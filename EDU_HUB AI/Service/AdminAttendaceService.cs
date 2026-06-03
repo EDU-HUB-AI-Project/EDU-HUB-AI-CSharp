@@ -1,8 +1,10 @@
-﻿using EDU_HUB_AI.Util;
-using EDU_HUB_AI.Model;
+﻿using EDU_HUB_AI.Model;
+using EDU_HUB_AI.Util;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,11 +14,40 @@ namespace EDU_HUB_AI.Service
     {
         private readonly string _url = "/admin/attendance";
         private readonly ApiClient _apiClient = new ApiClient();
-        
+        // 테스트용
         public async Task<List<AttendDto>?> GetAttend()
         {
            return await _apiClient.Get<List<AttendDto>>(_url);
         }
+        public async Task<List<AttendDto>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
+        {
+            Debug.WriteLine("Called::GetAttend");
+            string url = _url + "?";
+            if (studentId != null) url += "studentId=" + studentId + "&";
+            if (eduId != null) url += "eduId=" + eduId + "&";
+            if (attendDate != null) url += "attendDate=" + attendDate + "&";
+            if (status != null) url += "status=" + status + "&";
+            return await _apiClient.Get<List<AttendDto>>(url);
+        }
 
+        public async Task<Dictionary<string, object>?> InsertAttend(AttendDto attendDto)
+        {
+            Debug.WriteLine("Called::InsertAttend");
+            return await _apiClient.Post<Dictionary<string, object>?>(_url, attendDto);
+        }
+
+        public async Task<int> UpdateAttendMsg(string studentId, AttendDto attendDto)
+        {
+            Debug.WriteLine("Called::UpdateAttendMsg");
+            string url = _url + $"/{studentId}";
+            return await _apiClient.Patch<int>(url, attendDto);
+        }
+
+        public async Task DeleteAttend(string attendId)
+        {
+            Debug.WriteLine("Called::DeleteAttend");
+            string url = _url + $"/{attendId}";
+            await _apiClient.Delete(url);
+        }
     }
 }

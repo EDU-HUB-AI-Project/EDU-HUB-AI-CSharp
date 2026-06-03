@@ -1,5 +1,7 @@
 ﻿using EDU_HUB_AI.Config;
+using System.DirectoryServices;
 using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
@@ -22,7 +24,7 @@ namespace EDU_HUB_AI.Util
             _httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json")); // 서버한테 JSON으로 응답해달라고 요청
         }
 
-        public async Task<T> Get<T>(string url)
+        public async Task<T> Get<T>(string url) // Task: js의 promise와 같은 역할
         {
             HttpResponseMessage response = await _httpClient.GetAsync(url); // ResponseEntity
             response.EnsureSuccessStatusCode(); // 상태코드가 성공이 아닐 경우 예외 발생
@@ -56,6 +58,21 @@ namespace EDU_HUB_AI.Util
             var json = JsonSerializer.Serialize(body);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await _httpClient.PatchAsync(url, content);
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<T>(result);
+        }
+
+        public async Task Delete(string? url)
+        {
+            HttpResponseMessage response = await _httpClient.DeleteAsync(url);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<T> Delete<T>(string? url)
+        {
+            HttpResponseMessage response = await _httpClient.DeleteAsync(url);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadAsStringAsync();
