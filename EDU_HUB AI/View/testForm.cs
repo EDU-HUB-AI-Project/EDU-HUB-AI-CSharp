@@ -30,17 +30,17 @@ namespace EDU_HUB_AI.View
 
             var result = await _adminAttendaceController.GetAttend(studentId, eduId, attendDate, status);
 
-            if (result == null)
+            if (result?.Status == "success")
             {
-                Debug.WriteLine("데이터 없음");
-                return;
-            }
-            else
-            {
-                foreach(var item in result)
+                foreach (var item in result?.Data)
                 {
                     Debug.WriteLine(item);
                 }
+                MessageBox.Show(result.ToString());
+            }
+            else
+            {
+                MessageBox.Show(result?.Message);
             }
         }
 
@@ -48,9 +48,9 @@ namespace EDU_HUB_AI.View
         {
             AttendDto attendDto = new AttendDto
             {
-                AttendanceId = "ATT_test2",
-                studentId = "STU_26005",
-                attendDate = "2026-06-03",
+                attendanceId = "ATT_test3",
+                studentId = "STU_26007",
+                attendDate = "2026-06-04",
                 status = "조퇴",
                 message = "병원진료"
             };
@@ -60,12 +60,12 @@ namespace EDU_HUB_AI.View
 
         public async void BtnTestPatch_Click(object? sender, EventArgs e)
         {
-            string studentId = "STU_26005";
+            string studentId = "STU_26007";
             AttendDto attendDto = new AttendDto
             {
                 status = "지각",
                 message = "행정 업무",
-                attendDate = "2026-05-26"
+                attendDate = "2026-06-04"
             };
             var result = await _adminAttendaceController.UpdateAttendMsg(studentId, attendDto);
             Debug.WriteLine(result);
@@ -73,7 +73,7 @@ namespace EDU_HUB_AI.View
 
         public async void BtnTestDelete_Click(object? sender, EventArgs e)
         {
-            string attendanceId = "ATT_test2";
+            string attendanceId = "ATT_test3";
             await _adminAttendaceController.DeleteAttend(attendanceId);
         }
     }

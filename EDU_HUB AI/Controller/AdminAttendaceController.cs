@@ -20,18 +20,18 @@ namespace EDU_HUB_AI.Controller
         //   return await adminAttendaceService.GetAttend();
         //}
 
-        public async Task<List<AttendDto>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
+        public async Task<ApiResponse<List<AttendDto>>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
         {
             Debug.WriteLine("Called::GetAttend");
             return await _adminAttendaceService.GetAttend(studentId, eduId, attendDate, status);
         }
 
-        public async Task<Dictionary<string, object>?> InsertAttend(AttendDto attendDto)
+        public async Task<ApiResponse<Dictionary<string, object>>?> InsertAttend(AttendDto attendDto)
         {
             Debug.WriteLine("Called::InsertAttend");
             return await _adminAttendaceService.InsertAttend(attendDto);
         }
-        public async Task<int> UpdateAttendMsg(string studentId, AttendDto attendDto)
+        public async Task<ApiResponse<int>> UpdateAttendMsg(string studentId, AttendDto attendDto)
         {
             Debug.WriteLine("Called::UpdateAttendMsg");
             return await _adminAttendaceService.UpdateAttendMsg(studentId, attendDto);

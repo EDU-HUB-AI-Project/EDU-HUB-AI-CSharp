@@ -15,11 +15,11 @@ namespace EDU_HUB_AI.Service
         private readonly string _url = "/admin/attendance";
         private readonly ApiClient _apiClient = new ApiClient();
         // 테스트용
-        public async Task<List<AttendDto>?> GetAttend()
+        public async Task<ApiResponse<List<AttendDto>>?> GetAttend()
         {
            return await _apiClient.Get<List<AttendDto>>(_url);
         }
-        public async Task<List<AttendDto>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
+        public async Task<ApiResponse<List<AttendDto>>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
         {
             Debug.WriteLine("Called::GetAttend");
             string url = _url + "?";
@@ -30,13 +30,13 @@ namespace EDU_HUB_AI.Service
             return await _apiClient.Get<List<AttendDto>>(url);
         }
 
-        public async Task<Dictionary<string, object>?> InsertAttend(AttendDto attendDto)
+        public async Task<ApiResponse<Dictionary<string, object>>?> InsertAttend(AttendDto attendDto)
         {
             Debug.WriteLine("Called::InsertAttend");
-            return await _apiClient.Post<Dictionary<string, object>?>(_url, attendDto);
+            return await _apiClient.Post<Dictionary<string, object>>(_url, attendDto);
         }
 
-        public async Task<int> UpdateAttendMsg(string studentId, AttendDto attendDto)
+        public async Task<ApiResponse<int>> UpdateAttendMsg(string studentId, AttendDto attendDto)
         {
             Debug.WriteLine("Called::UpdateAttendMsg");
             string url = _url + $"/{studentId}";

@@ -8,7 +8,7 @@ namespace EDU_HUB_AI.Model
 {
     public class AttendDto
     {
-        public string AttendanceId { get; set; }
+        public string attendanceId { get; set; }
         public string studentId { get; set; }
         public string eduId { get; set; }
         public string status { get; set; }
@@ -19,7 +19,7 @@ namespace EDU_HUB_AI.Model
 
         public override string ToString()
         {
-            return $"AttendanceId: {AttendanceId}, studentId: {studentId}, eduId: {eduId}, " +
+            return $"AttendanceId: {attendanceId}, studentId: {studentId}, eduId: {eduId}, " +
                    $"status: {status}, message: {message}, attendDate: {attendDate}, " +
                    $"createdAt: {createdAt}, updatedAt: {updatedAt}";
         }
