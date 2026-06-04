@@ -1,4 +1,5 @@
 ﻿using EDU_HUB_AI.Controller;
+using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
 using System.Diagnostics;
 using System.Drawing;
@@ -28,53 +29,90 @@ namespace EDU_HUB_AI.View
             string? attendDate = null;
             string? status = null;
 
-            var result = await _adminAttendaceController.GetAttend(studentId, eduId, attendDate, status);
-
-            if (result?.Status == "success")
+            try
             {
+                var result = await _adminAttendaceController.GetAttend(studentId, eduId, attendDate, status);
+                Debug.WriteLine(result?.Status);
                 foreach (var item in result?.Data)
                 {
                     Debug.WriteLine(item);
                 }
                 MessageBox.Show(result.ToString());
+            } 
+            catch (ApiException ex)
+            { 
+                MessageBox.Show($"오류: [{ex.Status}] {ex.Message}" );
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(result?.Message);
+                MessageBox.Show(ex.Message);
             }
         }
 
         public async void BtnTestPost_Click(object? sender, EventArgs e)
         {
-            AttendDto attendDto = new AttendDto
+            try
             {
-                attendanceId = "ATT_test3",
-                studentId = "STU_26007",
-                attendDate = "2026-06-04",
-                status = "조퇴",
-                message = "병원진료"
-            };
-            var result = await _adminAttendaceController.InsertAttend(attendDto);
-            Debug.WriteLine(result);
+                AttendDto attendDto = new AttendDto
+                {
+                    attendanceId = "ATT_test3",
+                    studentId = "STU_26007",
+                    attendDate = "2026-06-04",
+                    status = "조퇴",
+                    message = "병원진료"
+                };
+                var result = await _adminAttendaceController.InsertAttend(attendDto);
+                Debug.WriteLine(result);
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show($"오류: [{ex.Status}] {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         public async void BtnTestPatch_Click(object? sender, EventArgs e)
         {
-            string studentId = "STU_26007";
-            AttendDto attendDto = new AttendDto
+            try
             {
-                status = "지각",
-                message = "행정 업무",
-                attendDate = "2026-06-04"
-            };
-            var result = await _adminAttendaceController.UpdateAttendMsg(studentId, attendDto);
-            Debug.WriteLine(result);
+                string studentId = "STU_26007";
+                AttendDto attendDto = new AttendDto
+                {
+                    status = "지각",
+                    message = "행정 업무",
+                    attendDate = "2026-06-04"
+                };
+                var result = await _adminAttendaceController.UpdateAttendMsg(studentId, attendDto);
+                Debug.WriteLine(result);
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show($"오류: [{ex.Status}] {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         public async void BtnTestDelete_Click(object? sender, EventArgs e)
         {
-            string attendanceId = "ATT_test3";
-            await _adminAttendaceController.DeleteAttend(attendanceId);
+            try
+            {
+                string attendanceId = "ATT_test3";
+                await _adminAttendaceController.DeleteAttend(attendanceId);
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show($"오류: [{ex.Status}] {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }

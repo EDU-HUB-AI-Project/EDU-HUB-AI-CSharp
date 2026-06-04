@@ -9,8 +9,8 @@ namespace EDU_HUB_AI.Model
 {
     public class ApiResponse<T>
     {   
-        [JsonPropertyName("status")]
-        public string? Status { get; set; } // java에서 넘오는 변수 이름과 매핑
+        [JsonPropertyName("status")] // java에서 넘오는 변수 이름과 매핑
+        public int Status { get; set; } 
         [JsonPropertyName("message")]
         public string? Message { get; set; }
         [JsonPropertyName("data")]

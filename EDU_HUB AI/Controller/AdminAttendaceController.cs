@@ -14,11 +14,6 @@ namespace EDU_HUB_AI.Controller
     public class AdminAttendaceController
     {
         private readonly AdminAttendaceService _adminAttendaceService = new AdminAttendaceService();
-        // 테스트 코드
-        //public async Task<List<AttendDto>?> GetAttend()
-        //{
-        //   return await adminAttendaceService.GetAttend();
-        //}
 
         public async Task<ApiResponse<List<AttendDto>>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
         {
