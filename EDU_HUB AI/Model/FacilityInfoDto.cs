@@ -13,6 +13,9 @@ namespace EDU_HUB_AI.Model
         public string facilityType { get; set; }
         public string name { get; set; }
         public string location { get; set; }
+        public int? floor { get; set; }
+        public decimal? mapX { get; set; }
+        public decimal? mapY { get; set; }
         public string imagePath { get; set; }
         public string description { get; set; }
         public string createdAt { get; set; }
@@ -22,7 +25,8 @@ namespace EDU_HUB_AI.Model
         public override string ToString()
         {
             return $"facilityId: {facilityId}, facilityType: {facilityType}, name: {name}, " +
-                   $"location: {location}, imagePath: {imagePath}, description: {description}, " +
+                   $"location: {location}, floor: {floor}, mapX: {mapX}, mapY: {mapY}, " +
+                   $"imagePath: {imagePath}, description: {description}, " +
                    $"createdAt: {createdAt}, updatedAt: {updatedAt}, delYn: {delYn}";
         }
     }
