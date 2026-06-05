@@ -14,5 +14,11 @@ namespace EDU_HUB_AI.Model
         public int maxCount { get; set; }
         public string delYn { get; set; }
         public string dormitoryRoomName { get; set; }
+
+        public override string ToString()
+        {
+            return $"dormitoryId: {dormitoryId}, eduId:{eduId}, currentCount: {currentCount}" +
+                   $"maxCount: {maxCount}, delYn: {delYn}, dormitoryRoomName: {dormitoryRoomName}";
+        }
     }
 }

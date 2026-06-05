@@ -18,5 +18,12 @@ namespace EDU_HUB_AI.Model
         public string delYn { get; set; }
         public string createdAt { get; set; }
         public string phoneNumber { get; set; }
+
+        public override string ToString()
+        {
+            return $"studentId: {studentId}, studentName: {studentName}, birthDate: {birthDate}, " +
+                   $"eduId: {eduId}, attendYn: {attendYn}, dormYn: {dormYn}, ddormitoryId: {dormitoryId}" +
+                   $"delYn: {delYn}, createdAt: {createdAt}, phoneNumber: {phoneNumber}";
+        }
     }
 }
