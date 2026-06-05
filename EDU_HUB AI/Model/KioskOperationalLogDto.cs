@@ -14,5 +14,11 @@ namespace EDU_HUB_AI.Model
         public string dorm;
         public string createdAt;
         public string delYN;
+
+        public override string ToString()
+        {
+            return $"opLogId: {opLogId}, studentId: {studentId}, printing: {printing}, " +
+                   $"dorm: {dorm}, createdAt: {createdAt}, delYN: {delYN}";
+        }
     }
 }

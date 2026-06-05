@@ -1,12 +1,7 @@
 ﻿using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace EDU_HUB_AI.Service
 {

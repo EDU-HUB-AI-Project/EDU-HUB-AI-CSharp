@@ -172,8 +172,8 @@ namespace EDU_HUB_AI.Util
             }
             
         }
-
-        public async Task<ApiResponse<T>> Delete<T>(string? url)
+        
+        public async Task<ApiResponse<T>> Delete<T>(string? url, object? body = null)
         {
             int attempt = 0;
             while (true)
@@ -181,7 +181,16 @@ namespace EDU_HUB_AI.Util
                 try
                 {
                     attempt++;
-                    HttpResponseMessage response = await _httpClient.DeleteAsync(url);
+                    // HttpClient에서 DeleteAsync가 body를 받지 않아서 우회하는 로직 추가
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, url);
+
+                    if (body != null)
+                    {
+                        var json = JsonSerializer.Serialize(body);
+                        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+                    }
+                    // sendAsync: 커스텀 가능한 비동기 처리 메소드
+                    HttpResponseMessage response = await _httpClient.SendAsync(request);
                     var res = await response.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<ApiResponse<T>>(res);
                     if (result?.Status >= 400) throw new ApiException(result.Status, result.Message);

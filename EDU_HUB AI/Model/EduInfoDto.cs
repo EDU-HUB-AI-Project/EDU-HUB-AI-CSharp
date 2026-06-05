@@ -15,5 +15,12 @@ namespace EDU_HUB_AI.Model
         private int batchNumber { get; set; }
         private int capacity { get; set; }
         private string delYn { get; set; }
+
+        public override string ToString()
+        {
+            return $"eduId: {eduId}, eduName: {eduName}, startDate: {startDate}" +
+                   $"endDate: {endDate}, batchNumber: {batchNumber}, capacity: {capacity}" +
+                   $"delYn: {delYn}";
+        }
     }
 }

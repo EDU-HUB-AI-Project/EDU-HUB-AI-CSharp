@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace EDU_HUB_AI.Model
 {
@@ -17,5 +18,12 @@ namespace EDU_HUB_AI.Model
         public string createdAt { get; set; }
         public string updatedAt { get; set; }
         public string delYn { get; set; }
+
+        public override string ToString()
+        {
+            return $"facilityId: {facilityId}, facilityType: {facilityType}, name: {name}, " +
+                   $"location: {location}, imagePath: {imagePath}, description: {description}, " +
+                   $"createdAt: {createdAt}, updatedAt: {updatedAt}, delYn: {delYn}";
+        }
     }
 }
