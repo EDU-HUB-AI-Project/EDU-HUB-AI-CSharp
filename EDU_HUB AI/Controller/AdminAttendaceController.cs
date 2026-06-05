@@ -1,5 +1,6 @@
 ﻿using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Service;
+using EDU_HUB_AI.Util;
 using System.Diagnostics;
 
 namespace EDU_HUB_AI.Controller
@@ -18,6 +19,11 @@ namespace EDU_HUB_AI.Controller
         {
             Debug.WriteLine("Called::InsertAttend");
             return await _adminAttendaceService.InsertAttend(attendDto);
+        }
+        public async Task<ApiResponse<int>> InsertAttendList(List<AttendDto> attendDtoList)
+        {
+            Debug.WriteLine("Called::InsertAttendList");
+            return await _adminAttendaceService.InsertAttendList(attendDtoList);
         }
         public async Task<ApiResponse<int>> UpdateAttendMsg(string studentId, AttendDto attendDto)
         {
