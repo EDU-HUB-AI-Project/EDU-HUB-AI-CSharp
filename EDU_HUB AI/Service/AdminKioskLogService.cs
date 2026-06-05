@@ -1,8 +1,6 @@
 ﻿using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
-using Microsoft.VisualBasic.Logging;
 using System.Diagnostics;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace EDU_HUB_AI.Service
 {

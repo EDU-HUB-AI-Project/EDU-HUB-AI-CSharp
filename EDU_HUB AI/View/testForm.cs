@@ -21,7 +21,7 @@ namespace EDU_HUB_AI.View
             btnTestPost.Click += BtnTestPost_Click;
             btnTestPatch.Click += BtnTestPatch_Click;
             btnTestDelete.Click += BtnTestDelete_Click;
-            
+
             btnKLGet.Click += BtnKLGet_Click;
             btnKLPost.Click += BtnKLPost_Click;
             btnKLPatch.Click += BtnKLPatch_Click;
@@ -157,7 +157,7 @@ namespace EDU_HUB_AI.View
         {
             KioskLogDto kioskLogDto = new KioskLogDto
             {
-                action="구내 식당"
+                action = "구내 식당"
             };
             try
             {
@@ -195,6 +195,13 @@ namespace EDU_HUB_AI.View
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void btnAttend_Click(object sender, EventArgs e)
+        {
+            Form_Attend form = new Form_Attend();
+            form.Show(this);
+            this.Hide();
         }
     }
 }

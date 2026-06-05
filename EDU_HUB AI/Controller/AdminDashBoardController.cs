@@ -10,24 +10,24 @@ namespace EDU_HUB_AI.Controller
 
         public async Task<ApiResponse<List<Dictionary<string, object>>>> GetPrintCountByHour()
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::GetPrintCountByHour");
             return await _adminDashBoardService.GetPrintCountByHour();
         }
         public async Task<ApiResponse<List<Dictionary<string, object>>>> GetPopularFeature()
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::GetPopularFeature");
             return await _adminDashBoardService.GetPopularFeature();
         }
 
         public async Task<ApiResponse<List<Dictionary<string, object>>>> GetAttendCount()
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::GetAttendCount");
             return await _adminDashBoardService.GetAttendCount();
         }
 
         public async Task<ApiResponse<List<Dictionary<string, object>>>> GetDormStats()
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::GetDormStats");
             return await _adminDashBoardService.GetDormStats();
         }
     }

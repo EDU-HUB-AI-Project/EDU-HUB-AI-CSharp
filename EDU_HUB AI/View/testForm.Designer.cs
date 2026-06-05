@@ -36,11 +36,12 @@
             btnKLDel = new Button();
             btnKLPatch = new Button();
             btnKLPost = new Button();
+            btnAttend = new Button();
             SuspendLayout();
             // 
             // btnTest
             // 
-            btnTest.Location = new Point(86, 55);
+            btnTest.Location = new Point(22, 53);
             btnTest.Name = "btnTest";
             btnTest.Size = new Size(159, 62);
             btnTest.TabIndex = 0;
@@ -49,7 +50,7 @@
             // 
             // btnTestPost
             // 
-            btnTestPost.Location = new Point(86, 137);
+            btnTestPost.Location = new Point(22, 135);
             btnTestPost.Name = "btnTestPost";
             btnTestPost.Size = new Size(159, 56);
             btnTestPost.TabIndex = 1;
@@ -58,7 +59,7 @@
             // 
             // btnTestPatch
             // 
-            btnTestPatch.Location = new Point(86, 223);
+            btnTestPatch.Location = new Point(22, 221);
             btnTestPatch.Name = "btnTestPatch";
             btnTestPatch.Size = new Size(159, 56);
             btnTestPatch.TabIndex = 2;
@@ -67,7 +68,7 @@
             // 
             // btnTestDelete
             // 
-            btnTestDelete.Location = new Point(86, 307);
+            btnTestDelete.Location = new Point(22, 305);
             btnTestDelete.Name = "btnTestDelete";
             btnTestDelete.Size = new Size(159, 56);
             btnTestDelete.TabIndex = 3;
@@ -76,7 +77,7 @@
             // 
             // btnKLGet
             // 
-            btnKLGet.Location = new Point(389, 55);
+            btnKLGet.Location = new Point(222, 53);
             btnKLGet.Name = "btnKLGet";
             btnKLGet.Size = new Size(150, 62);
             btnKLGet.TabIndex = 4;
@@ -85,7 +86,7 @@
             // 
             // btnKLDel
             // 
-            btnKLDel.Location = new Point(389, 307);
+            btnKLDel.Location = new Point(222, 305);
             btnKLDel.Name = "btnKLDel";
             btnKLDel.Size = new Size(150, 56);
             btnKLDel.TabIndex = 5;
@@ -94,7 +95,7 @@
             // 
             // btnKLPatch
             // 
-            btnKLPatch.Location = new Point(389, 223);
+            btnKLPatch.Location = new Point(222, 221);
             btnKLPatch.Name = "btnKLPatch";
             btnKLPatch.Size = new Size(150, 56);
             btnKLPatch.TabIndex = 6;
@@ -103,18 +104,29 @@
             // 
             // btnKLPost
             // 
-            btnKLPost.Location = new Point(389, 137);
+            btnKLPost.Location = new Point(222, 135);
             btnKLPost.Name = "btnKLPost";
             btnKLPost.Size = new Size(150, 56);
             btnKLPost.TabIndex = 7;
             btnKLPost.Text = "KL POST 테스트";
             btnKLPost.UseVisualStyleBackColor = true;
             // 
+            // btnAttend
+            // 
+            btnAttend.Location = new Point(427, 53);
+            btnAttend.Name = "btnAttend";
+            btnAttend.Size = new Size(150, 62);
+            btnAttend.TabIndex = 8;
+            btnAttend.Text = "attendForm이동";
+            btnAttend.UseVisualStyleBackColor = true;
+            btnAttend.Click += btnAttend_Click;
+            // 
             // testForm
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnAttend);
             Controls.Add(btnKLPost);
             Controls.Add(btnKLPatch);
             Controls.Add(btnKLDel);
@@ -138,5 +150,6 @@
         private Button btnKLDel;
         private Button btnKLPatch;
         private Button btnKLPost;
+        private Button btnAttend;
     }
 }

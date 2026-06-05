@@ -1,11 +1,6 @@
 ﻿using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EDU_HUB_AI.Service
 {
@@ -18,7 +13,7 @@ namespace EDU_HUB_AI.Service
                                                                               string dorm,
                                                                               string createdAt)
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::GetOpLog");
             string url = _url + "?";
             if (studentId != null) url += "studentId=" + studentId + "&";
             if (dorm != null) url += "dorm=" + dorm + "&";
@@ -28,20 +23,20 @@ namespace EDU_HUB_AI.Service
 
         public async Task<ApiResponse<int>> InsertOpLog (KioskOperationalLogDto kioskOperationalLogDto)
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::InsertOpLog");
             string url = _url + "/op-log";
             return await _apiClient.Post<int>(url, kioskOperationalLogDto);
         }
 
         public async Task<ApiResponse<int>> InsertDormOutLog(KioskOperationalLogDto kioskOperationalLogDto)
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::InsertDormOutLog");
             string url = _url + "/dorm-op";
             return await _apiClient.Post<int>(url, kioskOperationalLogDto);
         }
         public async Task<ApiResponse<int>> DeleteLog(KioskOperationalLogDto kioskOperationalLogDto)
         {
-            Debug.WriteLine("Called::");
+            Debug.WriteLine("Called::DeleteLog");
             return await _apiClient.Delete<int>(_url, kioskOperationalLogDto);
         }
     }
