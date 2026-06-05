@@ -16,13 +16,14 @@ namespace EDU_HUB_AI.Model
         public string imagePath { get; set; }
         public string createdAt { get; set; }
         public string updatedAt { get; set; }
+        public string delYn { get; set; }
 
         public override string ToString()
         {
             return $"classroomId: {classroomId}, classroomName: {classroomName}, floor: {floor}, " +
                    $"imageId: {imageId}, imagePath: {imagePath}, createdAt: {createdAt}, " +
-                   $"updatedAt: {updatedAt}";
+                   $"updatedAt: {updatedAt}, delYn: {delYn}";
         }
     }
 }
-}
+

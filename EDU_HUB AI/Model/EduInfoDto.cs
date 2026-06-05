@@ -8,19 +8,21 @@ namespace EDU_HUB_AI.Model
 {
     public class EduInfoDto
     {
-        private string eduId { get; set; }
-        private string eduName { get; set; }
-        private string startDate { get; set; }
-        private string endDate { get; set; }
-        private int batchNumber { get; set; }
-        private int capacity { get; set; }
-        private string delYn { get; set; }
+        public string eduId { get; set; }
+        public string eduName { get; set; }
+        public string startDate { get; set; }
+        public string endDate { get; set; }
+        public int batchNumber { get; set; }
+        public int capacity { get; set; }
+        public string delYn { get; set; }
+        public string createdAt { get; set; }
+        public string updatedAt { get; set; }
 
         public override string ToString()
         {
             return $"eduId: {eduId}, eduName: {eduName}, startDate: {startDate}" +
                    $"endDate: {endDate}, batchNumber: {batchNumber}, capacity: {capacity}" +
-                   $"delYn: {delYn}";
+                   $"delYn: {delYn}, createdAt: {createdAt}, updatedAt:{updatedAt}";
         }
     }
 }

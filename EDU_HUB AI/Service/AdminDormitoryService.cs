@@ -11,32 +11,32 @@ namespace EDU_HUB_AI.Service
 
         public async Task<ApiResponse<List<DormitoryDto>>> GettDormRoomAssignStatus()
         {
-            Debug.WriteLine("Called");
+            Debug.WriteLine("Called::GettDormRoomAssignStatu");
             return await _apiClient.Get<List<DormitoryDto>> (_url);
         }
         public async Task<ApiResponse<DormitoryDto>> GetDormRoomAssignStatusById(string dormitoryId)
         {
-            Debug.WriteLine("Called");
+            Debug.WriteLine("Called::GetDormRoomAssignStatusById");
             string url = _url + $"/{dormitoryId}";
             return await _apiClient.Get<DormitoryDto>(url);
         }
         public async Task<ApiResponse<int>> UpdateDormAssignMaxCnt(DormitoryDto dormitoryDto)
         {
-            Debug.WriteLine("Called");
+            Debug.WriteLine("Called::UpdateDormAssignMaxCnt");
             string url = _url + "/max-count";
             return await _apiClient.Patch<int>(url, dormitoryDto);
         }
         public async Task<ApiResponse<int>> UpdateDormCurrentCnt(string studentId,
                                                                           DormitoryDto dormitoryDto)
         {
-            Debug.WriteLine("Called");
+            Debug.WriteLine("Called::UpdateDormCurrentCnt");
             string url = _url + $"?studentId={studentId}";
             return await _apiClient.Patch<int>(url, dormitoryDto);
         }
         public async Task<ApiResponse<int>> UpdateDormCurrentCntDown(string studentId,
                                                                           DormitoryDto dormitoryDto)
         {
-            Debug.WriteLine("Called");
+            Debug.WriteLine("Called::UpdateDormCurrentCntDown");
             string url = _url + $"?studentId={studentId}";
             return await _apiClient.Patch<int>(url, dormitoryDto);
         }
