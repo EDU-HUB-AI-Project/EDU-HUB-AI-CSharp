@@ -4,7 +4,7 @@ using EDU_HUB_AI.Config.Component.Layout;
 
 namespace EDU_HUB_AI.View
 {
-    partial class TableTemplateForm
+    partial class Student_Form
     {
         private System.ComponentModel.IContainer components = null;
 
@@ -17,9 +17,9 @@ namespace EDU_HUB_AI.View
 
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             navigation1 = new Navigation();
             panelMain = new Panel();
             bodyPanel = new Panel();
@@ -27,6 +27,9 @@ namespace EDU_HUB_AI.View
             actionPanel = new ActionBar();
             btnCreate = new AppButton();
             btnExcel = new AppButton();
+            txtSearch = new TextField();
+            cmbEdu = new ComboBox();
+            cmbBatch = new ComboBox();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             panelMain.SuspendLayout();
@@ -75,30 +78,30 @@ namespace EDU_HUB_AI.View
             grid.AllowUserToAddRows = false;
             grid.AllowUserToDeleteRows = false;
             grid.AllowUserToResizeRows = false;
-            dataGridViewCellStyle4.BackColor = Color.FromArgb(250, 251, 252);
-            grid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(250, 251, 252);
+            grid.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             grid.BackgroundColor = Color.White;
             grid.BorderStyle = BorderStyle.None;
             grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = Color.FromArgb(241, 245, 249);
-            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Bold);
-            dataGridViewCellStyle5.ForeColor = Color.FromArgb(15, 23, 42);
-            dataGridViewCellStyle5.Padding = new Padding(8, 0, 8, 0);
-            dataGridViewCellStyle5.SelectionBackColor = Color.FromArgb(241, 245, 249);
-            grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = Color.FromArgb(241, 245, 249);
+            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 9F, FontStyle.Bold);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(15, 23, 42);
+            dataGridViewCellStyle2.Padding = new Padding(8, 0, 8, 0);
+            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(241, 245, 249);
+            grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             grid.ColumnHeadersHeight = 36;
             grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = Color.White;
-            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F);
-            dataGridViewCellStyle6.ForeColor = Color.FromArgb(15, 23, 42);
-            dataGridViewCellStyle6.Padding = new Padding(8, 0, 8, 0);
-            dataGridViewCellStyle6.SelectionBackColor = Color.FromArgb(248, 250, 252);
-            dataGridViewCellStyle6.SelectionForeColor = Color.FromArgb(15, 23, 42);
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.False;
-            grid.DefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = Color.White;
+            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 9F);
+            dataGridViewCellStyle3.ForeColor = Color.FromArgb(15, 23, 42);
+            dataGridViewCellStyle3.Padding = new Padding(8, 0, 8, 0);
+            dataGridViewCellStyle3.SelectionBackColor = Color.FromArgb(248, 250, 252);
+            dataGridViewCellStyle3.SelectionForeColor = Color.FromArgb(15, 23, 42);
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.False;
+            grid.DefaultCellStyle = dataGridViewCellStyle3;
             grid.Dock = DockStyle.Fill;
             grid.EnableHeadersVisualStyles = false;
             grid.Font = new Font("맑은 고딕", 9F);
@@ -118,6 +121,9 @@ namespace EDU_HUB_AI.View
             actionPanel.BackColor = Color.FromArgb(244, 246, 249);
             actionPanel.Controls.Add(btnCreate);
             actionPanel.Controls.Add(btnExcel);
+            actionPanel.Controls.Add(txtSearch);
+            actionPanel.Controls.Add(cmbEdu);
+            actionPanel.Controls.Add(cmbBatch);
             actionPanel.Dock = DockStyle.Top;
             actionPanel.FlowDirection = FlowDirection.RightToLeft;
             actionPanel.Location = new Point(34, 40);
@@ -168,6 +174,32 @@ namespace EDU_HUB_AI.View
             btnExcel.Text = "엑셀 일괄 등록";
             btnExcel.UseVisualStyleBackColor = false;
             btnExcel.Variant = ButtonVariant.Secondary;
+            btnExcel.Click += btnExcel_Click;
+            // 
+            // txtSearch
+            // 
+            txtSearch.BackColor = Color.White;
+            txtSearch.Location = new Point(427, 10);
+            txtSearch.MinimumSize = new Size(120, 54);
+            txtSearch.Name = "txtSearch";
+            txtSearch.Size = new Size(369, 81);
+            txtSearch.TabIndex = 2;
+            // 
+            // cmbEdu
+            // 
+            cmbEdu.FormattingEnabled = true;
+            cmbEdu.Location = new Point(239, 10);
+            cmbEdu.Name = "cmbEdu";
+            cmbEdu.Size = new Size(182, 33);
+            cmbEdu.TabIndex = 3;
+            // 
+            // cmbBatch
+            // 
+            cmbBatch.FormattingEnabled = true;
+            cmbBatch.Location = new Point(51, 10);
+            cmbBatch.Name = "cmbBatch";
+            cmbBatch.Size = new Size(182, 33);
+            cmbBatch.TabIndex = 4;
             // 
             // pagination1
             // 
@@ -193,7 +225,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.TabIndex = 0;
             pageHeader1.Title = "교육생 관리";
             // 
-            // TableTemplateForm
+            // Student_Form
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -201,9 +233,9 @@ namespace EDU_HUB_AI.View
             Controls.Add(panelMain);
             Controls.Add(navigation1);
             Margin = new Padding(4, 5, 4, 5);
-            Name = "TableTemplateForm";
+            Name = "Student_Form";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "EDU-HUB — 테이블 템플릿";
+            Text = "EDU-HUB — 교육생 관리";
             panelMain.ResumeLayout(false);
             bodyPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
@@ -221,5 +253,8 @@ namespace EDU_HUB_AI.View
         private ActionBar actionPanel;
         private AppButton btnExcel;
         private AppButton btnCreate;
+        private TextField txtSearch;
+        private ComboBox cmbEdu;
+        private ComboBox cmbBatch;
     }
 }
