@@ -26,6 +26,12 @@ namespace EDU_HUB_AI.Service
             Debug.WriteLine("Called::InsertAttend");
             return await _apiClient.Post<Dictionary<string, object>>(_url, attendDto);
         }
+        public async Task<ApiResponse<int>> InsertAttendList(List<AttendDto> attendDtoList)
+        {
+            Debug.WriteLine("Called::InsertAttend");
+            string url = _url + "/list";
+            return await _apiClient.Post<int>(url, attendDtoList);
+        }
 
         public async Task<ApiResponse<int>> UpdateAttendMsg(string studentId, AttendDto attendDto)
         {

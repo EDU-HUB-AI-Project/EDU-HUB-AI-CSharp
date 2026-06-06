@@ -33,6 +33,7 @@
             dgvAttend = new DataGridView();
             bsAttend = new BindingSource(components);
             btnExport = new Button();
+            btnImport = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvAttend).BeginInit();
             ((System.ComponentModel.ISupportInitialize)bsAttend).BeginInit();
             SuspendLayout();
@@ -67,11 +68,21 @@
             btnExport.Text = "엑셀로 내보내기";
             btnExport.UseVisualStyleBackColor = true;
             // 
+            // btnImport
+            // 
+            btnImport.Location = new Point(272, 537);
+            btnImport.Name = "btnImport";
+            btnImport.Size = new Size(142, 48);
+            btnImport.TabIndex = 3;
+            btnImport.Text = "엑셀에서 저장하기";
+            btnImport.UseVisualStyleBackColor = true;
+            // 
             // Form_Attend
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1243, 643);
+            Controls.Add(btnImport);
             Controls.Add(btnExport);
             Controls.Add(dgvAttend);
             Controls.Add(btnBack);
@@ -88,5 +99,6 @@
         private DataGridView dgvAttend;
         private BindingSource bsAttend;
         private Button btnExport;
+        private Button btnImport;
     }
 }

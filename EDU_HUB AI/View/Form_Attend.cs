@@ -21,6 +21,7 @@ namespace EDU_HUB_AI.View
         private readonly AdminAttendaceController _adminAttendaceController = new();
         private ApiResponse<List<AttendDto>> attendList = new();
         private readonly ExcelExport excelExport = new ExcelExport();
+        private readonly ExcelImport excelImport = new ExcelImport();
         private List<AttendDto> _listAttend = new();
         private DataTable _dtAttend = new DataTable();
         public Form_Attend()
@@ -28,6 +29,7 @@ namespace EDU_HUB_AI.View
             InitializeComponent();
             PageInit();
             btnExport.Click += BtnExport_Click;
+            btnImport.Click += BtnImport_Click;
         }
 
         private void BtnBack_Click(object? sender, EventArgs e)
@@ -87,6 +89,42 @@ namespace EDU_HUB_AI.View
                 {
                     string filePath = saveFileDialog.FileName;
                     excelExport.ExcelExporter(_dtAttend, filePath);
+                }
+            }
+        }
+        private async void BtnImport_Click (object? sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Excel Files(*.xlsx) | *.xlsx";
+                openFileDialog.DefaultExt = "xlsx";
+                if(openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        string filePath = openFileDialog.FileName;
+                        DataTable dt = excelImport.ExcelImporter(filePath);
+                        List<AttendDto> list = new List<AttendDto>();
+                        foreach (DataRow row in dt.Rows)
+                        {
+                            list.Add(new AttendDto
+                            {
+                                studentId = row[0]?.ToString(),
+                                eduId = row[1]?.ToString(),
+                                attendDate = row[2]?.ToString(),
+                                status = row[3]?.ToString(),
+                                message = row[4]?.ToString()
+                            });
+                        }
+                        var response = await _adminAttendaceController.InsertAttendList(list);
+                        if (response?.Status == 200)
+                        {
+                            MessageBox.Show("저장되었습니다.");
+                        }
+                    } catch (Exception ex)
+                    {
+                        MessageBox.Show($"오류가 발생했습니다.\n{ex.Message}");
+                    }
                 }
             }
         }
