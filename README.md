@@ -8,7 +8,6 @@
 | 대상 | 한국산업안전보건교육원 교육원 관리자 |
 | 해상도 | 1080 × 1920px 세로형 터치 키오스크 |
 | 역할 | 관리자 프그램 |
-| 포트 | 8080 |
 
 
 ### 목적
@@ -47,7 +46,7 @@
 | **개발 환경** | Visual Studio 2022 (Community 이상) |
 | **HTTP 통신** | System.Net.Http (HttpClient) - REST API 호출 |
 | **JSON 처리** | System.Text.Json (JSON 직렬화 / 역직렬화) |
-| **Excel 처리** | ClosedXML 또는 NPOI (업로드 / 다운로드) |
+| **Excel 처리** | NPOI 2.8.0 (업로드 / 다운로드) |
 | **이미지 처리** | System.Drawing |
 
 ---
@@ -132,7 +131,7 @@ EDU_HUB AI/
 
 ├── Service/        # API 통신 등 핵심 서비스 로직
 
-├── Util/           # 공통 유틸리티 및 헬퍼 클래스
+├── Util/           # ApiClient 및 Excel 관련 클래스
 
 ├── View/           # WinForm 화면 (UI)
 

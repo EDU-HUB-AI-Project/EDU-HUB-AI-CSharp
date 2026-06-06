@@ -10,7 +10,9 @@ namespace EDU_HUB_AI.Model
     {
         public string attendanceId { get; set; }
         public string studentId { get; set; }
+        public string studentName { get; set; }
         public string eduId { get; set; }
+        public string eduName { get; set; }
         public string status { get; set; }
         public string message { get; set; }
         public string createdAt { get; set; }
@@ -19,9 +21,9 @@ namespace EDU_HUB_AI.Model
 
         public override string ToString()
         {
-            return $"AttendanceId: {attendanceId}, studentId: {studentId}, eduId: {eduId}, " +
-                   $"status: {status}, message: {message}, attendDate: {attendDate}, " +
-                   $"createdAt: {createdAt}, updatedAt: {updatedAt}";
+            return $"AttendanceId: {attendanceId}, studentId: {studentId}, studentName: {studentName} " +
+                   $"eduId: {eduId}, eduName: {eduName}, status: {status}, message: {message} " +
+                   $"attendDate: {attendDate}, createdAt: {createdAt}, updatedAt: {updatedAt}";
         }
     }
 }

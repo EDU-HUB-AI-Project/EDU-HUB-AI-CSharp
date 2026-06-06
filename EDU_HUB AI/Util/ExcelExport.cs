@@ -18,7 +18,7 @@ namespace EDU_HUB_AI.Util
 
             //헤더 작성
             var headerRow = sheet.CreateRow(0);
-            for (int i = 0; i < dt.Columns.Count; i++)
+            for (int i = 0; i < dt.Columns.Count - 2; i++)
             {
                 headerRow.CreateCell(i).SetCellValue(dt.Columns[i].ColumnName);
             }

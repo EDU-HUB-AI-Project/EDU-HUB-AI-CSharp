@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -37,6 +38,9 @@ namespace EDU_HUB_AI.View
             pageHeader1.SyncClicked += (_, _) => LoadAndRender();
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
+
+            navigation1.ActiveMenu = MenuKey.Trainees; // 현재 메뉴 활성화
+            navigation1.MenuSelected += NavigateTo;
         }
 
         protected override void OnLoad(EventArgs e)
@@ -168,6 +172,21 @@ namespace EDU_HUB_AI.View
         private void ehButton１_Click(object sender, EventArgs e)
         {
 
+        }
+        private void NavigateTo(object? sender, MenuKey key)
+        {
+            switch (key)
+            {
+                case MenuKey.Trainees:
+                    break;
+                case MenuKey.Attendance:
+                    new AttendForm().Show();
+                    break;
+                case MenuKey.Dormitory:
+                    // new DormitoryForm().Show();
+                    // this.Close();
+                    break;
+            }
         }
     }
 }
