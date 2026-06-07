@@ -11,20 +11,20 @@ namespace EDU_HUB_AI.Model
     {
         public string subjectId { get; set; }
         public string eduId { get; set; }
+        public string classroomId { get; set; }
         public string subjectName { get; set; }
         public string startDate { get; set; }
         public string endDate { get; set; }
         public string endYn { get; set; }
-        public string eduRoomName { get; set; }
         public string createdAt { get; set; }
         public string updatedAt { get; set; }
         public string delYn { get; set; }
 
         public override string ToString()
         {
-            return $"subjectId: {subjectId}, eduId: {eduId}, subjectName: {subjectName}" +
+            return $"subjectId: {subjectId}, eduId: {eduId}, classroomId: {classroomId}, subjectName: {subjectName}" +
                    $"startDate: {startDate}, endDate: {endDate}, endYn: {endYn}, " +
-                   $"eduRoomName: {eduRoomName}, createdAt: {createdAt}, updatedAt: {updatedAt}, delYn: {delYn}";
+                   $"createdAt: {createdAt}, updatedAt: {updatedAt}, delYn: {delYn}";
         }
     }
 }
