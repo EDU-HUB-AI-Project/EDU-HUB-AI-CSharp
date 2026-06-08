@@ -1,11 +1,13 @@
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
+using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
-using NPOI.SS.UserModel;
-using NPOI.XSSF.UserModel;
+using EDU_HUB_AI.Util;
+using System.Data;
 
 namespace EDU_HUB_AI.View
 {
@@ -32,6 +34,9 @@ namespace EDU_HUB_AI.View
         private List<StudentDto> _filtered = new();
         private readonly AdminEduInfoController _adminEduInfoController = new();
 
+        private static readonly string[] PhonePrefixes = { "010", "011" };
+        private bool _suppressFilter = false;
+
         public StudentView()
         {
             InitializeComponent();
@@ -46,8 +51,14 @@ namespace EDU_HUB_AI.View
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
-            cmbEdu.SelectedIndexChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
-            cmbBatch.SelectedIndexChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
+            cmbEdu.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) 
+                {
+                    UpdateBatchSource(cmbEdu.SelectedValue?.ToString());
+                    ApplyFilter(); 
+                    RenderPage(1); 
+                } 
+            };
+            cmbBatch.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) { ApplyFilter(); RenderPage(1); } };
             txtSearch.TextChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
         }
 
@@ -72,23 +83,50 @@ namespace EDU_HUB_AI.View
             return res?.Data ?? new List<StudentDto>();
         }
 
-        private async Task LoadAndRender(int page)
+        private async Task LoadAndRender(int page, bool showOverlay = true)
         {
-            _all = await LoadData();
+            var overlay = showOverlay ? LoadingOverlay.Create(bodyPanel, "데이터 로딩 중...") : null;
+
+            _adminStudentController.OnRetry = (attempt, max) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
 
             try
             {
-                var eduRes = await _adminEduInfoController.GetEduInfos();
-                _eduInfos = eduRes?.Data ?? new List<EduInfoDto>();
-            }
-            catch
-            {
-                _eduInfos = new List<EduInfoDto>();
-            }
+                _all = await LoadData();
 
-            SetupFilterSource();
-            ApplyFilter();
-            RenderPage(page);
+                try
+                {
+                    var eduRes = await _adminEduInfoController.GetEduInfos();
+                    _eduInfos = eduRes?.Data ?? new List<EduInfoDto>();
+                }
+                catch
+                {
+                    _eduInfos = new List<EduInfoDto>();
+                }
+
+                var prevEduId = cmbEdu.SelectedValue?.ToString();
+                var prevBatch = cmbBatch.SelectedValue is int b ? b : 0;
+
+                _suppressFilter = true;
+                SetupFilterSource();
+                if (!string.IsNullOrEmpty(prevEduId))
+                {
+                    cmbEdu.SelectedValue = prevEduId;
+                    UpdateBatchSource(prevEduId);
+                }
+                if (prevBatch > 0)
+                {
+                    cmbBatch.SelectedValue = prevBatch;
+                }
+                _suppressFilter = false;
+                ApplyFilter();
+                RenderPage(page);
+            }
+            finally
+            {
+                _adminStudentController.OnRetry = null;
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         // ===== 그리드 =====
@@ -98,8 +136,17 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("birth", "생년월일");
             grid.Columns.Add("phone", "연락처");
             grid.Columns.Add("edu", "과정");
+            grid.Columns.Add("batch", "기수");
             grid.Columns.Add("dorm", "생활관");
             grid.AddTextActionColumns();
+
+            grid.Columns["name"].FillWeight = 130;
+            grid.Columns["birth"].FillWeight = 110;
+            grid.Columns["phone"].FillWeight = 130;
+            grid.Columns["edu"].FillWeight = 280;
+            grid.Columns["batch"].FillWeight = 70;
+            grid.Columns["dorm"].FillWeight = 90;
+
             grid.ActionClicked += OnRowAction;
         }
 
@@ -118,8 +165,10 @@ namespace EDU_HUB_AI.View
 
             foreach(var s in _pageItems)
             {
-                var eduName = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId)?.eduName ?? s.eduId;
-                grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, eduName, DormLabel(s.dormYn));
+                var edu = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId);
+                var eduName = edu?.eduName ?? s.eduId;
+                var batchLabel = edu?.batchNumber is > 0 ? $"{edu.batchNumber}기" : "-";
+                grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, eduName, batchLabel, DormLabel(s.dormYn));
             }
             grid.ResumeLayout();
         }
@@ -131,10 +180,34 @@ namespace EDU_HUB_AI.View
             var created = StudentEditModal.Show(this.FindForm(), null);
             if (created == null) return;
 
-            var res = await _adminStudentController.InsertStudent(created);
-            if (res?.Status == 200)
+            var overlay = LoadingOverlay.Create(bodyPanel, "등록 중...");
+            _adminStudentController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중... \n재시도 {attempt}/{max}");
+
+            try
             {
-                await LoadAndRender(int.MaxValue);
+                var res = await _adminStudentController.InsertStudent(created);
+                if (res?.Status == 200)
+                {
+                    await LoadAndRender(int.MaxValue, showOverlay: false);
+                }
+                else
+                {
+                    MessageBox.Show(res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch(ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _adminStudentController.OnRetry = null;
+                overlay.Close();
+                overlay.Dispose();
             }
         }
 
@@ -148,26 +221,76 @@ namespace EDU_HUB_AI.View
                 var edited = StudentEditModal.Show(this.FindForm(), target);
                 if (edited == null) return;
 
-                var res = await _adminStudentController.UpdateStudent(target.studentId, edited);
-                if (res?.Status == 200)
+                var overlay = LoadingOverlay.Create(bodyPanel, "수정 중...");
+                _adminStudentController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
+                try
                 {
-                    var idx = _all.IndexOf(target);
-                    if (idx >= 0) _all[idx] = edited;
-                    ApplyFilter();
-                    RenderPage(pagination1.PageIndex);
+                    var res = await _adminStudentController.UpdateStudent(target.studentId, edited);
+                    if (res?.Status == 200)
+                    {
+                        var idx = _all.IndexOf(target);
+                        if (idx >= 0) _all[idx] = edited;
+                        ApplyFilter();
+                        RenderPage(pagination1.PageIndex);
+                    }
+                    else
+                    {
+                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                catch (ApiException ex)
+                {
+                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _adminStudentController.OnRetry = null;
+                    overlay.Close();
+                    overlay.Dispose();
                 }
             }
             else if (e.Action == TableAction.Delete)
             {
                 if (!ConfirmModal.Show(this.FindForm(), "삭제 확인", $"'{target.studentName}'을(를) 삭제할까요?"))
-                    return;
-
-                var res = await _adminStudentController.DeleteStudent(target.studentId);
-                if (res?.Status == 200)
                 {
-                    _all.Remove(target);
-                    ApplyFilter();
-                    RenderPage(pagination1.PageIndex);
+                    return;
+                }
+
+                var overlay = LoadingOverlay.Create(bodyPanel, "삭제 중...");
+                _adminStudentController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
+                try
+                {
+                    var res = await _adminStudentController.DeleteStudent(target.studentId);
+                    if (res?.Status == 200)
+                    {
+                        _all.Remove(target);
+                        ApplyFilter();
+                        RenderPage(pagination1.PageIndex);
+                    }
+                    else
+                    {
+                        MessageBox.Show(res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                catch (ApiException ex)
+                {
+                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _adminStudentController.OnRetry = null;
+                    overlay.Close();
+                    overlay.Dispose();
                 }
             }
         }
@@ -191,7 +314,7 @@ namespace EDU_HUB_AI.View
 
             try
             {
-                students = ParseExcel(dialog.FileName);
+                students = ImportStudentsFromExcel(dialog.FileName);
             }
             catch(Exception ex)
             {
@@ -205,52 +328,102 @@ namespace EDU_HUB_AI.View
                 return;
             }
 
-            var res = await _adminStudentController.BatchInsertStudent(students);
+            var overlay = LoadingOverlay.Create(bodyPanel, "업로드 중...");
+            _adminStudentController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
 
-            if(res?.Status == 200)
+            try
             {
-                MessageBox.Show($"{students.Count} 명이 등록되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                await LoadAndRender(int.MaxValue);
+                var res = await _adminStudentController.BatchInsertStudent(students);
+
+                if (res?.Status == 200)
+                {
+                    MessageBox.Show($"{students.Count} 명이 등록되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await LoadAndRender(int.MaxValue, showOverlay: false);
+                }
+                else
+                {
+                    MessageBox.Show(res?.Message ?? "일괄 등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _adminStudentController.OnRetry = null;
+                overlay.Close();
+                overlay.Dispose();
             }
         }
 
-        private List<StudentDto> ParseExcel(string filePath)
+        // ====== 엑셀 파싱 ======
+        private static List<StudentDto> ImportStudentsFromExcel(string filePath)
         {
+            var dt = new ExcelImport().ExcelImporter(filePath);
+            var errors = new List<string>();
             var result = new List<StudentDto>();
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
-            IWorkbook workbook = new XSSFWorkbook(stream);
-            ISheet sheet = workbook.GetSheetAt(0);
-
-            for(int i = 1; i <= sheet.LastRowNum; i++)
+            for (int i = 0; i < dt.Rows.Count; i++)
             {
-                IRow row = sheet.GetRow(i);
-
-                if(row == null)
+                try
                 {
-                    continue;
+                    result.Add(ToStudentDto(dt.Rows[i], i + 2));
                 }
-
-                var studentName = row.GetCell(0)?.ToString()?.Trim();
-                var birthDate = row.GetCell(1)?.ToString()?.Trim();
-                var phoneNumber = row.GetCell(2)?.ToString()?.Trim().Replace("-", "");
-                var eduId = row.GetCell(3)?.ToString()?.Trim();
-                var dormYn = row.GetCell(4)?.ToString()?.Trim();
-
-                if (string.IsNullOrWhiteSpace(studentName) || string.IsNullOrWhiteSpace(birthDate))
+                catch (Exception ex)
                 {
-                    throw new Exception($"{i + 1} 행 : 이름 또는 생년월일이 비어있습니다.");
+                    errors.Add(ex.Message);
                 }
-                result.Add(new StudentDto
-                {
-                    studentName = studentName,
-                    birthDate = birthDate,
-                    phoneNumber = phoneNumber ?? "",
-                    eduId = eduId ?? "",
-                    dormYn = string.IsNullOrWhiteSpace(dormYn) ? "N" : dormYn.ToUpper(),
-                });
             }
+
+            if (errors.Count > 0)
+            {
+                throw new Exception(string.Join("\n", errors));
+            }
+
             return result;
+        }
+
+        private static StudentDto ToStudentDto(DataRow row, int rowNum)
+        {
+            var name = row[0]?.ToString()?.Trim();
+            var rawBirth = row[1]?.ToString()?.Trim();
+            var phone = row[2]?.ToString()?.Trim().Replace("-", "").Replace(" ", "");
+            var eduId = row[3]?.ToString()?.Trim();
+            var dormYn = row[4]?.ToString()?.Trim().ToUpper();
+
+            if (string.IsNullOrWhiteSpace(name)) 
+            {
+                throw new Exception($"{rowNum}행 : 이름이 비어있습니다.");
+            }
+
+            var birthDate = string.IsNullOrWhiteSpace(rawBirth) ? null : DateHelper.NormalizeBirthDate(rawBirth);
+            if(birthDate == null)
+            {
+                throw new Exception($"{rowNum}행 : 생년월일 형식이 올바르지 않습니다. (예: 2000-01-01 / 000101)");
+            }
+            if(!string.IsNullOrEmpty(phone) && (!phone.All(char.IsDigit) || phone.Length != 11 || !PhonePrefixes.Any(p => phone.StartsWith(p))))
+            {
+                throw new Exception($"{rowNum}행 : 유효하지 않은 연락처입니다. (예: 010-1234-5678)");
+            }
+            dormYn = string.IsNullOrWhiteSpace(dormYn) ? "N" : dormYn;
+            if(dormYn != "Y" && dormYn != "N")
+            {
+                throw new Exception($"{rowNum}행 : 생활관 값은 Y 또는 N만 입력 가능합니다.");
+            }
+
+            return new StudentDto
+            {
+                studentName = name,
+                birthDate = birthDate,
+                phoneNumber = phone ?? "",
+                eduId = eduId ?? "",
+                dormYn = dormYn,
+            };
         }
 
         // ===== 필터링 =====
@@ -270,23 +443,26 @@ namespace EDU_HUB_AI.View
             cmbEdu.DisplayMember = "eduName";
             cmbEdu.ValueMember = "eduId";
 
-            var batchList = new[]
-            {
-                new
-                {
-                    Value = 0,
-                    Label = "전체"
-                }
-            }.Concat(_eduInfos.Select(e => e.batchNumber).Distinct().OrderBy(b => b)
-            .Select(b => new
-            {
-                Value = b,
-                Label = $"{b}기"
-            })).ToList();
+            UpdateBatchSource("");
+        }
 
+        private void UpdateBatchSource(string? eduId)
+        {
+            var source = string.IsNullOrEmpty(eduId) ? _eduInfos : _eduInfos.Where(e => e.eduId == eduId).ToList();
+
+            var batchList = new[] { new { Value = 0, Label = "전체" } }
+                            .Concat(source
+                                        .Select(e => e.batchNumber)
+                                        .Distinct()
+                                        .OrderBy(b => b)
+                                        .Select(b => new { Value = b, Label = $"{b}기" }))
+                            .ToList();
+
+            _suppressFilter = true;
             cmbBatch.DataSource = batchList;
             cmbBatch.DisplayMember = "Label";
             cmbBatch.ValueMember = "Value";
+            _suppressFilter = false;
         }
 
         private void ApplyFilter()
