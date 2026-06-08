@@ -25,10 +25,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Config\Component\Domain\EduInfoEditModal.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="View\EduInfoView.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="View\StudentView.cs">
       <SubType>Form</SubType>
