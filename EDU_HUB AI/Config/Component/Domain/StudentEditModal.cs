@@ -14,7 +14,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
         private readonly TextField _txtBirth;
         private readonly TextField _txtPhone;
         private readonly ComboBox _cmbEdu;
-        private readonly TextField _txtDorm;
+        private readonly CheckBox _chkDorm;
 
         private readonly AdminEduInfoController _eduInfoController = new();
 
@@ -41,7 +41,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _txtBirth = AddField(stack, "생년월일", source?.birthDate, "YY-MM-DD", 1);
             _txtPhone = AddField(stack, "연락처", source?.phoneNumber, "010-0000-0000", 2);
             _cmbEdu = AddComboField(stack, "교육과정", 3);
-            _txtDorm = AddField(stack, "생활관 (Y/N)", source?.dormYn, "Y 또는 N", 4);
+            _chkDorm = AddCheckField(stack, "생활관 신청 여부", source?.dormYn == "Y", 4);
 
             Body.Controls.Add(stack);
         }
@@ -79,16 +79,75 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
+            var name = _txtName.Text.Trim();
+            var birth = NormalizeBirthDate(_txtBirth.Text);
+            var phone = _txtPhone.Text.Trim().Replace("-", "").Replace(" ", "");
+            var eduId = _cmbEdu.SelectedValue?.ToString();
+
+            if(string.IsNullOrWhiteSpace(name))
+            {
+                MessageBox.Show("이름을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if(birth == null)
+            {
+                MessageBox.Show("생년월일 형식이 올바르지 않습니다.\n예) 2000-01-01 / 00-01-01 / 000101", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var validPrefixes = new[] {"010", "011" };
+            if(!string.IsNullOrEmpty(phone) && (!phone.All(char.IsDigit) || phone.Length != 11 || !validPrefixes.Any(p => phone.StartsWith(p))))
+            {
+                MessageBox.Show("유효한 연락처를 입력해주세요.\n예) 010-1234-5678", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if(string.IsNullOrEmpty(eduId))
+            {
+                MessageBox.Show("교육과정을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+
             Result = _source != null ? CopyOf(_source) : new StudentDto();
-            Result.studentName = _txtName.Text.Trim();
-            Result.birthDate = _txtBirth.Text.Trim();
-            Result.phoneNumber = _txtPhone.Text.Trim().Replace("-", "");
-            Result.eduId = _cmbEdu.SelectedValue?.ToString() ?? "";
-            Result.dormYn = string.IsNullOrWhiteSpace(_txtDorm.Text.Trim()) ? "N" : _txtDorm.Text.Trim();
+            Result.studentName = name;
+            Result.birthDate = birth;
+            Result.phoneNumber = phone;
+            Result.eduId = eduId;
+            Result.dormYn = _chkDorm.Checked ? "Y" : "N";
             Result.attendYn = Result.attendYn ?? "N";
             base.OnConfirm();
         }
 
+        // ====== 유효성 검사 ======
+        private static string? NormalizeBirthDate(string input)
+        {
+            var s = input.Trim().Replace("-", "").Replace(" ", "");
+
+            if (s.Length == 8 && s.All(char.IsDigit))
+            {
+                s = s.Substring(2);
+            }
+            if (s.Length == 6 && s.All(char.IsDigit))
+            {
+                var year = int.Parse("20" + s.Substring(0, 2));
+                var month = int.Parse(s.Substring(2, 2));
+                var day = int.Parse(s.Substring(4, 2));
+
+                if (month < 1 || month > 12 || day < 1)
+                {
+                    return null;
+                }
+                if(day > DateTime.DaysInMonth(year, month))
+                {
+                    return null;
+                }
+                return s;
+            }
+            return null;
+        }
+
+
+        // ====== UI 헬퍼 ======
         private ComboBox AddComboField(TableLayoutPanel parent, string label, int row)
         {
             parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -140,6 +199,44 @@ namespace EDU_HUB_AI.Config.Component.Domain
             return field;
         }
 
+        private CheckBox AddCheckField(TableLayoutPanel parent, string label, bool isChecked, int row)
+        {
+            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                BackColor = ThemeColors.Surface,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            var lbl = new Label
+            {
+                Text = label,
+                Font = ThemeFonts.BodySm,
+                ForeColor = ThemeColors.TextMuted,
+                AutoSize = true,
+                Dock = DockStyle.Top
+            };
+
+            var chk = new CheckBox
+            {
+                Text = "생활관 배정",
+                Checked = isChecked,
+                Font = ThemeFonts.Body,
+                ForeColor = ThemeColors.Text,
+                AutoSize = true,
+                Dock = DockStyle.Top
+            };
+
+            panel.Controls.Add(chk);
+            panel.Controls.Add(lbl);
+            parent.Controls.Add(panel, 0, row);
+            return chk;
+        }
+
+        // ====== 리턴 ======
         private static StudentDto CopyOf(StudentDto s) => new()
         {
             studentId = s.studentId,

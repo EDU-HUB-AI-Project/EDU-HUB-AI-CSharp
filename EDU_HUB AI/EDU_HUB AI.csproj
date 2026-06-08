@@ -29,7 +29,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="View\Student_Form.cs">
+    <Compile Update="View\StudentView.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
