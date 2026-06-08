@@ -22,7 +22,7 @@ namespace EDU_HUB_AI.Model
         public override string ToString()
         {
             return $"studentId: {studentId}, studentName: {studentName}, birthDate: {birthDate}, " +
-                   $"eduId: {eduId}, attendYn: {attendYn}, dormYn: {dormYn}, ddormitoryId: {dormitoryId}" +
+                   $"eduId: {eduId}, attendYn: {attendYn}, dormYn: {dormYn}, dormitoryId: {dormitoryId}" +
                    $"delYn: {delYn}, createdAt: {createdAt}, phoneNumber: {phoneNumber}";
         }
     }

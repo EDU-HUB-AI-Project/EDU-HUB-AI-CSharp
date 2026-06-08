@@ -22,7 +22,7 @@ namespace EDU_HUB_AI.View
     /// 페이지네이션은 전체 목록을 메모리에 두고 클라이언트에서 자르기
     /// ──────────────────────────────────────────────────────────
     /// </summary>
-    public partial class Student_Form : Form
+    public partial class StudentView : UserControl
     {
         private List<StudentDto> _all = new();
         private List<StudentDto> _pageItems = new();
@@ -32,7 +32,7 @@ namespace EDU_HUB_AI.View
         private List<StudentDto> _filtered = new();
         private readonly AdminEduInfoController _adminEduInfoController = new();
 
-        public Student_Form()
+        public StudentView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
@@ -40,9 +40,9 @@ namespace EDU_HUB_AI.View
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
-            FixDockOrder();
+            //FixDockOrder();
 
-            pageHeader1.SyncClicked += async (_, _) => await LoadAndRender();
+            pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
@@ -55,7 +55,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
-            await LoadAndRender();
+            await LoadAndRender(1);
         }
 
         private void FixDockOrder()
@@ -72,7 +72,7 @@ namespace EDU_HUB_AI.View
             return res?.Data ?? new List<StudentDto>();
         }
 
-        private async Task LoadAndRender()
+        private async Task LoadAndRender(int page)
         {
             _all = await LoadData();
 
@@ -88,7 +88,7 @@ namespace EDU_HUB_AI.View
 
             SetupFilterSource();
             ApplyFilter();
-            RenderPage(1);
+            RenderPage(page);
         }
 
         // ===== 그리드 =====
@@ -118,7 +118,8 @@ namespace EDU_HUB_AI.View
 
             foreach(var s in _pageItems)
             {
-                grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, s.eduId, DormLabel(s.dormYn));
+                var eduName = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId)?.eduName ?? s.eduId;
+                grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, eduName, DormLabel(s.dormYn));
             }
             grid.ResumeLayout();
         }
@@ -127,14 +128,13 @@ namespace EDU_HUB_AI.View
         /// <summary>등록 버튼 Click 이벤트에 연결 (디자이너에서 AppButton 추가 후 연결)</summary>
         protected async void OnCreate(object? sender, EventArgs e)
         {
-            var created = StudentEditModal.Show(this, null);
+            var created = StudentEditModal.Show(this.FindForm(), null);
             if (created == null) return;
 
             var res = await _adminStudentController.InsertStudent(created);
             if (res?.Status == 200)
             {
-                await LoadAndRender();
-                RenderPage(int.MaxValue);
+                await LoadAndRender(int.MaxValue);
             }
         }
 
@@ -145,7 +145,7 @@ namespace EDU_HUB_AI.View
 
             if (e.Action == TableAction.Edit)
             {
-                var edited = StudentEditModal.Show(this, target);
+                var edited = StudentEditModal.Show(this.FindForm(), target);
                 if (edited == null) return;
 
                 var res = await _adminStudentController.UpdateStudent(target.studentId, edited);
@@ -153,18 +153,20 @@ namespace EDU_HUB_AI.View
                 {
                     var idx = _all.IndexOf(target);
                     if (idx >= 0) _all[idx] = edited;
+                    ApplyFilter();
                     RenderPage(pagination1.PageIndex);
                 }
             }
             else if (e.Action == TableAction.Delete)
             {
-                if (!ConfirmModal.Show(this, "삭제 확인", $"'{target.studentName}'을(를) 삭제할까요?"))
+                if (!ConfirmModal.Show(this.FindForm(), "삭제 확인", $"'{target.studentName}'을(를) 삭제할까요?"))
                     return;
 
                 var res = await _adminStudentController.DeleteStudent(target.studentId);
                 if (res?.Status == 200)
                 {
                     _all.Remove(target);
+                    ApplyFilter();
                     RenderPage(pagination1.PageIndex);
                 }
             }
@@ -208,7 +210,7 @@ namespace EDU_HUB_AI.View
             if(res?.Status == 200)
             {
                 MessageBox.Show($"{students.Count} 명이 등록되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                await LoadAndRender();
+                await LoadAndRender(int.MaxValue);
             }
         }
 
