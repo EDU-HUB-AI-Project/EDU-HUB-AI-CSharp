@@ -17,7 +17,7 @@ namespace EDU_HUB_AI.View
         {
             InitializeComponent();
             navigation1.MenuSelected += (_, key) => NavigateTo(key);
-            NavigateTo(MenuKey.Trainees); // 초기 화면 설정, 추후 대시보드로 변경
+            NavigateTo(MenuKey.Dashboard); // 초기 화면 설정, 추후 대시보드로 변경
         }
 
         private void NavigateTo(MenuKey key)
@@ -25,7 +25,8 @@ namespace EDU_HUB_AI.View
             UserControl? view = key switch
             {
                 MenuKey.Trainees => new StudentView(),
-                //MenuKey.Attendance => new AttendanceView(),
+                MenuKey.Dashboard => new DashboardView(),
+                MenuKey.Attendance => new AttendanceView(),
                 MenuKey.Test => new TestView(),
                 _ => null
                 // 여기에 본인 MenuKey 에 따른 UserControl 추가
