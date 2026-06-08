@@ -1,4 +1,5 @@
 using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
@@ -80,7 +81,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
         protected override void OnConfirm()
         {
             var name = _txtName.Text.Trim();
-            var birth = NormalizeBirthDate(_txtBirth.Text);
+            var birth = DateHelper.NormalizeBirthDate(_txtBirth.Text);
             var phone = _txtPhone.Text.Trim().Replace("-", "").Replace(" ", "");
             var eduId = _cmbEdu.SelectedValue?.ToString();
 
@@ -117,35 +118,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Result.attendYn = Result.attendYn ?? "N";
             base.OnConfirm();
         }
-
-        // ====== 유효성 검사 ======
-        private static string? NormalizeBirthDate(string input)
-        {
-            var s = input.Trim().Replace("-", "").Replace(" ", "");
-
-            if (s.Length == 8 && s.All(char.IsDigit))
-            {
-                s = s.Substring(2);
-            }
-            if (s.Length == 6 && s.All(char.IsDigit))
-            {
-                var year = int.Parse("20" + s.Substring(0, 2));
-                var month = int.Parse(s.Substring(2, 2));
-                var day = int.Parse(s.Substring(4, 2));
-
-                if (month < 1 || month > 12 || day < 1)
-                {
-                    return null;
-                }
-                if(day > DateTime.DaysInMonth(year, month))
-                {
-                    return null;
-                }
-                return s;
-            }
-            return null;
-        }
-
 
         // ====== UI 헬퍼 ======
         private ComboBox AddComboField(TableLayoutPanel parent, string label, int row)

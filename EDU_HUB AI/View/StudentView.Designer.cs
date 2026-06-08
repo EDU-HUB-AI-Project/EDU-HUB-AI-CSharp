@@ -25,7 +25,7 @@ namespace EDU_HUB_AI.View
             actionPanel = new ActionBar();
             btnCreate = new AppButton();
             btnExcel = new AppButton();
-            txtSearch = new TextField();
+            txtSearch = new TextBox();
             cmbEdu = new ComboBox();
             cmbBatch = new ComboBox();
             pagination1 = new Pagination();
@@ -34,6 +34,14 @@ namespace EDU_HUB_AI.View
             ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
             actionPanel.SuspendLayout();
             SuspendLayout();
+
+            var pnlEdu = new Panel();
+            var pnlBatch = new Panel();
+            var lblEdu = new Label();
+            var lblBatch = new Label();
+            var pnlSearch = new Panel();
+            var lblSearch = new Label();
+
             // 
             // bodyPanel
             // 
@@ -96,9 +104,9 @@ namespace EDU_HUB_AI.View
             actionPanel.BackColor = Color.FromArgb(244, 246, 249);
             actionPanel.Controls.Add(btnCreate);
             actionPanel.Controls.Add(btnExcel);
-            actionPanel.Controls.Add(txtSearch);
-            actionPanel.Controls.Add(cmbEdu);
-            actionPanel.Controls.Add(cmbBatch);
+            actionPanel.Controls.Add(pnlSearch);
+            actionPanel.Controls.Add(pnlBatch);
+            actionPanel.Controls.Add(pnlEdu);
             actionPanel.Dock = DockStyle.Top;
             actionPanel.FlowDirection = FlowDirection.RightToLeft;
             actionPanel.Location = new Point(34, 40);
@@ -150,31 +158,79 @@ namespace EDU_HUB_AI.View
             btnExcel.UseVisualStyleBackColor = false;
             btnExcel.Variant = ButtonVariant.Secondary;
             btnExcel.Click += btnExcel_Click;
+            //
+            // lblSearch
+            //
+            lblSearch.AutoSize = true;
+            lblSearch.Font = new Font("맑은 고딕", 8.25F);
+            lblSearch.ForeColor = Color.FromArgb(100, 116, 139);
+            lblSearch.Location = new Point(0, 0);
+            lblSearch.Text = "검색";
             // 
             // txtSearch
             // 
-            txtSearch.BackColor = Color.White;
-            txtSearch.Location = new Point(706, 10);
-            txtSearch.MinimumSize = new Size(120, 54);
-            txtSearch.Name = "txtSearch";
-            txtSearch.Size = new Size(369, 81);
+            txtSearch.BorderStyle = BorderStyle.FixedSingle;
+            txtSearch.Font = new Font("맑은 고딕", 9F);
+            txtSearch.Location = new Point(0, 18);
+            txtSearch.Size = new Size(280, 23);
+            txtSearch.PlaceholderText = "이름으로 검색";
             txtSearch.TabIndex = 2;
+            //
+            // pnlSearch
+            //
+            pnlSearch.BackColor = Color.FromArgb(244, 246, 249);
+            pnlSearch.Controls.Add(lblSearch);
+            pnlSearch.Controls.Add(txtSearch);
+            pnlSearch.Size = new Size(280, 54);
+            pnlSearch.Margin = new Padding(0, 0, 0, 0);
             // 
             // cmbEdu
             // 
             cmbEdu.FormattingEnabled = true;
-            cmbEdu.Location = new Point(518, 10);
+            cmbEdu.Location = new Point(0, 18);
             cmbEdu.Name = "cmbEdu";
-            cmbEdu.Size = new Size(182, 33);
+            cmbEdu.Size = new Size(160, 33);
             cmbEdu.TabIndex = 3;
             // 
             // cmbBatch
             // 
             cmbBatch.FormattingEnabled = true;
-            cmbBatch.Location = new Point(330, 10);
+            cmbBatch.Location = new Point(0, 18);
             cmbBatch.Name = "cmbBatch";
-            cmbBatch.Size = new Size(182, 33);
+            cmbBatch.Size = new Size(100, 33);
             cmbBatch.TabIndex = 4;
+            //
+            // lblEdu
+            //
+            lblEdu.AutoSize = true;
+            lblEdu.Font = new Font("맑은 고딕", 8.25F);
+            lblEdu.ForeColor = Color.FromArgb(100, 116, 139);
+            lblEdu.Location = new Point(0, 0);
+            lblEdu.Text = "교육과정";
+            //
+            // pnlEdu
+            //
+            pnlEdu.BackColor = Color.FromArgb(244, 246, 249);
+            pnlEdu.Controls.Add(lblEdu);
+            pnlEdu.Controls.Add(cmbEdu);
+            pnlEdu.Size = new Size(160, 54);
+            pnlEdu.Margin = new Padding(0, 0, 8, 0);
+            //
+            // lblBatch
+            //
+            lblBatch.AutoSize = true;
+            lblBatch.Font = new Font("맑은 고딕", 8.25F);
+            lblBatch.ForeColor = Color.FromArgb(100, 116, 139);
+            lblBatch.Location = new Point(0, 0);
+            lblBatch.Text = "기수";
+            //
+            // pnlBatch
+            //
+            pnlBatch.BackColor = Color.FromArgb(244, 246, 249);
+            pnlBatch.Controls.Add(lblBatch);
+            pnlBatch.Controls.Add(cmbBatch);
+            pnlBatch.Size = new Size(100, 54);
+            pnlBatch.Margin = new Padding(0, 0, 8, 0);
             // 
             // pagination1
             // 
@@ -222,7 +278,7 @@ namespace EDU_HUB_AI.View
         private ActionBar actionPanel;
         private AppButton btnExcel;
         private AppButton btnCreate;
-        private TextField txtSearch;
+        private TextBox txtSearch;
         private ComboBox cmbEdu;
         private ComboBox cmbBatch;
     }
