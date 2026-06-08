@@ -6,22 +6,12 @@ using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
-using Microsoft.VisualBasic;
-using NPOI.HSSF.Util;
-using NPOI.XSSF.UserModel;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+
 
 namespace EDU_HUB_AI.View
 {
-    public partial class AttendForm : Form
+    public partial class AttendanceView : UserControl
     {
         private List<AttendDto> _all = new();
         private List<AttendDto> _pageItems = new();
@@ -30,7 +20,7 @@ namespace EDU_HUB_AI.View
         private readonly ExcelExport excelExport = new ExcelExport();
         private readonly ExcelImport excelImport = new ExcelImport();
 
-        public AttendForm()
+        public AttendanceView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
@@ -38,17 +28,14 @@ namespace EDU_HUB_AI.View
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
-            FixDockOrder();
+            //FixDockOrder();
 
-            pageHeader1.SyncClicked += (_, _) => LoadAndRender();
+            pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
             btnSearch.Click += BtnSearch_Click;
             btnExport.Click += BtnExport_Click;
             btnImport.Click += BtnImport_Click;
-
-            navigation1.ActiveMenu = MenuKey.Attendance;
-            navigation1.MenuSelected += NavigateTo;
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -57,7 +44,7 @@ namespace EDU_HUB_AI.View
             FixDockOrder();
             LoadCmbStatus();
             await LoadCmb();
-            LoadAndRender();
+            await LoadAndRender(1);
         }
 
         private void FixDockOrder()
@@ -79,10 +66,10 @@ namespace EDU_HUB_AI.View
             return res?.Data ?? new List<AttendDto>();
         }
 
-        private async void LoadAndRender()
+        private async Task LoadAndRender(int page)
         {
             _all = await LoadData();
-            RenderPage(1);
+            RenderPage(page);
         }
 
         // ===== 그리드 =====
@@ -120,7 +107,7 @@ namespace EDU_HUB_AI.View
         /// <summary>등록 버튼 Click 이벤트에 연결 (디자이너에서 AppButton 추가 후 연결)</summary>
         protected async void OnCreate(object? sender, EventArgs e)
         {
-            var created = AttendEditModal.Show(this, null);
+            var created = AttendEditModal.Show(this.FindForm(), null);
             if (created == null) return;
 
             // TODO: API 등록 — await new AdminStudentController().InsertStudent(created);
@@ -138,7 +125,7 @@ namespace EDU_HUB_AI.View
 
             if (e.Action == TableAction.Edit)
             {
-                var edited = AttendEditModal.Show(this, target);
+                var edited = AttendEditModal.Show(this.FindForm(), target);
                 if (edited == null) return;
 
                 // TODO: API 수정 — await new AdminStudentController().UpdateStudent(target.studentId, edited);
@@ -149,7 +136,7 @@ namespace EDU_HUB_AI.View
             }
             else if (e.Action == TableAction.Delete)
             {
-                if (!ConfirmModal.Show(this, "삭제 확인", $"'{target.studentName}'을(를) 삭제할까요?"))
+                if (!ConfirmModal.Show(this.FindForm(), "삭제 확인", $"'{target.studentName}'을(를) 삭제할까요?"))
                     return;
 
                 // TODO: API 삭제 — await new AdminStudentController().DeleteStudent(target.studentId);
@@ -216,9 +203,9 @@ namespace EDU_HUB_AI.View
         }
 
         // 버튼 이벤트 
-        private void BtnSearch_Click(object? sender, EventArgs e)
+        private async void BtnSearch_Click(object? sender, EventArgs e)
         {
-            LoadAndRender();
+            await LoadAndRender(1);
         }
         // 엑셀로 내보내기
         private void BtnExport_Click(object? sender, EventArgs e)
@@ -261,7 +248,7 @@ namespace EDU_HUB_AI.View
                         var response = await new AdminAttendaceController().InsertAttendList(list);
                         if (response?.Status == 200)
                         {
-                            LoadAndRender();
+                            LoadAndRender(int.MaxValue);
                             MessageBox.Show("저장되었습니다.");
                         }
                     }
@@ -271,27 +258,6 @@ namespace EDU_HUB_AI.View
                     }
                 }
             }
-        }
-        private void NavigateTo(object? sender, MenuKey key)
-        {
-            switch (key)
-            {
-                case MenuKey.Trainees:
-                    new TableTemplateForm().Show();
-                    this.Close();
-                    break;
-                case MenuKey.Attendance:
-                    break; // 현재 화면이므로 무시
-                case MenuKey.Dormitory:
-                    // new DormitoryForm().Show();
-                    // this.Close();
-                    break;
-            }
-        }
-
-        private void actionPanel_Paint(object sender, PaintEventArgs e)
-        {
-
         }
     }
 }

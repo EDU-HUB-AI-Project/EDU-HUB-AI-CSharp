@@ -180,7 +180,7 @@ namespace EDU_HUB_AI.View
                 case MenuKey.Trainees:
                     break;
                 case MenuKey.Attendance:
-                    new AttendForm().Show();
+                    //new AttendForm().Show();
                     break;
                 case MenuKey.Dormitory:
                     // new DormitoryForm().Show();
