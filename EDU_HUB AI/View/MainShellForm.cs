@@ -27,7 +27,7 @@ namespace EDU_HUB_AI.View
                 MenuKey.Trainees => new StudentView(),
                 MenuKey.Dashboard => new DashboardView(),
                 MenuKey.Attendance => new AttendanceView(),
-                MenuKey.Test => new TestView(),
+                MenuKey.EduInfo => new EduInfoView(),
                 _ => null
                 // 여기에 본인 MenuKey 에 따른 UserControl 추가
             };
