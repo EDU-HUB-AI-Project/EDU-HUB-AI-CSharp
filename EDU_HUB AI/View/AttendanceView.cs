@@ -1,9 +1,9 @@
-﻿using EDU_HUB_AI.Config.Component.Common;
-using EDU_HUB_AI.Config.Component.Data;
+﻿using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
+using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
 using System.Data;
@@ -19,6 +19,7 @@ namespace EDU_HUB_AI.View
         private DataTable _dtAttend = new DataTable();
         private readonly ExcelExport excelExport = new ExcelExport();
         private readonly ExcelImport excelImport = new ExcelImport();
+        private readonly AdminAttendaceController _adminAttendaceController = new AdminAttendaceController();
 
         public AttendanceView()
         {
@@ -62,14 +63,33 @@ namespace EDU_HUB_AI.View
             string? eduId = cmbEdu.SelectedIndex > 0 ? cmbEdu.SelectedValue.ToString() : null;
             string? attendDate = dtpDate.Checked ? dtpDate.Value.ToString("yyyy-MM-dd") : null; ;
             string? status = cmbStatus.SelectedIndex > 0 ? cmbStatus.SelectedItem.ToString() : null;
-            var res = await new AdminAttendaceController().GetAttend(studentId, eduId, attendDate, status);
+            var res = await _adminAttendaceController.GetAttend(studentId, eduId, attendDate, status);
             return res?.Data ?? new List<AttendDto>();
         }
 
-        private async Task LoadAndRender(int page)
+        private async Task LoadAndRender(int page, bool showOverlay = true)
         {
-            _all = await LoadData();
-            RenderPage(page);
+            var overlay = showOverlay ? LoadingOverlay.Create(bodyPanel, "데이터 로딩중...") : null;
+            _adminAttendaceController.OnRetry = (attempt, max) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+            try
+            {
+                _all = await LoadData();
+                RenderPage(page);
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _adminAttendaceController.OnRetry = null;
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         // ===== 그리드 =====
@@ -110,12 +130,41 @@ namespace EDU_HUB_AI.View
             var created = AttendEditModal.Show(this.FindForm(), null);
             if (created == null) return;
 
+            var overlay = LoadingOverlay.Create(bodyPanel, "등록 중...");
+            _adminAttendaceController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중... \n재시도 {attempt}/{max}");
+
             // TODO: API 등록 — await new AdminStudentController().InsertStudent(created);
-            await new AdminAttendaceController().InsertAttend(created);
-            if (string.IsNullOrWhiteSpace(created.attendanceId))
-                created.attendanceId = Guid.NewGuid().ToString("N")[..8];
-            _all.Add(created);
-            RenderPage(int.MaxValue); // 마지막 페이지로 이동해 추가된 행 표시
+            try
+            {
+                var res = await _adminAttendaceController.InsertAttend(created);
+                if (res?.Status == 200)
+                {
+                    await LoadAndRender(int.MaxValue, showOverlay: false);
+                    created.attendanceId = Guid.NewGuid().ToString("N")[..8];
+                    _all.Add(created);
+                    RenderPage(int.MaxValue); // 마지막 페이지로 이동해 추가된 행 표시}
+                }
+                else
+                {
+                    MessageBox.Show(res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (ApiException ex)
+            {
+                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _adminAttendaceController.OnRetry = null;
+                overlay.Close();
+                overlay.Dispose();
+            }
+
+
         }
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
@@ -127,22 +176,67 @@ namespace EDU_HUB_AI.View
             {
                 var edited = AttendEditModal.Show(this.FindForm(), target);
                 if (edited == null) return;
+                var overlay = LoadingOverlay.Create(bodyPanel, "수정 중...");
+                _adminAttendaceController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+                try
+                {
+                    // TODO: API 수정 — await new AdminStudentController().UpdateStudent(target.studentId, edited);
+                    var res = await _adminAttendaceController.UpdateAttendMsg(target.studentId, edited);
+                    if(res?.Status == 200) 
+                    {
+                        var idx = _all.IndexOf(target);
+                        if (idx >= 0) _all[idx] = edited;
+                        RenderPage(pagination1.PageIndex);
+                    }
+                    else
+                    {
+                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    
+                }
+                catch (ApiException ex)
+                {
+                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _adminAttendaceController.OnRetry = null;
+                    overlay.Close();
+                    overlay.Dispose();
+                }
 
-                // TODO: API 수정 — await new AdminStudentController().UpdateStudent(target.studentId, edited);
-                await new AdminAttendaceController().UpdateAttendMsg(target.studentId, edited);
-                var idx = _all.IndexOf(target);
-                if (idx >= 0) _all[idx] = edited;
-                RenderPage(pagination1.PageIndex);
             }
             else if (e.Action == TableAction.Delete)
             {
                 if (!ConfirmModal.Show(this.FindForm(), "삭제 확인", $"'{target.studentName}'을(를) 삭제할까요?"))
                     return;
 
-                // TODO: API 삭제 — await new AdminStudentController().DeleteStudent(target.studentId);
-                await new AdminAttendaceController().DeleteAttend(target.attendanceId);
-                _all.Remove(target);
-                RenderPage(pagination1.PageIndex);
+                var overlay = LoadingOverlay.Create(bodyPanel, "삭제 중...");
+                _adminAttendaceController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+                try
+                {
+                    await new AdminAttendaceController().DeleteAttend(target.attendanceId);
+                    _all.Remove(target);
+                    RenderPage(pagination1.PageIndex);
+                }
+                catch (ApiException ex)
+                {
+                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _adminAttendaceController.OnRetry = null;
+                    overlay.Close();
+                    overlay.Dispose();
+                }
             }
         }
 
@@ -174,7 +268,7 @@ namespace EDU_HUB_AI.View
         // studentId, eduId에 콤보박스 추가
         private async Task LoadCmb()
         {
-            var response = await new AdminAttendaceController().GetAttend(null, null, null, null);
+            var response = await _adminAttendaceController.GetAttend(null, null, null, null);
             if (response?.Status == 200)
             {
                 // 출석 전체조회 응답 데이터를 활용하여 콤보박스 목록을 구성
@@ -237,20 +331,47 @@ namespace EDU_HUB_AI.View
                         List<AttendDto> list = new List<AttendDto>();
                         foreach (DataRow row in dt.Rows)
                         {
+                            string studentId = row[0]?.ToString();
+                            string attendDate = row[1]?.ToString();
+                            string status = row[2]?.ToString();
+                            string message = row[3]?.ToString();
+                            if(string.IsNullOrEmpty(studentId))
+                            {
+                                throw new Exception($"{dt.Rows.IndexOf(row) + 1}행 : 이름이 비어있습니다.");
+                            }
+                            if (string.IsNullOrEmpty(attendDate))
+                            {
+                                MessageBox.Show($"{dt.Rows.IndexOf(row) + 1}행: 출석일자가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                            if (string.IsNullOrEmpty(status))
+                            {
+                                MessageBox.Show($"{dt.Rows.IndexOf(row) + 1}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                            if (status != "출석" && string.IsNullOrEmpty(message))
+                            {
+                                MessageBox.Show($"{dt.Rows.IndexOf(row) + 1}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
                             list.Add(new AttendDto
                             {
-                                studentId = row[0]?.ToString(),
-                                attendDate = row[1]?.ToString(),
-                                status = row[2]?.ToString(),
-                                message = row[3]?.ToString()
+                                studentId = studentId,
+                                attendDate = attendDate,
+                                status = status,
+                                message = message
                             });
                         }
-                        var response = await new AdminAttendaceController().InsertAttendList(list);
+                        var response = await _adminAttendaceController.InsertAttendList(list);
                         if (response?.Status == 200)
                         {
                             LoadAndRender(int.MaxValue);
                             MessageBox.Show("저장되었습니다.");
                         }
+                    }
+                    catch (ApiException ex)
+                    {
+                        MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     catch (Exception ex)
                     {
