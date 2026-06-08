@@ -23,12 +23,12 @@ namespace EDU_HUB_AI.Controller
             Debug.WriteLine("Called::InsertAttend");
             return await _adminAttendaceService.InsertAttend(attendDto);
         }
-        public async Task<ApiResponse<int>> InsertAttendList(List<AttendDto> attendDtoList)
+        public async Task<ApiResponse<int>?> InsertAttendList(List<AttendDto> attendDtoList)
         {
             Debug.WriteLine("Called::InsertAttendList");
             return await _adminAttendaceService.InsertAttendList(attendDtoList);
         }
-        public async Task<ApiResponse<int>> UpdateAttendMsg(string studentId, AttendDto attendDto)
+        public async Task<ApiResponse<int>?> UpdateAttendMsg(string studentId, AttendDto attendDto)
         {
             Debug.WriteLine("Called::UpdateAttendMsg");
             return await _adminAttendaceService.UpdateAttendMsg(studentId, attendDto);
@@ -37,6 +37,12 @@ namespace EDU_HUB_AI.Controller
         {
             Debug.WriteLine("Called::DeleteAttend");
             await _adminAttendaceService.DeleteAttend(attendId);
+        }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _adminAttendaceService.OnRetry;
+            set => _adminAttendaceService.OnRetry = value;
         }
     }
 }

@@ -46,5 +46,11 @@ namespace EDU_HUB_AI.Service
             string url = _url + $"/{attendId}";
             return await _apiClient.Delete<object>(url);
         }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _apiClient.OnRetry;
+            set => _apiClient.OnRetry = value;
+        }
     }
 }
