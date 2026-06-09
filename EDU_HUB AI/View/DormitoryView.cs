@@ -76,6 +76,7 @@ namespace EDU_HUB_AI.View
 
         private async void LoadDormView(bool showOverlay = true)
         {
+            bodyPanel.Controls.Clear();
             var overlay = showOverlay ? LoadingOverlay.Create(bodyPanel, "데이터 로딩중...") : null;
             try
             {
@@ -101,6 +102,11 @@ namespace EDU_HUB_AI.View
                 // ================== 대기 현황 ======================
                 var panel2 = CreateGridPanel("생활관 대기 현황", 20, 500, 400, 300);
                 var res2 = await _adminDormitoryController.GetDormWaiting();
+                foreach (var item in res2?.Data)
+                {
+                    Debug.WriteLine(item);
+                }
+                _waitingData = res2?.Data;
                 _waitingGrid.Dock = DockStyle.Fill;
                 _pagination2.Dock = DockStyle.Bottom;
                 _pagination2.PageChanged += (_, page) => RenderWaiting(page);
@@ -231,8 +237,8 @@ namespace EDU_HUB_AI.View
             _waitingGrid.SuspendLayout();
             _waitingGrid.Rows.Clear();
             foreach (var a in _waitingPageItems)
-                _assignGrid.Rows.Add(a.studentName, a.dormitoryRoomName);
-            _assignGrid.ResumeLayout();
+                _waitingGrid.Rows.Add(a.studentName, a.dormitoryRoomName);
+            _waitingGrid.ResumeLayout();
         }
 
         private void RenderDormIn(int page)
@@ -289,6 +295,7 @@ namespace EDU_HUB_AI.View
                         var idx = _assignData.IndexOf(target);
                         if (idx >= 0) _assignData[idx] = edited;
                         RenderAssign(_pagination1.PageIndex);
+                        LoadDormView(showOverlay: false);
                     }
                     else
                     {
@@ -335,8 +342,9 @@ namespace EDU_HUB_AI.View
                     if (res?.Status == 200)
                     {
                         // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
-                        _dormInData.Remove(target);
+                        _waitingData.Remove(target);
                         RenderWaiting(_pagination2.PageIndex);
+                        LoadDormView(showOverlay: false);
                     }
                     else
                     {
@@ -384,6 +392,7 @@ namespace EDU_HUB_AI.View
                         // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
                         _dormInData.Remove(target);
                         RenderDormIn(_pagination3.PageIndex);
+                        LoadDormView(showOverlay: false);
                     }
                     else
                     {
