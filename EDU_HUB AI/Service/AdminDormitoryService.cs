@@ -21,7 +21,12 @@ namespace EDU_HUB_AI.Service
             string url = _url + $"/combo-box";
             return await _apiClient.Get<List<DormitoryDto>>(url);
         }
-
+        public async Task<ApiResponse<List<DormInOutDto>>> GetDormWaiting()
+        {
+            Debug.WriteLine("Called::GetDormWaiting");
+            string url = _url + $"/waiting";
+            return await _apiClient.Get<List<DormInOutDto>>(url);
+        }
         public async Task<ApiResponse<List<DormInOutDto>>> GetDormIn()
         {
             Debug.WriteLine("Called::GetDormIn");

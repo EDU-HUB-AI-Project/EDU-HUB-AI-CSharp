@@ -21,6 +21,12 @@ namespace EDU_HUB_AI.Controller
             return await _adminDormitoryService.GetCmbDorm();
         }
 
+        public async Task<ApiResponse<List<DormInOutDto>>> GetDormWaiting()
+        {
+            Debug.WriteLine("Called::GetDormWaiting");
+            return await _adminDormitoryService.GetDormWaiting();
+        }
+
         public async Task<ApiResponse<List<DormInOutDto>>> GetDormIn()
         {
             Debug.WriteLine("Called::GetDormIn");

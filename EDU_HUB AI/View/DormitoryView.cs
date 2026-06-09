@@ -23,15 +23,20 @@ namespace EDU_HUB_AI.View
     public partial class DormitoryView : UserControl
     {
         private AppDataGrid _assignGrid;
+        private AppDataGrid _waitingGrid;
         private AppDataGrid _dormInGrid;
         private AppDataGrid _dormOutGrid;
 
         private Pagination _pagination1;
         private Pagination _pagination2;
         private Pagination _pagination3;
+        private Pagination _pagination4;
 
         private List<DormAssignDto> _assignData = new();
         private List<DormAssignDto> _assignPageItems = new();
+
+        private List<DormInOutDto> _waitingData = new();
+        private List<DormInOutDto> _waitingPageItems = new();
 
         private List<DormInOutDto> _dormInData = new();
         private List<DormInOutDto> _dormInPageItems = new();
@@ -45,11 +50,13 @@ namespace EDU_HUB_AI.View
             BackColor = ThemeColors.Background;
             bodyPanel.BackColor = ThemeColors.Background;
             _assignGrid = CreateAssignGrid();
+            _waitingGrid = CreateWaitingGrid();
             _dormInGrid = CreateDormInGrid();
             _dormOutGrid = CreateDormOutGrid();
             _pagination1 = new Pagination();
             _pagination2 = new Pagination();
             _pagination3 = new Pagination();
+            _pagination4 = new Pagination();
             pageHeader1.SyncClicked += (_, _) => LoadDormView();
         }
 
@@ -90,38 +97,48 @@ namespace EDU_HUB_AI.View
                 panel1.Controls.Add(_pagination1);
                 bodyPanel.Controls.Add(panel1);
                 RenderAssign(1);
+
                 // ================== 대기 현황 ======================
-                var panel2 = CreateGridPanel("생활관 입실 현황", 570, 500, 400, 300);
+                var panel2 = CreateGridPanel("생활관 대기 현황", 20, 500, 400, 300);
+                var res2 = await _adminDormitoryController.GetDormWaiting();
+                _waitingGrid.Dock = DockStyle.Fill;
+                _pagination2.Dock = DockStyle.Bottom;
+                _pagination2.PageChanged += (_, page) => RenderWaiting(page);
+                panel2.Controls.Add(_waitingGrid);
+                panel2.Controls.Add(_pagination2);
+                bodyPanel.Controls.Add(panel2);
+                RenderWaiting(1);
+
                 // ================== 입실 현황 ======================
                 var panel3 = CreateGridPanel("생활관 입실 현황", 570, 500, 400, 300);
-                var res2 = await _adminDormitoryController.GetDormIn();
-                foreach(var item in res2?.Data)
+                var res3 = await _adminDormitoryController.GetDormIn();
+                foreach(var item in res3?.Data)
                 {
                     Debug.WriteLine(item);
                 }
-                _dormInData = res2?.Data;
+                _dormInData = res3?.Data;
                 _dormInGrid.Dock = DockStyle.Fill;
-                _pagination2.Dock = DockStyle.Bottom;
-                _pagination2.PageChanged += (_, page) => RenderDormIn(page);
+                _pagination3.Dock = DockStyle.Bottom;
+                _pagination3.PageChanged += (_, page) => RenderDormIn(page);
                 panel3.Controls.Add(_dormInGrid);
-                panel3.Controls.Add(_pagination2);
+                panel3.Controls.Add(_pagination3);
                 bodyPanel.Controls.Add(panel3);
                 RenderDormIn(1);
 
                 // ================== 퇴실 현황 ======================
                 var panel4 = CreateGridPanel("생활관 퇴실 현황", 1000, 500, 300, 300);
-                var res3 = await _adminDormitoryController.GetDormOut();
-                foreach (var item in res3?.Data)
+                var res4 = await _adminDormitoryController.GetDormOut();
+                foreach (var item in res4?.Data)
                 {
                     Debug.WriteLine(item);
                 }
-                _dormOutData = res3?.Data;
+                _dormOutData = res4?.Data;
                 _dormOutGrid.AddTextActionColumns(false, false);
                 _dormOutGrid.Dock = DockStyle.Fill;
-                _pagination3.Dock = DockStyle.Bottom;
-                _pagination3.PageChanged += (_, page) => RenderDormOut(page);
+                _pagination4.Dock = DockStyle.Bottom;
+                _pagination4.PageChanged += (_, page) => RenderDormOut(page);
                 panel4.Controls.Add(_dormOutGrid);
-                panel4.Controls.Add(_pagination3);
+                panel4.Controls.Add(_pagination4);
                 bodyPanel.Controls.Add(panel4);
                 RenderDormOut(1);
             }
@@ -151,6 +168,16 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("assignStatus", "배정상태");
             grid.AddTextActionColumns(true, false);
             grid.ActionClicked += OnRowActionAssign;
+            return grid;
+        }
+
+        private AppDataGrid CreateWaitingGrid()
+        {
+            var grid = new AppDataGrid();
+            grid.Columns.Add("studentName", "이름");
+            grid.Columns.Add("dormitoryRoomName", "호실");
+            grid.AddTextActionColumns(true, false);
+            grid.ActionClicked += OnRowActionWaiting;
             return grid;
         }
 
@@ -191,13 +218,30 @@ namespace EDU_HUB_AI.View
             _assignGrid.ResumeLayout();
         }
 
-        private void RenderDormIn(int page)
+        private void RenderWaiting(int page)
         {
-            _pagination2.TotalCount = _dormInData.Count;
+            _pagination2.TotalCount = _waitingData.Count;
             var size = _pagination2.PageSize;
-            var totalPages = Math.Max(1, (int)Math.Ceiling(_dormInData.Count / (double)size));
+            var totalPages = Math.Max(1, (int)Math.Ceiling(_waitingData.Count / (double)size));
             page = Math.Clamp(page, 1, totalPages);
             _pagination2.PageIndex = page;
+
+            _waitingPageItems = _waitingData.Skip((page - 1) * size).Take(size).ToList();
+
+            _waitingGrid.SuspendLayout();
+            _waitingGrid.Rows.Clear();
+            foreach (var a in _waitingPageItems)
+                _assignGrid.Rows.Add(a.studentName, a.dormitoryRoomName);
+            _assignGrid.ResumeLayout();
+        }
+
+        private void RenderDormIn(int page)
+        {
+            _pagination3.TotalCount = _dormInData.Count;
+            var size = _pagination3.PageSize;
+            var totalPages = Math.Max(1, (int)Math.Ceiling(_dormInData.Count / (double)size));
+            page = Math.Clamp(page, 1, totalPages);
+            _pagination3.PageIndex = page;
 
             _dormInPageItems = _dormInData.Skip((page - 1) * size).Take(size).ToList();
 
@@ -207,13 +251,14 @@ namespace EDU_HUB_AI.View
                 _dormInGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.dorm);
             _dormInGrid.ResumeLayout();
         }
+
         private void RenderDormOut(int page)
         {
-            _pagination3.TotalCount = _dormOutData.Count;
-            var size = _pagination3.PageSize;
+            _pagination4.TotalCount = _dormOutData.Count;
+            var size = _pagination4.PageSize;
             var totalPages = Math.Max(1, (int)Math.Ceiling(_dormOutData.Count / (double)size));
             page = Math.Clamp(page, 1, totalPages);
-            _pagination3.PageIndex = page;
+            _pagination4.PageIndex = page;
 
             var pageItems = _dormOutData.Skip((page - 1) * size).Take(size).ToList();
 
@@ -268,6 +313,53 @@ namespace EDU_HUB_AI.View
             }
         }
 
+        private async void OnRowActionWaiting(object? sender, TableActionEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _waitingPageItems.Count) return;
+            var target = _waitingPageItems[e.RowIndex];
+
+            if (e.Action == TableAction.Edit)
+            {
+                if (MessageBox.Show($"{target.studentName} 학생을 입실 처리하시겠습니까?", "입실 확인",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+
+                var overlay = LoadingOverlay.Create(bodyPanel, "처리 중...");
+                _adminDormitoryController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+                try
+                {
+                    var dormitoryDto = new DormitoryDto
+                    {
+                        dormitoryId = target.dormitoryId
+                    };
+                    var res = await _adminDormitoryController.UpdateDormCurrentCnt(target.studentId, dormitoryDto);
+                    if (res?.Status == 200)
+                    {
+                        // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
+                        _dormInData.Remove(target);
+                        RenderWaiting(_pagination2.PageIndex);
+                    }
+                    else
+                    {
+                        MessageBox.Show(res?.Message ?? "처리에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+                catch (ApiException ex)
+                {
+                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally
+                {
+                    _adminDormitoryController.OnRetry = null;
+                    overlay.Close();
+                    overlay.Dispose();
+                }
+            }
+        }
+
         private async void OnRowActionDormOut(object? sender, TableActionEventArgs e)
         {
             if (e.RowIndex < 0 || e.RowIndex >= _dormInPageItems.Count) return;
@@ -291,7 +383,7 @@ namespace EDU_HUB_AI.View
                     {
                         // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
                         _dormInData.Remove(target);
-                        RenderDormIn(_pagination2.PageIndex);
+                        RenderDormIn(_pagination3.PageIndex);
                     }
                     else
                     {
