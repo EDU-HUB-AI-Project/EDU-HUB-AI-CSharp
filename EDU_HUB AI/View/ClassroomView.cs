@@ -37,12 +37,12 @@ namespace EDU_HUB_AI.View
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
-            //FixDockOrder();
 
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
             txtSearch.TextChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
+            cmbFloor.SelectedIndexChanged += OnFloorChanged;
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -75,6 +75,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                InitFloorCombo();
                 ApplyFilter();
                 RenderPage(page);
             }
@@ -85,6 +86,24 @@ namespace EDU_HUB_AI.View
                 overlay?.Dispose();
             }
         }
+
+        private void InitFloorCombo()
+        {
+            var floors = _all
+                    .Select(c => c.floor)
+                    .Distinct()
+                    .OrderBy(f => f)
+                    .Select(f => $"{f}층")
+                    .Prepend("전체")
+                    .ToArray();
+
+            cmbFloor.SelectedIndexChanged -= OnFloorChanged;
+            cmbFloor.Items.Clear();
+            cmbFloor.Items.AddRange(floors);
+            cmbFloor.SelectedIndex = 0;
+            cmbFloor.SelectedIndexChanged += OnFloorChanged;
+        }
+
 
         // ===== 그리드 =====
         private void SetupGrid()
@@ -169,7 +188,9 @@ namespace EDU_HUB_AI.View
             
         }
         
-
+        //
+        // 필터링
+        //
         private void ApplyFilter()
         {
             var result = _all.AsEnumerable();
@@ -178,7 +199,18 @@ namespace EDU_HUB_AI.View
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(c => c.classroomName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
+            if(cmbFloor.SelectedItem is string selected && selected != "전체")
+            {
+                var floor = int.Parse(selected.Replace("층", ""));
+                result = result.Where(c => c.floor == floor);
+            }
             _filtered = result.ToList();
+        }
+
+        private void OnFloorChanged(object? sender, EventArgs e)
+        {
+            ApplyFilter();
+            RenderPage(1);
         }
     }
 }

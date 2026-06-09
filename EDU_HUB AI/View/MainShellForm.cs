@@ -28,7 +28,6 @@ namespace EDU_HUB_AI.View
                 MenuKey.Facilities => new CafeteriaView(),
                 MenuKey.Dashboard => new DashboardView(),
                 MenuKey.Attendance => new AttendanceView(),
-                MenuKey.Facilities => new FacilityLocationView(),
                 MenuKey.EduInfo => new EduInfoView(),
                 MenuKey.Classroom => new ClassroomView(),
                 _ => null

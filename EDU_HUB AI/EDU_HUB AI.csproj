@@ -28,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Config\Component\Domain\ClassroomEditModal.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Config\Component\Domain\EduInfoEditModal.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -35,6 +38,9 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="View\ClassroomView.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="View\EduInfoView.cs">
       <SubType>UserControl</SubType>
