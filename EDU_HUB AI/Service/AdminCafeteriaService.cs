@@ -53,14 +53,6 @@ namespace EDU_HUB_AI.Service
             return await _apiClient.Delete<int>(url);
         }
 
-        public async Task<ApiResponse<List<CafeteriaDto>>> GetCafeteriaList()
-        {
-            Debug.WriteLine("Called::GetCafeteriaList");
-            string today = DateTime.Now.ToString("yyyy-MM");
-            string url = _url + $"/{today}";
-            return await _apiClient.Get<List<CafeteriaDto>>(url);
-        }
-
         public async Task<ApiResponse<Dictionary<string, object>>> CreateCafeteriaList(List<CafeteriaDto> list)
         {
             Debug.WriteLine("Called::CreateCafeteriaLit");
