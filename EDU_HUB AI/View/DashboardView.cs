@@ -1,4 +1,5 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
@@ -15,8 +16,12 @@ namespace EDU_HUB_AI.View
     public partial class DashboardView : UserControl
     {
         private AdminDashBoardController _adminDashBoardController = new AdminDashBoardController();
-        public DashboardView()
+
+        private readonly Action<MenuKey, string?>? _navigateTo;
+
+        public DashboardView(Action<MenuKey, string?>? navigateTo = null)
         {
+            _navigateTo = navigateTo;
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
@@ -40,13 +45,14 @@ namespace EDU_HUB_AI.View
             {
                 // =================== 데이터 불러오기 ===================
 
-                var res1 = await new AdminDashBoardController().GetAttendCount();
-                var res2 = await new AdminDashBoardController().GetPopularFeature();
-                var res3 = await new AdminDashBoardController().GetDormStats();
-                var res4 = await new AdminDashBoardController().GetPrintCountByHour();
-                var res5 = await new AdminDashBoardController().GetLogTop10();
+                var res1 = await _adminDashBoardController.GetAttendCount();
+                var res2 = await _adminDashBoardController.GetPopularFeature();
+                var res3 = await _adminDashBoardController.GetDormStats();
+                var res4 = await _adminDashBoardController.GetPrintCountByHour();
+                var res5 = await _adminDashBoardController.GetLogTop10();
+                var res6 = await _adminDashBoardController.GetEduStats();
                 if (res1?.Status != 200 || res2?.Status != 200 ||
-                    res3?.Status != 200 || res4?.Status != 200 || res5?.Status != 200) return;
+                    res3?.Status != 200 || res4?.Status != 200 || res5?.Status != 200 || res6?.Status != 200) return;
 
                 // =============  출석현황에 사용할 데이터 ===============
 
@@ -74,54 +80,90 @@ namespace EDU_HUB_AI.View
                 string GetRatio(int value) =>
                     total > 0 ? $"{value} / {total} ({(double)value / total * 100:F2}%)" : "0 / 0 (0%)";
 
+                // ================= 교육 과정 관련 데이터 ===================
+                int activeEduCount = res6.Data["ACTIVE_EDU_COUNT"].GetInt32();
+                int totalStudentsEdu = res6.Data["TOTAL_STUDENTS"].GetInt32();
+                double avgAttendRate = res6.Data["AVG_ATTEND_RATE"].GetDouble();
+                int warningEduCount = res6.Data["WARNING_EDU_COUNT"].GetInt32();
+
                 bodyPanel.Controls.Clear();
 
-                // ========================== 출석 현황 ===================================
+                int W = bodyPanel.ClientSize.Width;
+                int gap = 20;
 
-                bodyPanel.Controls.Add(new CardControl
+                // ========================== 출석 현황 ===================================
+                int cardW = (W - 3 * gap) / 4;
+
+                var cardAttend = new CardControl
                 {
                     Title = "출석 현황",
                     Value = $"{attend}명",
                     SubText = GetRatio(attend),
                     AccentColor = Color.Green,
-                    Location = new Point(20, 20)
-                });
-                bodyPanel.Controls.Add(new CardControl
+                    Size = new Size(cardW, 165),
+                    Location = new Point(0, 0),
+                    LinkText = "바로가기 →"
+                };
+
+                var cardAbsence = new CardControl
                 {
                     Title = "결석 현황",
                     Value = $"{absence}명",
                     SubText = GetRatio(absence),
                     AccentColor = Color.FromArgb(220, 53, 69),
-                    Location = new Point(340, 20)
-                });
-                bodyPanel.Controls.Add(new CardControl
+                    Size = new Size(cardW, 165),
+                    Location = new Point(cardW + gap, 0),
+                    LinkText = "바로가기 →"
+                };
+
+                var cardLate = new CardControl
                 {
                     Title = "지각 현황",
                     Value = $"{late}명",
                     SubText = GetRatio(late),
                     AccentColor = Color.DarkOrange,
-                    Location = new Point(660, 20)
-                });
-                bodyPanel.Controls.Add(new CardControl
+                    Size = new Size(cardW, 165),
+                    Location = new Point(2 * (cardW + gap), 0),
+                    LinkText = "바로가기 →"
+                };
+
+                var cardEarlyLeave = new CardControl
                 {
                     Title = "조퇴 현황",
                     Value = $"{earlyLeave}명",
                     SubText = GetRatio(earlyLeave),
                     AccentColor = Color.DarkGoldenrod,
-                    Location = new Point(980, 20)
-                });
+                    Size = new Size(cardW, 165),
+                    Location = new Point(3 * (cardW + gap), 0),
+                    LinkText = "바로가기 →"
+                };
 
-                var barPanel = CreateChartPanel("출석 현황 분포", 20, 170, 1260, 180);
+                cardAttend.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "출석");
+                cardAbsence.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "결석");
+                cardLate.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "지각");
+                cardEarlyLeave.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "조퇴");
+
+                bodyPanel.Controls.Add(cardAttend);
+                bodyPanel.Controls.Add(cardAbsence);
+                bodyPanel.Controls.Add(cardLate);
+                bodyPanel.Controls.Add(cardEarlyLeave);
+
+                // ========================== 출석 현황 끝 =================================
+                // -------------------------------------------------------------------------
+                // ========================== 출석 현황 분포 ================================
+                int barY = 165 + gap;
+                var barPanel = CreateChartPanel("출석 현황 분포", 0, barY, W, 180);
+                
                 var btnAttend = new AppButton
                 {
-                    Location = new Point(1130, 6),
+                    Location = new Point(W - 160, 6),
                     Size = new Size(150, 10),
                     Text = "출석현황"
                 };
                 var adminChart = new CartesianChart
                 {
                     Location = new Point(30, 50),
-                    Size = new Size(1200, 105),
+                    Size = new Size(W - 60, 105),
                     Series = new ISeries[]
                     {
                     new StackedRowSeries<double> {
@@ -162,11 +204,16 @@ namespace EDU_HUB_AI.View
                 barPanel.Controls.Add(btnAttend);
                 bodyPanel.Controls.Add(barPanel);
 
-                // ========================== 출석 현황 끝===================================
+                // ========================== 출석 현황 분포 끝===================================
                 // --------------------------------------------------------------------------
                 // ========================== 인기 기능 =====================================
 
-                var piePanel = CreateChartPanel("인기 기능", 20, 360, 400, 330);
+                int midY = barY + 180 + gap;
+                int pieW = (int)((W - 2 * gap) * 0.30);
+                int dormW = (int)((W - 2 * gap) * 0.22);
+                int printW = W - pieW - dormW - 2 * gap;
+
+                var piePanel = CreateChartPanel("인기 기능", 0, midY, pieW, 330);
                 piePanel.Controls.Add(new PieChart
                 {
                     Dock = DockStyle.Fill,
@@ -183,7 +230,7 @@ namespace EDU_HUB_AI.View
                 // --------------------------------------------------------------------------
                 // ======================== 생활관 입실 현황 ================================
 
-                var dormPanel = CreateChartPanel("생활관 입실 현황", 440, 360, 300, 330);
+                var dormPanel = CreateChartPanel("생활관 입실 현황", pieW + gap, midY, dormW, 330);
                 dormPanel.Controls.Add(new PieChart
                 {
                     Dock = DockStyle.Fill,
@@ -210,7 +257,7 @@ namespace EDU_HUB_AI.View
                 // --------------------------------------------------------------------------
                 // ======================== 명찰 발급 트래픽 ================================
 
-                var printPanel = CreateChartPanel("명찰 발급 시간대", 760, 360, 520, 330);
+                var printPanel = CreateChartPanel("명찰 발급 시간대", pieW + gap + dormW + gap, midY, printW, 330);
                 printPanel.Controls.Add(new CartesianChart
                 {
                     Dock = DockStyle.Fill,
@@ -234,13 +281,19 @@ namespace EDU_HUB_AI.View
                 // ======================== 명찰 발급 트래픽 끝 =============================
                 // --------------------------------------------------------------------------
                 // ======================== 최근 키오스크 연동 ==============================
+
+                int botY = midY + 330 + gap;
+                int logW = pieW;
+                int remaining = W - logW - gap;
+                int eduCardW = (remaining - gap) / 2;
+                int eduRow2Y = botY + 165 + gap;
+
                 var dgvLogTop10 = new AppDataGrid();
                 dgvLogTop10.Dock = DockStyle.Fill;
                 dgvLogTop10.Columns.Add("createdAt", "시간");
                 dgvLogTop10.Columns.Add("action", "활동내역");
                 dgvLogTop10.Width = 380;
-                var logGrid = CreateChartPanel("최근 키오스크 연동 이벤트", 20, 700, 400, 330);
-                logGrid.Controls.Add(dgvLogTop10);
+                var logGrid = CreateChartPanel("최근 키오스크 연동 이벤트", 0, botY, logW, 330);
                 dgvLogTop10.Rows.Clear();
                 foreach (var item in res5?.Data)
                 {
@@ -251,6 +304,65 @@ namespace EDU_HUB_AI.View
                 logGrid.Controls.Add(dgvLogTop10);
                 bodyPanel.Controls.Add(logGrid);
                 // ====================== 최근 키오스크 연동 끝 =============================
+                // --------------------------------------------------------------------------
+                // ========================== 교육 과정 연동 ================================
+
+                var cardActiveEdu = new CardControl
+                {
+                    Title = "진행중 과정",
+                    Value = $"{activeEduCount}개",
+                    SubText = "현재 운영중인 교육과정",
+                    AccentColor = Color.SteelBlue,
+                    Size = new Size(eduCardW, 165),
+                    Location = new Point(logW + gap, botY),
+                    LinkText = "바로가기 →"
+                };
+
+                var cardTotalStudents = new CardControl
+                {
+                    Title = "총 수강생",
+                    Value = $"{totalStudentsEdu}명",
+                    SubText = "진행중 과정 수강생 합계",
+                    AccentColor = Color.Green,
+                    Size = new Size(eduCardW, 165),
+                    Location = new Point(logW + gap + eduCardW + gap, botY),
+                    LinkText = "바로가기 →"
+                };
+
+                var cardAvgAttend = new CardControl
+                {
+                    Title = "평균 출석률",
+                    Value = $"{avgAttendRate:F2}%",
+                    SubText = "오늘 기준 전체 출석률",
+                    AccentColor = Color.DarkOrange,
+                    Size = new Size(eduCardW, 165),
+                    Location = new Point(logW + gap, eduRow2Y),
+                    LinkText = "바로가기 →"
+                };
+
+                var cardWarning = new CardControl
+                {
+                    Title = "주의 필요 과정",
+                    Value = $"{warningEduCount}개",
+                    SubText = "출석률 80% 미만 과정",
+                    AccentColor = Color.Red,
+                    Size = new Size(eduCardW, 165),
+                    Location = new Point(logW + gap + eduCardW + gap, eduRow2Y),
+                    LinkText = "바로가기 →"
+                };
+
+                cardActiveEdu.Click += (_, _) => _navigateTo?.Invoke(MenuKey.EduInfo, "ACTIVE");
+                cardTotalStudents.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Trainees, null);
+                cardAvgAttend.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "TODAY");
+                cardWarning.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "TODAY");
+
+
+                bodyPanel.Controls.Add(cardActiveEdu);
+                bodyPanel.Controls.Add(cardTotalStudents);
+                bodyPanel.Controls.Add(cardAvgAttend);
+                bodyPanel.Controls.Add(cardWarning);
+
+                // ======================== 교육 과정 연동 끝 ===============================
             }
             catch (ApiException ex)
             {

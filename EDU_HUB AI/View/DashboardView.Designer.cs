@@ -27,7 +27,7 @@ namespace EDU_HUB_AI.View
             bodyPanel.Location = new Point(0, 85);
             bodyPanel.Margin = new Padding(4);
             bodyPanel.Name = "bodyPanel";
-            bodyPanel.Padding = new Padding(31, 32, 31, 32);
+            bodyPanel.Padding = new Padding(0);
             bodyPanel.Size = new Size(1331, 625);
             bodyPanel.TabIndex = 1;
             // 

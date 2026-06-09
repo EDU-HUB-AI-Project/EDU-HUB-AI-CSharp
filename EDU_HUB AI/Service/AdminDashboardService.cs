@@ -2,6 +2,7 @@
 using EDU_HUB_AI.Model;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Security.Policy;
 
 namespace EDU_HUB_AI.Service
 {
@@ -46,6 +47,13 @@ namespace EDU_HUB_AI.Service
             Debug.WriteLine("Called::GetLogTop10");
             string url = _url + "/kiosk-log";
             return await _apiClient.Get<List<Dictionary<string, JsonElement>>>(url);
+        }
+
+        public async Task<ApiResponse<Dictionary<string, JsonElement>>> GetEduStats()
+        {
+            Debug.WriteLine("Called :: GetEduStats()");
+            string url = _url + "/edu-stats";
+            return await _apiClient.Get<Dictionary<string, JsonElement>>(url);
         }
 
         public Action<int, int>? OnRetry

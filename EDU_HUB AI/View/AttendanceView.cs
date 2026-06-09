@@ -21,6 +21,8 @@ namespace EDU_HUB_AI.View
         private readonly ExcelImport excelImport = new ExcelImport();
         private readonly AdminAttendaceController _adminAttendaceController = new AdminAttendaceController();
 
+        private string? _pendingFilter;
+
         public AttendanceView()
         {
             InitializeComponent();
@@ -44,6 +46,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             LoadCmbStatus();
+            ApplyPendingFilter();
             await LoadCmb();
             await LoadAndRender(1);
         }
@@ -379,6 +382,38 @@ namespace EDU_HUB_AI.View
                     }
                 }
             }
+        }
+
+        // ============ 필터링 ============
+        public void SetFilter(string filter)
+        {
+            _pendingFilter = filter;
+        }
+
+        private void ApplyPendingFilter()
+        {
+            if(_pendingFilter == null)
+            {
+                return;
+            }
+
+            switch (_pendingFilter)
+            {
+                case "TODAY":
+                    dtpDate.Checked = true;
+                    dtpDate.Value = DateTime.Today;
+                    break;
+                case "출석":
+                case "결석":
+                case "지각":
+                case "조퇴":
+                    dtpDate.Checked = true;
+                    dtpDate.Value = DateTime.Today;
+                    cmbStatus.SelectedItem = _pendingFilter;
+                    break;
+            }
+
+            _pendingFilter = null;
         }
     }
 }
