@@ -57,6 +57,9 @@
     <Compile Update="View\FacilityLocationView.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Update="View\TransportView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
