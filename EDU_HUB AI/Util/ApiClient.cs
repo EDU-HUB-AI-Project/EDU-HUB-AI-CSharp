@@ -61,6 +61,55 @@ namespace EDU_HUB_AI.Util
             }
         }
 
+        // multipart 업로드
+        public async Task<ApiResponse<T>> PostMultipartAsync<T>(string url, string filePath)
+        {
+            int attempt = 0;
+            while (true)
+            {
+                try
+                {
+                    attempt++;
+                    await using var stream = File.OpenRead(filePath);
+                    using var form = new MultipartFormDataContent();
+                    var fileContent = new StreamContent(stream);
+                    fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+                        GetImageMediaType(Path.GetExtension(filePath)));
+                    form.Add(fileContent, "file", Path.GetFileName(filePath));
+
+                    var response = await _httpClient.PostAsync(url, form);
+                    var res = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ApiResponse<T>>(res);
+                    if (result?.Status >= 400) throw new ApiException(result.Status, result.Message ?? "업로드 실패");
+                    return result;
+                }
+                catch (ApiException ex) when (ex.Status >= 400 && ex.Status < 500)
+                {
+                    throw;
+                }
+                catch (ApiException ex) when (ex.Status == 500)
+                {
+                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
+                    if (attempt >= _maxAttempt) throw;
+                    await Task.Delay(2000);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
+                    if (attempt >= _maxAttempt) throw;
+                    await Task.Delay(2000);
+                }
+            }
+        }
+
+        private static string GetImageMediaType(string ext) => ext.ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+
         public async Task<ApiResponse<T>> Post<T>(string? url, Object? body)
         {
             int attempt = 0;

@@ -7,6 +7,7 @@ namespace EDU_HUB_AI.Config.Component.Common
         Attendance,
         Dormitory,
         Facilities,
+        Cafeteria,
         Transport,
         EduInfo,
         Classroom
