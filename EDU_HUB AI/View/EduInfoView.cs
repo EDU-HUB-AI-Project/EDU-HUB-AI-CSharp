@@ -28,6 +28,7 @@ namespace EDU_HUB_AI.View
         private readonly AdminEduInfoController _adminEduInfoController = new AdminEduInfoController();
 
         private List<EduInfoDto> _filtered = new();
+        private string? _activeFilter;
 
         public EduInfoView()
         {
@@ -247,17 +248,30 @@ namespace EDU_HUB_AI.View
                 }
             }
         }
-        
 
+        // ================= 필터 =================
         private void ApplyFilter()
         {
             var result = _all.AsEnumerable();
+
+            if(_activeFilter == "ACTIVE")
+            {
+                var today = DateTime.Today;
+                result = result.Where(e => DateTime.TryParseExact(e.startDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var start)
+                                && DateTime.TryParseExact(e.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var end)
+                                && start <= today && end >= today);
+            }
 
             var search = txtSearch.Text.Trim();
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(e => e.eduName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+        }
+
+        public void SetFilter(string filter)
+        {
+            _activeFilter = filter;
         }
     }
 }

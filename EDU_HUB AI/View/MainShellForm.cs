@@ -20,7 +20,7 @@ namespace EDU_HUB_AI.View
             NavigateTo(MenuKey.Dashboard); // 초기 화면 설정, 추후 대시보드로 변경
         }
 
-        private void NavigateTo(MenuKey key)
+        private void NavigateTo(MenuKey key, string? filter = null)
         {
             UserControl? view = key switch
             {
@@ -28,7 +28,7 @@ namespace EDU_HUB_AI.View
                 MenuKey.Facilities => new FacilityLocationView(),
                 MenuKey.Cafeteria => new CafeteriaView(),
                 MenuKey.Transport => new TransportView(),
-                MenuKey.Dashboard => new DashboardView(),
+                MenuKey.Dashboard => new DashboardView(NavigateTo),
                 MenuKey.Attendance => new AttendanceView(),
                 MenuKey.EduInfo => new EduInfoView(),
                 MenuKey.Classroom => new ClassroomView(),
@@ -40,6 +40,11 @@ namespace EDU_HUB_AI.View
             if(view == null)
             {
                 return;
+            }
+            if(filter != null)
+            {
+                if(view is AttendanceView av) av.SetFilter(filter);
+                if (view is EduInfoView ev) ev.SetFilter(filter);
             }
 
             contentPanel.Controls.Clear();
