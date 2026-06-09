@@ -23,10 +23,10 @@ namespace EDU_HUB_AI.View
             bodyPanel = new Panel();
             grid = new AppDataGrid();
             actionPanel = new ActionBar();
-            btnCreate = new AppButton();
             txtSearch = new TextBox();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
+            cmbFloor = new ComboBox();
             bodyPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
             actionPanel.SuspendLayout();
@@ -34,6 +34,8 @@ namespace EDU_HUB_AI.View
 
             var pnlSearch = new Panel();
             var lblSearch = new Label();
+            var pnlFloor = new Panel();
+            var lblFloor = new Label();
 
             // 
             // bodyPanel
@@ -94,9 +96,9 @@ namespace EDU_HUB_AI.View
             // 
             // actionPanel
             // 
-            actionPanel.BackColor = Color.FromArgb(244, 246, 249);
-            actionPanel.Controls.Add(btnCreate);
+            actionPanel.BackColor = Color.FromArgb(244, 246, 249);            
             actionPanel.Controls.Add(pnlSearch);
+            actionPanel.Controls.Add(pnlFloor);
             actionPanel.Dock = DockStyle.Top;
             actionPanel.FlowDirection = FlowDirection.RightToLeft;
             actionPanel.Location = new Point(34, 40);
@@ -106,26 +108,6 @@ namespace EDU_HUB_AI.View
             actionPanel.Size = new Size(1411, 90);
             actionPanel.TabIndex = 2;
             actionPanel.WrapContents = false;
-            // 
-            // btnCreate
-            // 
-            btnCreate.AutoSize = true;
-            btnCreate.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnCreate.BackColor = Color.FromArgb(37, 99, 235);
-            btnCreate.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnCreate.FlatAppearance.MouseOverBackColor = Color.FromArgb(29, 78, 216);
-            btnCreate.FlatStyle = FlatStyle.Flat;
-            btnCreate.Font = new Font("맑은 고딕", 9F);
-            btnCreate.ForeColor = Color.White;
-            btnCreate.Location = new Point(1257, 7);
-            btnCreate.Margin = new Padding(0);
-            btnCreate.Name = "btnCreate";
-            btnCreate.Padding = new Padding(17, 10, 17, 10);
-            btnCreate.Size = new Size(154, 57);
-            btnCreate.TabIndex = 0;
-            btnCreate.Tag = ButtonVariant.Primary;
-            btnCreate.Text = "과정 추가";
-            btnCreate.UseVisualStyleBackColor = false;
             //
             // lblSearch
             //
@@ -141,7 +123,7 @@ namespace EDU_HUB_AI.View
             txtSearch.Font = new Font("맑은 고딕", 9F);
             txtSearch.Location = new Point(0, 18);
             txtSearch.Size = new Size(280, 23);
-            txtSearch.PlaceholderText = "과정명으로 검색";
+            txtSearch.PlaceholderText = "강의실명으로 검색";
             txtSearch.TabIndex = 2;
             //
             // pnlSearch
@@ -151,6 +133,30 @@ namespace EDU_HUB_AI.View
             pnlSearch.Controls.Add(txtSearch);
             pnlSearch.Size = new Size(280, 54);
             pnlSearch.Margin = new Padding(0, 0, 0, 0);
+            //
+            // cmbFloor
+            //
+            cmbFloor.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFloor.Font = new Font("맑은 고딕", 9F);
+            cmbFloor.Location = new Point(0, 18);
+            cmbFloor.Size = new Size(120, 23);
+            cmbFloor.TabIndex = 3;
+            //
+            // lblFloor
+            //
+            lblFloor.AutoSize = true;
+            lblFloor.Font = new Font("맑은 고딕", 8.25F);
+            lblFloor.ForeColor = Color.FromArgb(100, 116, 139);
+            lblFloor.Location = new Point(0, 0);
+            lblFloor.Text = "층";
+            //
+            // pnlFloor
+            //
+            pnlFloor.BackColor = Color.FromArgb(244, 246, 249);
+            pnlFloor.Controls.Add(lblFloor);
+            pnlFloor.Controls.Add(cmbFloor);
+            pnlFloor.Size = new Size(120, 54);
+            pnlFloor.Margin = new Padding(0, 0, 12, 0);
             // 
             // pagination1
             // 
@@ -174,15 +180,15 @@ namespace EDU_HUB_AI.View
             pageHeader1.Name = "pageHeader1";
             pageHeader1.Size = new Size(1479, 107);
             pageHeader1.TabIndex = 0;
-            pageHeader1.Title = "교육과정 관리";
+            pageHeader1.Title = "강의실 관리";
             // 
-            // EduInfoView
+            // ClassroomView
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(bodyPanel);
             Controls.Add(pageHeader1);
-            Name = "EduInfoView";
+            Name = "ClassroomView";
             Size = new Size(1479, 888);
             bodyPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
@@ -196,7 +202,7 @@ namespace EDU_HUB_AI.View
         private AppDataGrid grid;
         private Pagination pagination1;
         private ActionBar actionPanel;
-        private AppButton btnCreate;
+        private ComboBox cmbFloor;
         private TextBox txtSearch;
     }
 }
