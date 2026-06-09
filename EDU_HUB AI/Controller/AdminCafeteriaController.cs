@@ -43,17 +43,12 @@ namespace EDU_HUB_AI.Controller
             return await _adminCafeteriaService.DeleteCafeteria(id);
         }
 
-        public async Task<ApiResponse<List<CafeteriaDto>>> GetCafeteriaList()
-        {
-            Debug.WriteLine("Called::GetCafeteriaList");
-            return await _adminCafeteriaService.GetCafeteriaList();
-        }
-
         public async Task<ApiResponse<Dictionary<string, object>>> CreateCafeteriaList(List<CafeteriaDto> list)
         {
             Debug.WriteLine("Called::CreateCafeteriaList");
             return await _adminCafeteriaService.CreateCafeteriaList(list);
         }
+
 
         public async Task SaveCafeteriaList(List<CafeteriaDto> dtoList)
         {
