@@ -25,7 +25,9 @@ namespace EDU_HUB_AI.View
             UserControl? view = key switch
             {
                 MenuKey.Trainees => new StudentView(),
-                MenuKey.Facilities => new CafeteriaView(),
+                MenuKey.Facilities => new FacilityLocationView(),
+                MenuKey.Cafeteria => new CafeteriaView(),
+                MenuKey.Transport => new TransportView(),
                 MenuKey.Dashboard => new DashboardView(),
                 MenuKey.Attendance => new AttendanceView(),
                 MenuKey.EduInfo => new EduInfoView(),
