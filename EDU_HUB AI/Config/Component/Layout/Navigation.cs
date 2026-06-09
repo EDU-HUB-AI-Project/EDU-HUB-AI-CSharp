@@ -60,12 +60,13 @@ namespace EDU_HUB_AI.Config.Component.Layout
             ]);
             AddGroup(stack, "콘텐츠",
             [
-                (MenuKey.Facilities, "시설 · 식당", "utensils"),
+                (MenuKey.Facilities, "시설 위치", "facilities"),
+                (MenuKey.Cafeteria, "식당 메뉴", "utensils"),
                 (MenuKey.Transport, "교통 정보", "bus")
             ]);
 
-            scroll.Controls.Add(stack);
             Controls.Add(scroll);
+            scroll.Controls.Add(stack);
             SetActiveMenu(MenuKey.Dashboard, raiseEvent: false);
         }
 

@@ -276,6 +276,12 @@ namespace EDU_HUB_AI.Config.Component.Layout
             FitCardSize();
         }
 
+        protected void SetCardWidth(int width)
+        {
+            _card.Width = width;
+            FitCardSize();
+        }
+
         private void LayoutFooter()
         {
             _btnConfirm.Location = new Point(_footer.Width - 24 - _btnConfirm.Width, (_footer.Height - _btnConfirm.Height) / 2);

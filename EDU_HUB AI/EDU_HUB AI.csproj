@@ -18,6 +18,9 @@
     <None Update="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\facility-location-map.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +35,9 @@
     </Compile>
     <Compile Update="View\StudentView.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="View\FacilityLocationView.cs">
+      <SubType>UserControl</SubType>
     </Compile>
   </ItemGroup>
 
