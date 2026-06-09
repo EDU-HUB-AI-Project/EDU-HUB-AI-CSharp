@@ -56,11 +56,12 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 (MenuKey.Trainees, "교육생 정보", "users"),
                 (MenuKey.Attendance, "출석 현황", "clipboard-check"),
                 (MenuKey.Dormitory, "생활관 배정", "bed-double"),
-                (MenuKey.EduInfo, "교육과정 관리", "eduInfo")
+                (MenuKey.EduInfo, "교육과정 관리", "eduInfo"),
+                (MenuKey.Subject, "과목 관리", "subject")
             ]);
             AddGroup(stack, "콘텐츠",
             [
-                (MenuKey.Classroom, "강의실 관리", "classroom")
+                (MenuKey.Classroom, "강의실 관리", "classroom"),
                 (MenuKey.Facilities, "시설 위치", "facilities"),
                 (MenuKey.Cafeteria, "식당 메뉴", "utensils"),
                 (MenuKey.Transport, "교통 정보", "bus")

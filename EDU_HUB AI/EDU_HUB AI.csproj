@@ -28,7 +28,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Config\Component\Domain\ClassroomEditModal.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Config\Component\Domain\EduInfoEditModal.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Config\Component\Domain\SubjectEditModal.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
@@ -36,7 +42,13 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="View\ClassroomView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Update="View\EduInfoView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="View\SubjectView.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Update="View\StudentView.cs">

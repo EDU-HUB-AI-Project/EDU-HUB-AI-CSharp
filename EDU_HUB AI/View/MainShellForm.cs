@@ -30,9 +30,9 @@ namespace EDU_HUB_AI.View
                 //MenuKey.Test => new TestView(),
                 MenuKey.Dashboard => new DashboardView(),
                 MenuKey.Attendance => new AttendanceView(),
-                MenuKey.Facilities => new FacilityLocationView(),
                 MenuKey.EduInfo => new EduInfoView(),
                 MenuKey.Classroom => new ClassroomView(),
+                MenuKey.Subject => new SubjectView(),
                 _ => null
                 // 여기에 본인 MenuKey 에 따른 UserControl 추가
             };
