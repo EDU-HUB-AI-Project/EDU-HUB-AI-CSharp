@@ -13,8 +13,6 @@ namespace EDU_HUB_AI
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            var form = new StudentView();
-            form.Size = new Size(1920, 1080);
             Application.Run(new MainShellForm());
         }
     }

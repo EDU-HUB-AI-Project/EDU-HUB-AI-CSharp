@@ -40,5 +40,18 @@ namespace EDU_HUB_AI.Service
             string url = _url + "/dorm-stats";
             return await _apiClient.Get<Dictionary<string, JsonElement>>(url);
         }
+
+        public async Task<ApiResponse<List<Dictionary<string, JsonElement>>>> GetLogTop10()
+        {
+            Debug.WriteLine("Called::GetLogTop10");
+            string url = _url + "/kiosk-log";
+            return await _apiClient.Get<List<Dictionary<string, JsonElement>>>(url);
+        }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _apiClient.OnRetry;
+            set => _apiClient.OnRetry = value;
+        }
     }
 }

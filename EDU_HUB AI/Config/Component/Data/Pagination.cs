@@ -97,6 +97,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                 var btn = ButtonStyles.Create(page.ToString(),
                     page == _pageIndex ? ButtonVariant.Primary : ButtonVariant.Ghost, small: true);
                 btn.Width = 32;
+                btn.Padding = new Padding(4, 4, 4, 4);
                 var captured = page;
                 btn.Click += (_, _) => GoToPage(captured);
                 flowPages.Controls.Add(btn);

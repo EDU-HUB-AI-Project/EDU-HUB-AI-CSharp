@@ -16,6 +16,8 @@ namespace EDU_HUB_AI.Util
         // 최대 시도 회수 지정
         private readonly int _maxAttempt = 5;
 
+        public Action<int, int>? OnRetry { get; set; }
+
         public ApiClient()
         {
             _appConfig = JsonSerializer.Deserialize<AppConfig>(File.ReadAllText("config.json"));
@@ -50,17 +52,11 @@ namespace EDU_HUB_AI.Util
                 // 서버 및 기타 예외는 재실행 최대 5회까지
                 catch (ApiException ex) when (ex.Status == 500)
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    // 최대 회수 채우면 종료
-                    if (attempt >= _maxAttempt) throw;
-                    // 2초 후 재실행
-                    await Task.Delay(2000);                  
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
                 catch (Exception ex) // 기존에 정의된 status 이외의 예외
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 } 
             }
         }
@@ -137,15 +133,11 @@ namespace EDU_HUB_AI.Util
                 }
                 catch (ApiException ex) when (ex.Status == 500)
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
                 catch (Exception ex) // 기존에 정의된 status 이외의 예외
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
             }
 
@@ -172,15 +164,11 @@ namespace EDU_HUB_AI.Util
                 }
                 catch (ApiException ex) when (ex.Status == 500)
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
                 catch (Exception ex) // 기존에 정의된 status 이외의 예외
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
             }
                 
@@ -208,15 +196,11 @@ namespace EDU_HUB_AI.Util
                 }
                 catch (ApiException ex) when (ex.Status == 500)
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
                 catch (Exception ex) // 기존에 정의된 status 이외의 예외
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
             }
             
@@ -251,17 +235,22 @@ namespace EDU_HUB_AI.Util
                 }
                 catch (ApiException ex) when (ex.Status == 500)
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
                 catch (Exception ex) // 기존에 정의된 status 이외의 예외
                 {
-                    Debug.WriteLine($"재시도 횟수: {attempt}회", ex.Message);
-                    if (attempt >= _maxAttempt) throw;
-                    await Task.Delay(2000);
+                    if (!await ShouldRetry(attempt, ex)) throw;
                 }
             }
+        }
+
+        private async Task<bool> ShouldRetry(int attempt, Exception ex)
+        {
+            Debug.WriteLine($"재시도 횟수: {attempt}회 - {ex.Message}");
+            if (attempt >= _maxAttempt) return false;
+            OnRetry?.Invoke(attempt, _maxAttempt);
+            await Task.Delay(2000);
+            return true;
         }
     }
 }

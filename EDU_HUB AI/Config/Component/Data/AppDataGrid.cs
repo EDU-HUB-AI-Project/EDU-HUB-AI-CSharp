@@ -106,7 +106,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                     ActiveLinkColor = ThemeColors.PrimaryHover,
                     VisitedLinkColor = ThemeColors.Link,
                     TrackVisitedState = false,
-                    Width = 52,
+                    Width = 72,
                     AutoSizeMode = DataGridViewAutoSizeColumnMode.None
                 });
             }
@@ -123,7 +123,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                     ActiveLinkColor = ThemeColors.Danger,
                     VisitedLinkColor = ThemeColors.LinkDanger,
                     TrackVisitedState = false,
-                    Width = 52,
+                    Width = 72,
                     AutoSizeMode = DataGridViewAutoSizeColumnMode.None
                 });
             }

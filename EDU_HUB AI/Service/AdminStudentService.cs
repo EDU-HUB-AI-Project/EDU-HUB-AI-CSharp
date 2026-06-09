@@ -46,5 +46,11 @@ namespace EDU_HUB_AI.Service
             string url = _url + "/batch";
             return await _apiClient.Post<int>(url, students);
         }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _apiClient.OnRetry;
+            set => _apiClient.OnRetry = value;
+        }
     }
 }

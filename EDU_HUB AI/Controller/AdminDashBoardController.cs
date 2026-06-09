@@ -31,5 +31,16 @@ namespace EDU_HUB_AI.Controller
             Debug.WriteLine("Called::GetDormStats");
             return await _adminDashBoardService.GetDormStats();
         }
+        
+        public async Task<ApiResponse<List<Dictionary<string, JsonElement>>>> GetLogTop10()
+        {
+            Debug.WriteLine("Called::GetLogTop10");
+            return await _adminDashBoardService.GetLogTop10();
+        }
+        public Action<int, int>? OnRetry
+        {
+            get => _adminDashBoardService.OnRetry;
+            set => _adminDashBoardService.OnRetry = value;
+        }
     }
 }

@@ -4,6 +4,7 @@ using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Model;
+using System.Diagnostics;
 
 namespace EDU_HUB_AI.View
 {
@@ -185,6 +186,9 @@ namespace EDU_HUB_AI.View
                 case MenuKey.Dormitory:
                     // new DormitoryForm().Show();
                     // this.Close();
+                    break;
+                case MenuKey.Facilities:
+                    
                     break;
             }
         }

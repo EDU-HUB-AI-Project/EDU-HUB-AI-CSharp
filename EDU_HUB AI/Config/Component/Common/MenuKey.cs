@@ -9,6 +9,7 @@ namespace EDU_HUB_AI.Config.Component.Common
         Facilities,
         Cafeteria,
         Transport,
-        Test
+        EduInfo,
+        Classroom
     }
 }
