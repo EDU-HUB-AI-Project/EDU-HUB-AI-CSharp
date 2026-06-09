@@ -4,7 +4,7 @@ using EDU_HUB_AI.Config.Component.Layout;
 
 namespace EDU_HUB_AI.View
 {
-    partial class StudentView
+    partial class ClassroomView
     {
         private System.ComponentModel.IContainer components = null;
 
@@ -24,10 +24,7 @@ namespace EDU_HUB_AI.View
             grid = new AppDataGrid();
             actionPanel = new ActionBar();
             btnCreate = new AppButton();
-            btnExcel = new AppButton();
             txtSearch = new TextBox();
-            cmbEdu = new ComboBox();
-            cmbBatch = new ComboBox();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             bodyPanel.SuspendLayout();
@@ -35,10 +32,6 @@ namespace EDU_HUB_AI.View
             actionPanel.SuspendLayout();
             SuspendLayout();
 
-            var pnlEdu = new Panel();
-            var pnlBatch = new Panel();
-            var lblEdu = new Label();
-            var lblBatch = new Label();
             var pnlSearch = new Panel();
             var lblSearch = new Label();
 
@@ -103,10 +96,7 @@ namespace EDU_HUB_AI.View
             // 
             actionPanel.BackColor = Color.FromArgb(244, 246, 249);
             actionPanel.Controls.Add(btnCreate);
-            actionPanel.Controls.Add(btnExcel);
             actionPanel.Controls.Add(pnlSearch);
-            actionPanel.Controls.Add(pnlBatch);
-            actionPanel.Controls.Add(pnlEdu);
             actionPanel.Dock = DockStyle.Top;
             actionPanel.FlowDirection = FlowDirection.RightToLeft;
             actionPanel.Location = new Point(34, 40);
@@ -134,30 +124,8 @@ namespace EDU_HUB_AI.View
             btnCreate.Size = new Size(154, 57);
             btnCreate.TabIndex = 0;
             btnCreate.Tag = ButtonVariant.Primary;
-            btnCreate.Text = "교육생 추가";
+            btnCreate.Text = "과정 추가";
             btnCreate.UseVisualStyleBackColor = false;
-            // 
-            // btnExcel
-            // 
-            btnExcel.AutoSize = true;
-            btnExcel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnExcel.BackColor = Color.White;
-            btnExcel.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnExcel.FlatAppearance.MouseOverBackColor = Color.FromArgb(239, 246, 255);
-            btnExcel.FlatStyle = FlatStyle.Flat;
-            btnExcel.Font = new Font("맑은 고딕", 9F);
-            btnExcel.ForeColor = Color.FromArgb(37, 99, 235);
-            btnExcel.Location = new Point(1078, 7);
-            btnExcel.Margin = new Padding(0, 0, 11, 0);
-            btnExcel.Name = "btnExcel";
-            btnExcel.Padding = new Padding(12, 6, 12, 6);
-            btnExcel.Size = new Size(168, 49);
-            btnExcel.TabIndex = 1;
-            btnExcel.Tag = ButtonVariant.Secondary;
-            btnExcel.Text = "엑셀 일괄 등록";
-            btnExcel.UseVisualStyleBackColor = false;
-            btnExcel.Variant = ButtonVariant.Secondary;
-            btnExcel.Click += btnExcel_Click;
             //
             // lblSearch
             //
@@ -173,7 +141,7 @@ namespace EDU_HUB_AI.View
             txtSearch.Font = new Font("맑은 고딕", 9F);
             txtSearch.Location = new Point(0, 18);
             txtSearch.Size = new Size(280, 23);
-            txtSearch.PlaceholderText = "이름으로 검색";
+            txtSearch.PlaceholderText = "과정명으로 검색";
             txtSearch.TabIndex = 2;
             //
             // pnlSearch
@@ -183,54 +151,6 @@ namespace EDU_HUB_AI.View
             pnlSearch.Controls.Add(txtSearch);
             pnlSearch.Size = new Size(280, 54);
             pnlSearch.Margin = new Padding(0, 0, 0, 0);
-            // 
-            // cmbEdu
-            // 
-            cmbEdu.FormattingEnabled = true;
-            cmbEdu.Location = new Point(0, 18);
-            cmbEdu.Name = "cmbEdu";
-            cmbEdu.Size = new Size(160, 33);
-            cmbEdu.TabIndex = 3;
-            // 
-            // cmbBatch
-            // 
-            cmbBatch.FormattingEnabled = true;
-            cmbBatch.Location = new Point(0, 18);
-            cmbBatch.Name = "cmbBatch";
-            cmbBatch.Size = new Size(100, 33);
-            cmbBatch.TabIndex = 4;
-            //
-            // lblEdu
-            //
-            lblEdu.AutoSize = true;
-            lblEdu.Font = new Font("맑은 고딕", 8.25F);
-            lblEdu.ForeColor = Color.FromArgb(100, 116, 139);
-            lblEdu.Location = new Point(0, 0);
-            lblEdu.Text = "교육과정";
-            //
-            // pnlEdu
-            //
-            pnlEdu.BackColor = Color.FromArgb(244, 246, 249);
-            pnlEdu.Controls.Add(lblEdu);
-            pnlEdu.Controls.Add(cmbEdu);
-            pnlEdu.Size = new Size(160, 54);
-            pnlEdu.Margin = new Padding(0, 0, 8, 0);
-            //
-            // lblBatch
-            //
-            lblBatch.AutoSize = true;
-            lblBatch.Font = new Font("맑은 고딕", 8.25F);
-            lblBatch.ForeColor = Color.FromArgb(100, 116, 139);
-            lblBatch.Location = new Point(0, 0);
-            lblBatch.Text = "기수";
-            //
-            // pnlBatch
-            //
-            pnlBatch.BackColor = Color.FromArgb(244, 246, 249);
-            pnlBatch.Controls.Add(lblBatch);
-            pnlBatch.Controls.Add(cmbBatch);
-            pnlBatch.Size = new Size(100, 54);
-            pnlBatch.Margin = new Padding(0, 0, 8, 0);
             // 
             // pagination1
             // 
@@ -254,15 +174,15 @@ namespace EDU_HUB_AI.View
             pageHeader1.Name = "pageHeader1";
             pageHeader1.Size = new Size(1479, 107);
             pageHeader1.TabIndex = 0;
-            pageHeader1.Title = "교육생 관리";
+            pageHeader1.Title = "교육과정 관리";
             // 
-            // StudentView
+            // EduInfoView
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(bodyPanel);
             Controls.Add(pageHeader1);
-            Name = "StudentView";
+            Name = "EduInfoView";
             Size = new Size(1479, 888);
             bodyPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
@@ -276,10 +196,7 @@ namespace EDU_HUB_AI.View
         private AppDataGrid grid;
         private Pagination pagination1;
         private ActionBar actionPanel;
-        private AppButton btnExcel;
         private AppButton btnCreate;
         private TextBox txtSearch;
-        private ComboBox cmbEdu;
-        private ComboBox cmbBatch;
     }
 }

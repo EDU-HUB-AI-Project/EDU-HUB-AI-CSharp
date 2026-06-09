@@ -20,27 +20,33 @@ namespace EDU_HUB_AI.Controller
             return await _adminStudentService.GetStudent(studentId);
         }
 
-        public async Task<ApiResponse<int>> InsertStudent(StudentDto studentDto)
+        public async Task<ApiResponse<int>?> InsertStudent(StudentDto studentDto)
         {
             Debug.WriteLine("Called :: InsertStudent");
             return await _adminStudentService.InsertStudent(studentDto);
         }
 
-        public async Task<ApiResponse<int>> UpdateStudent(string studentId, StudentDto studentDto)
+        public async Task<ApiResponse<int>?> UpdateStudent(string studentId, StudentDto studentDto)
         {
             Debug.WriteLine("Called :: UpdateStudent :: " + studentId);
             return await _adminStudentService.UpdateStudent(studentId, studentDto);
         }
 
-        public async Task<ApiResponse<int>> DeleteStudent(string studentId)
+        public async Task<ApiResponse<int>?> DeleteStudent(string studentId)
         {
             Debug.WriteLine("Called :: DeleteStudent :: " + studentId);
             return await _adminStudentService.DeleteStudent(studentId);
         }
-        public async Task<ApiResponse<int>> BatchInsertStudent(List<StudentDto> students)
+        public async Task<ApiResponse<int>?> BatchInsertStudent(List<StudentDto> students)
         {
             Debug.WriteLine("Called :: BatchInsertStudent");
             return await _adminStudentService.BatchInsertStudent(students);
+        }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _adminStudentService.OnRetry;
+            set => _adminStudentService.OnRetry = value;
         }
     }
 }

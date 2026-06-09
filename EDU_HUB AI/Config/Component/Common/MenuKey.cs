@@ -8,6 +8,7 @@ namespace EDU_HUB_AI.Config.Component.Common
         Dormitory,
         Facilities,
         Transport,
-        Test
+        EduInfo,
+        Classroom
     }
 }

@@ -36,5 +36,11 @@ namespace EDU_HUB_AI.Controller
         {
             return await _adminEduInfoService.DeleteEduInfo(eduInfoId);
         }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _adminEduInfoService.OnRetry;
+            set => _adminEduInfoService.OnRetry = value;
+        }
     }
 }
