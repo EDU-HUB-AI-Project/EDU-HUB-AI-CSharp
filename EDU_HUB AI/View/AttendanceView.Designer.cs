@@ -1,6 +1,7 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Layout;
+using EDU_HUB_AI.Config.Theme;
 
 namespace EDU_HUB_AI.View
 {
@@ -21,37 +22,54 @@ namespace EDU_HUB_AI.View
             DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
             DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             bodyPanel = new Panel();
+            tableCard = new Panel();
+            gapPanel = new Panel();
+            filterCard = new Panel();
             grid = new AppDataGrid();
-            actionPanel = new ActionBar();
+            actionPanel = new Panel();
             btnCreate = new AppButton();
             btnImport = new AppButton();
             btnExport = new AppButton();
             btnSearch = new AppButton();
-            cmbStatus = new ComboBox();
-            cmbEdu = new ComboBox();
-            cmbStudent = new ComboBox();
+            txtSearch = new TextField();
+            cmbStatus = new ComboField();
+            cmbEdu = new ComboField();
             dtpDate = new DateTimePicker();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             bodyPanel.SuspendLayout();
+            tableCard.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
-            actionPanel.SuspendLayout();
             SuspendLayout();
-            // 
-            // bodyPanel
-            // 
-            bodyPanel.Controls.Add(grid);
-            bodyPanel.Controls.Add(actionPanel);
+
+            // =============== bodyPanel ===============
+            bodyPanel.Controls.Add(tableCard);
+            bodyPanel.Controls.Add(gapPanel);
+            bodyPanel.Controls.Add(filterCard);
             bodyPanel.Controls.Add(pagination1);
             bodyPanel.Dock = DockStyle.Fill;
-            bodyPanel.Location = new Point(0, 64);
-            bodyPanel.Name = "bodyPanel";
-            bodyPanel.Padding = new Padding(24, 24, 24, 24);
-            bodyPanel.Size = new Size(1150, 602);
-            bodyPanel.TabIndex = 1;
-            // 
-            // grid
-            // 
+            bodyPanel.Padding = new Padding(34, 20, 34, 24);
+            bodyPanel.BackColor = ThemeColors.Background;
+
+            // ===============gapPanel ===============
+            gapPanel.Dock = DockStyle.Top;
+            gapPanel.Height = 8;
+            gapPanel.BackColor = ThemeColors.Background;
+
+            // =============== tableCard ===============
+            tableCard.Controls.Add(grid);
+            tableCard.Dock = DockStyle.Fill;
+            tableCard.BackColor = ThemeColors.Surface;
+            tableCard.Padding = new Padding(1);
+
+            // =============== filterCard ===============
+            filterCard.Controls.Add(actionPanel);
+            filterCard.Dock = DockStyle.Top;
+            filterCard.BackColor = ThemeColors.Surface;
+            filterCard.Padding = new Padding(16, 12, 16, 12);
+            filterCard.Height = 120;
+
+            // =============== grid ===================
             grid.AllowUserToAddRows = false;
             grid.AllowUserToDeleteRows = false;
             grid.AllowUserToResizeRows = false;
@@ -68,7 +86,7 @@ namespace EDU_HUB_AI.View
             dataGridViewCellStyle5.Padding = new Padding(8, 0, 8, 0);
             dataGridViewCellStyle5.SelectionBackColor = Color.FromArgb(241, 245, 249);
             grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle5;
-            grid.ColumnHeadersHeight = 36;
+            grid.ColumnHeadersHeight = 38;
             grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle6.BackColor = Color.White;
@@ -81,7 +99,6 @@ namespace EDU_HUB_AI.View
             grid.DefaultCellStyle = dataGridViewCellStyle6;
             grid.Dock = DockStyle.Fill;
             grid.EnableHeadersVisualStyles = false;
-            grid.Font = new Font("맑은 고딕", 9F);
             grid.GridColor = Color.FromArgb(226, 232, 240);
             grid.Location = new Point(24, 92);
             grid.Name = "grid";
@@ -89,200 +106,129 @@ namespace EDU_HUB_AI.View
             grid.RowHeadersVisible = false;
             grid.RowHeadersWidth = 51;
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.Size = new Size(1102, 438);
-            grid.TabIndex = 0;
-            // 
-            // actionPanel
-            // 
-            actionPanel.BackColor = Color.FromArgb(244, 246, 249);
-            actionPanel.Controls.Add(btnCreate);
-            actionPanel.Controls.Add(btnImport);
-            actionPanel.Controls.Add(btnExport);
-            actionPanel.Controls.Add(btnSearch);
-            actionPanel.Controls.Add(cmbStatus);
-            actionPanel.Controls.Add(cmbEdu);
-            actionPanel.Controls.Add(cmbStudent);
-            actionPanel.Controls.Add(dtpDate);
-            actionPanel.Dock = DockStyle.Top;
-            actionPanel.FlowDirection = FlowDirection.RightToLeft;
-            actionPanel.Location = new Point(24, 24);
-            actionPanel.Margin = new Padding(0);
-            actionPanel.Name = "actionPanel";
-            actionPanel.Padding = new Padding(0, 4, 0, 8);
-            actionPanel.Size = new Size(1102, 68);
-            actionPanel.TabIndex = 2;
-            actionPanel.WrapContents = false;
-            // 
-            // btnCreate
-            // 
-            btnCreate.AutoSize = true;
-            btnCreate.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnCreate.BackColor = Color.FromArgb(37, 99, 235);
-            btnCreate.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnCreate.FlatAppearance.MouseOverBackColor = Color.FromArgb(29, 78, 216);
-            btnCreate.FlatStyle = FlatStyle.Flat;
-            btnCreate.Font = new Font("맑은 고딕", 9F);
-            btnCreate.ForeColor = Color.White;
-            btnCreate.Location = new Point(979, 4);
-            btnCreate.Margin = new Padding(0);
-            btnCreate.Name = "btnCreate";
-            btnCreate.Padding = new Padding(12, 6, 12, 6);
-            btnCreate.Size = new Size(123, 39);
-            btnCreate.TabIndex = 0;
+
+            // ============= actionPanel =============
+            var pnlFilterFlow = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Left,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                AutoSize = true,
+                //BackColor = ThemeColors.Surface,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
+            };
+            pnlFilterFlow.Controls.Add(cmbEdu);
+            pnlFilterFlow.Controls.Add(cmbStatus);
+            pnlFilterFlow.Controls.Add(txtSearch);
+            pnlFilterFlow.Controls.Add(dtpDate);
+            var pnlButtonFlow = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Right,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                AutoSize = true,
+                //BackColor = ThemeColors.Surface,
+                Padding = new Padding(12, 8, 0, 8)
+            };
+            pnlButtonFlow.Controls.Add(btnCreate);
+            pnlButtonFlow.Controls.Add(btnImport);
+            pnlButtonFlow.Controls.Add(btnExport);
+            pnlButtonFlow.Controls.Add(btnSearch);
+            actionPanel.Controls.Add(pnlFilterFlow);
+            actionPanel.Controls.Add(pnlButtonFlow);
+            actionPanel.Dock = DockStyle.Fill;
+            //actionPanel.BackColor = ThemeColors.Surface;
+            actionPanel.Padding = new Padding(0);
+
+            // ============= btnCreate ================
             btnCreate.Tag = ButtonVariant.Primary;
             btnCreate.Text = "출석 현황 추가";
-            btnCreate.UseVisualStyleBackColor = false;
-            // 
-            // btnImport
-            // 
-            btnImport.AutoSize = true;
-            btnImport.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnImport.BackColor = Color.White;
-            btnImport.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnImport.FlatAppearance.MouseOverBackColor = Color.FromArgb(239, 246, 255);
-            btnImport.FlatStyle = FlatStyle.Flat;
-            btnImport.Font = new Font("맑은 고딕", 9F);
-            btnImport.ForeColor = Color.FromArgb(37, 99, 235);
-            btnImport.Location = new Point(854, 4);
-            btnImport.Margin = new Padding(0, 0, 8, 0);
-            btnImport.Name = "btnImport";
-            btnImport.Padding = new Padding(9, 4, 9, 4);
-            btnImport.Size = new Size(117, 35);
-            btnImport.TabIndex = 1;
-            btnImport.Tag = ButtonVariant.Secondary;
+            btnCreate.IconName = "plus";
+            btnCreate.Margin = new Padding(0);
+
+            // =============== btnImport ===============
+            btnImport.Margin = new Padding(0);
+            btnImport.IconName = "import";
             btnImport.Text = "엑셀 일괄 등록";
-            btnImport.UseVisualStyleBackColor = false;
             btnImport.Variant = ButtonVariant.Secondary;
-            // 
-            // btnExport
-            // 
-            btnExport.AutoSize = true;
-            btnExport.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnExport.BackColor = Color.White;
-            btnExport.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnExport.FlatAppearance.MouseOverBackColor = Color.FromArgb(239, 246, 255);
-            btnExport.FlatStyle = FlatStyle.Flat;
-            btnExport.Font = new Font("맑은 고딕", 9F);
-            btnExport.ForeColor = Color.FromArgb(37, 99, 235);
-            btnExport.Location = new Point(727, 6);
-            btnExport.Margin = new Padding(2, 2, 2, 2);
-            btnExport.Name = "btnExport";
-            btnExport.Padding = new Padding(9, 4, 9, 4);
-            btnExport.Size = new Size(125, 35);
-            btnExport.TabIndex = 2;
-            btnExport.Tag = ButtonVariant.Secondary;
+
+            // =============== btnExport ===============
+       
+            btnExport.Margin = new Padding(0, 0, 8, 0);
+            btnExport.IconName = "export";
             btnExport.Text = "엑셀로 내보내기";
-            btnExport.UseVisualStyleBackColor = false;
             btnExport.Variant = ButtonVariant.Secondary;
-            // 
-            // btnSearch
-            // 
-            btnSearch.AutoSize = true;
-            btnSearch.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnSearch.BackColor = Color.White;
-            btnSearch.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnSearch.FlatAppearance.MouseOverBackColor = Color.FromArgb(239, 246, 255);
-            btnSearch.FlatStyle = FlatStyle.Flat;
-            btnSearch.Font = new Font("맑은 고딕", 9F);
-            btnSearch.ForeColor = Color.FromArgb(37, 99, 235);
-            btnSearch.Location = new Point(638, 6);
-            btnSearch.Margin = new Padding(2, 2, 2, 2);
+
+            // =============== btnSearch ===============
+            btnSearch.Margin = new Padding(0, 0, 8, 0);
             btnSearch.Name = "btnSearch";
-            btnSearch.Padding = new Padding(9, 4, 9, 4);
-            btnSearch.Size = new Size(85, 35);
-            btnSearch.TabIndex = 3;
-            btnSearch.Tag = ButtonVariant.Secondary;
             btnSearch.Text = "조회하기";
-            btnSearch.UseVisualStyleBackColor = false;
-            btnSearch.Variant = ButtonVariant.Secondary;
-            // 
-            // cmbStatus
-            // 
-            cmbStatus.FormattingEnabled = true;
-            cmbStatus.Location = new Point(559, 6);
-            cmbStatus.Margin = new Padding(2, 2, 2, 2);
-            cmbStatus.Name = "cmbStatus";
-            cmbStatus.Size = new Size(75, 23);
-            cmbStatus.TabIndex = 4;
-            // 
-            // cmbEdu
-            // 
-            cmbEdu.FormattingEnabled = true;
-            cmbEdu.Location = new Point(480, 6);
-            cmbEdu.Margin = new Padding(2, 2, 2, 2);
-            cmbEdu.Name = "cmbEdu";
-            cmbEdu.Size = new Size(75, 23);
-            cmbEdu.TabIndex = 5;
-            // 
-            // cmbStudent
-            // 
-            cmbStudent.FormattingEnabled = true;
-            cmbStudent.Location = new Point(401, 6);
-            cmbStudent.Margin = new Padding(2, 2, 2, 2);
-            cmbStudent.Name = "cmbStudent";
-            cmbStudent.Size = new Size(75, 23);
-            cmbStudent.TabIndex = 6;
-            // 
-            // dtpDate
-            // 
-            dtpDate.Location = new Point(318, 6);
-            dtpDate.Margin = new Padding(2, 2, 2, 2);
+            btnSearch.Variant = ButtonVariant.Primary;
+
+            // =============== txtSearch ==================
+            txtSearch.FieldLabel = "검색";
+            txtSearch.Placeholder = "이름입력하여 검색";
+            txtSearch.Size = new Size(220, 54);
+            txtSearch.Margin = new Padding(0, 0, 16, 0);
+
+            // =============== cmbStatus ==================
+            cmbStatus.FieldLabel = "출석상태";
+            cmbStatus.Size = new Size(100, 54);
+            cmbStatus.Margin = new Padding (0, 0, 8, 0);
+
+            // =============== cmbEdu =====================
+            cmbEdu.FieldLabel = "교육과정";
+            cmbStatus.Size = new Size(100, 54);
+            cmbEdu.Margin = new Padding(0, 0, 8, 0);
+
+            // =============== dtpDate ====================
+            dtpDate.Margin = new Padding(0, 0, 8, 0);
             dtpDate.Name = "dtpDate";
-            dtpDate.Size = new Size(79, 23);
-            dtpDate.TabIndex = 7;
-            // 
-            // pagination1
-            // 
-            pagination1.BackColor = Color.FromArgb(244, 246, 249);
+            dtpDate.Size = new Size(100, 23);
+
+            // =============== pagination1 ===============
+            pagination1.BackColor = ThemeColors.Background;
             pagination1.Dock = DockStyle.Bottom;
-            pagination1.Location = new Point(24, 530);
-            pagination1.Margin = new Padding(4, 4, 4, 4);
-            pagination1.Name = "pagination1";
-            pagination1.PageIndex = 1;
-            pagination1.PageSize = 10;
-            pagination1.Size = new Size(1102, 48);
-            pagination1.TabIndex = 1;
+            pagination1.Size = new Size(1411, 52);
             pagination1.TotalCount = 0;
-            // 
-            // pageHeader1
-            // 
-            pageHeader1.BackColor = Color.FromArgb(228, 231, 240);
+
+            // =============== pageHeader1 ===============
+            pageHeader1.BackColor = ThemeColors.HeaderBg;
             pageHeader1.Dock = DockStyle.Top;
-            pageHeader1.Location = new Point(0, 0);
-            pageHeader1.Margin = new Padding(4, 4, 4, 4);
-            pageHeader1.Name = "pageHeader1";
-            pageHeader1.Size = new Size(1150, 64);
-            pageHeader1.TabIndex = 0;
+            pageHeader1.Size = new Size(1479, 100);
             pageHeader1.Title = "출석현황";
-            // 
-            // AttendanceView
-            // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+
+            // =============== AttendanceView ===============
+            AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(bodyPanel);
             Controls.Add(pageHeader1);
-            Margin = new Padding(2, 2, 2, 2);
-            Name = "AttendanceView";
-            Size = new Size(1150, 666);
+            BackColor = ThemeColors.Background;
+            Size = new Size(1479, 888);
+
+            tableCard.ResumeLayout(false);
             bodyPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
-            actionPanel.ResumeLayout(false);
-            actionPanel.PerformLayout();
             ResumeLayout(false);
+            actionPanel.ResumeLayout();
         }
 
         private Panel bodyPanel;
         private PageHeader pageHeader1;
         private AppDataGrid grid;
         private Pagination pagination1;
-        private ActionBar actionPanel;
+        private Panel actionPanel;
+        private Panel tableCard;
+        private Panel filterCard;
+        private Panel gapPanel;
         private AppButton btnImport;
         private AppButton btnCreate;
         private AppButton btnExport;
         private AppButton btnSearch;
-        private ComboBox cmbStatus;
-        private ComboBox cmbEdu;
-        private ComboBox cmbStudent;
+        private TextField txtSearch;
+        private ComboField cmbStatus;
+        private ComboField cmbEdu;
         private DateTimePicker dtpDate;
     }
 }
