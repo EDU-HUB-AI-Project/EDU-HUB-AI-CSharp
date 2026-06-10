@@ -190,15 +190,15 @@ namespace EDU_HUB_AI.View
                 if (res?.Status == 200)
                     await LoadAndRender(int.MaxValue, showOverlay: false);
                 else
-                    MessageBox.Show(res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (ApiException ex)
             {
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -232,10 +232,10 @@ namespace EDU_HUB_AI.View
                         RenderPage(pagination1.PageIndex);
                     }
                     else
-                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex) { MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-                catch (Exception ex) { MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 finally { _adminStudentController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
             else if (e.Action == TableAction.Delete)
@@ -256,10 +256,10 @@ namespace EDU_HUB_AI.View
                         RenderPage(pagination1.PageIndex);
                     }
                     else
-                        MessageBox.Show(res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex) { MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-                catch (Exception ex) { MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 finally { _adminStudentController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
         }
@@ -303,13 +303,13 @@ namespace EDU_HUB_AI.View
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"파일 파싱 오류 : {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), $"파일 파싱 오류 : {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (students.Count == 0)
             {
-                MessageBox.Show("등록할 데이터가 없습니다.", "안내", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this.FindForm(), "등록할 데이터가 없습니다.", "안내", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -321,14 +321,14 @@ namespace EDU_HUB_AI.View
                 var res = await _adminStudentController.BatchInsertStudent(students);
                 if (res?.Status == 200)
                 {
-                    MessageBox.Show($"{students.Count} 명이 등록되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(this.FindForm(), $"{students.Count} 명이 등록되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await LoadAndRender(int.MaxValue, showOverlay: false);
                 }
                 else
-                    MessageBox.Show(res?.Message ?? "일괄 등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), res?.Message ?? "일괄 등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (ApiException ex) { MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-            catch (Exception ex) { MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { _adminStudentController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
         }
 
