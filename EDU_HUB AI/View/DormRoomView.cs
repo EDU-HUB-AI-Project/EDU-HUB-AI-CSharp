@@ -87,7 +87,7 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("dormitoryRoomName", "호실");
             grid.Columns.Add("currentCount", "배정 인원");
             grid.Columns.Add("maxCount", "최대 인원");
-            grid.AddTextActionColumns();
+            grid.AddTextActionColumns(true, false);
             grid.ActionClicked += OnRowAction;
         }
 

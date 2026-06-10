@@ -44,6 +44,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             _txtDormitoryID = AddField(stack, "생활관 id", source?.dormitoryId, "", 0);
+            _txtDormitoryID.ReadOnly = true;
             _txtRoomMaxCnt = AddField(stack, "최대 인원", source?.maxCount.ToString() ?? "미정", "", 1);
             Body.Controls.Add(stack);
         }
