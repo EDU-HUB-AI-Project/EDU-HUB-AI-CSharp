@@ -6,7 +6,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
     [ToolboxItem(true)]
     public partial class ComboField : UserControl
     {
-        private const int InputHeight = 32;
+        private const int InputHeight = 40;
         private const int LabelGap = 6;
 
         private readonly Label _label;

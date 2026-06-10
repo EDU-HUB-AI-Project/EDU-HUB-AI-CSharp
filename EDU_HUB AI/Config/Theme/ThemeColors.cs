@@ -42,7 +42,7 @@ namespace EDU_HUB_AI.Config.Theme
         // 모달 스크림 — 캡처 실패 시 단색 배경 (#F8FAFC)
         public static Color ModalScrim => Color.FromArgb(248, 250, 252);
         // 모달 베일 — Paint 전용, 캡처 위에 덮는 연한 흰색 (alpha 200 ≈ 78%)
-        public static Color ModalVeil => Color.FromArgb(200, 248, 250, 252);
+        public static Color ModalVeil => Color.FromArgb(120, 15, 23, 42);
 
         public static Color SidebarTextHover => Color.FromArgb(203, 213, 225);
     }

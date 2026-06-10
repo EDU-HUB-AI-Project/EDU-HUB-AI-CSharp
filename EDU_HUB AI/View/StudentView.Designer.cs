@@ -61,7 +61,7 @@ namespace EDU_HUB_AI.View
             filterCard.Dock = DockStyle.Top;
             filterCard.BackColor = ThemeColors.Surface;
             filterCard.Padding = new Padding(16, 12, 16, 12);
-            filterCard.Height = 110;
+            filterCard.Height = 120;
 
             // ── grid ───────────────────────────────────────────
             grid.Dock = DockStyle.Fill;
@@ -153,17 +153,17 @@ namespace EDU_HUB_AI.View
             // ── txtSearch ─────────────────────────────────────
             txtSearch.FieldLabel = "검색";
             txtSearch.Placeholder = "이름으로 검색...";
-            txtSearch.Size = new Size(220, 54);
+            txtSearch.Size = new Size(220, 62);
             txtSearch.Margin = new Padding(0, 0, 16, 0);
 
             // ── cmbEdu ────────────────────────────────
             cmbEdu.FieldLabel = "교육과정";
-            cmbEdu.Size = new Size(160, 54);
+            cmbEdu.Size = new Size(160, 62);
             cmbEdu.Margin = new Padding(0, 0, 8, 0);
 
             // ── cmbBatch ────────────────────────────
             cmbBatch.FieldLabel = "기수";
-            cmbBatch.Size = new Size(100, 54);
+            cmbBatch.Size = new Size(100, 62);
             cmbBatch.Margin = new Padding(0, 0, 8, 0);
 
             // ── pagination1 ────────────────────────────────────
