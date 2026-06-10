@@ -1,10 +1,12 @@
-﻿using EDU_HUB_AI.Config.Component.Common;
+﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
+using System.Text.Json;
 
 namespace EDU_HUB_AI.View
 {
@@ -12,12 +14,72 @@ namespace EDU_HUB_AI.View
     {
         private List<Dictionary<string, object>> _all = new List<Dictionary<string, object>>();
         private List<Dictionary<string, object>> _pageItems = new List<Dictionary<string, object>>();
+        private List<CafeteriaDto> _allDetail = new List<CafeteriaDto>();
         private readonly AdminCafeteriaController _adminCafeteriaController = new AdminCafeteriaController();
+        private DateTimePicker _datePickerStart;
+        private DateTimePicker _datePickerEnd;
 
         public CafeteriaView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
+
+            var dateRangePanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Background,
+                Margin = new Padding(0, 0, 0, 8)
+            };
+
+            _datePickerStart = new DateTimePicker
+            {
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "yyyy-MM-dd",
+                Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),  // 이번 달 1일
+                Font = ThemeFonts.Body,
+                Width = 150
+            };
+
+            _datePickerEnd = new DateTimePicker
+            {
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "yyyy-MM-dd",
+                Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)),  // 이번 달 말일
+                Font = ThemeFonts.Body,
+                Width = 150
+            };
+
+            var lblSeparator = new Label
+            {
+                Text = "~",
+                Font = ThemeFonts.Body,
+                AutoSize = true,
+                Margin = new Padding(6, 6, 6, 0)
+            };
+
+            var btnSearch = new AppButton
+            {
+                Text = "조회",
+                Variant = ButtonVariant.Primary,
+                Small = true,
+                Margin = new Padding(8, 2, 0, 0)
+            };
+            btnSearch.Click += async (_, _) => await LoadAndRender();
+
+            _datePickerStart.ValueChanged += async (_, _) =>
+            {
+                await LoadAndRender();
+                ScrollToData(_datePickerStart.Value.ToString("yyyy-MM-dd"));
+            };
+
+            dateRangePanel.Controls.Add(_datePickerStart);
+            dateRangePanel.Controls.Add(lblSeparator);
+            dateRangePanel.Controls.Add(_datePickerEnd);
+            dateRangePanel.Controls.Add(btnSearch);
+
+            bodyPanel.Controls.Add(dateRangePanel);
 
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
@@ -44,9 +106,61 @@ namespace EDU_HUB_AI.View
 
         private async Task<List<Dictionary<string, object>>> LoadData()
         {
-            string today = DateTime.Now.ToString("yyyy-MM");
-            var res = await _adminCafeteriaController.GetCafeteriaSummary(today);
-            return res?.Data ?? new List<Dictionary<string, object>>();
+            var result = new List<Dictionary<string, object>>();
+            _allDetail = new List<CafeteriaDto>();
+
+            DateTime start = _datePickerStart.Value.Date;
+            DateTime end = _datePickerEnd.Value.Date;
+
+            if (start > end)
+            {
+                MessageBox.Show("시작일이 종료일보다 클 수 없습니다.", "알림");
+                return result;
+            }
+
+            string startStr = start.ToString("yyyy-MM-dd");
+            string endStr = end.ToString("yyyy-MM-dd");
+
+            DateTime current = new DateTime(start.Year, start.Month, 1);
+            while (current <= end)
+            {
+                string month = current.ToString("yyyy-MM");
+                var res = await _adminCafeteriaController.GetCafeteriaSummary(month);
+                var monthData = res?.Data ?? new List<Dictionary<string, object>>();
+
+                foreach (var item in monthData)
+                {
+                    if (!item.ContainsKey("mealDate")) continue;
+
+                    string mealDateStr = item["mealDate"].ToString();
+
+                    if (string.Compare(mealDateStr, startStr) >= 0 &&
+                        string.Compare(mealDateStr, endStr) <= 0)
+                    {
+                        result.Add(item);
+
+                        if (item.ContainsKey("details") && item["details"] is JsonElement detailsElement
+                            && detailsElement.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var d in detailsElement.EnumerateArray())
+                            {
+                                _allDetail.Add(new CafeteriaDto
+                                {
+                                    cafeteriaId = d.TryGetProperty("cafeteriaId", out var cid) ? cid.GetString() : null,
+                                    mealDate = d.TryGetProperty("mealDate", out var md) ? md.GetString() : null,
+                                    mealType = d.TryGetProperty("mealType", out var mt) ? mt.GetString() : null,
+                                    menu = d.TryGetProperty("menu", out var mn) ? mn.GetString() : null,
+                                    mealClosed = d.TryGetProperty("mealClosed", out var mc) ? mc.GetString() : null
+                                });
+                            }
+                        }
+                    }
+                }
+
+                current = current.AddMonths(1);
+            }
+
+            return result;
         }
 
         private async Task LoadAndRender()
@@ -105,10 +219,42 @@ namespace EDU_HUB_AI.View
             grid.ResumeLayout();
         }
 
-        private async void OnCreate(object? sender, EventArgs e)
+        private void ScrollToData(string targetData)
         {
-            bool result = CafeteriaEditModal.Show(this.FindForm());
-            if (result) await LoadAndRender();
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                if (row.Cells["mealDate"].Value?.ToString() == targetData)
+                {
+                    grid.FirstDisplayedScrollingRowIndex = row.Index;
+                    row.Selected = true;
+                    break;
+                }
+            }
+        }
+
+        private void OnCreate(object? sender, EventArgs e)
+        {
+            var createView = new CafeteriaCreateView();
+            createView.Dock = DockStyle.Fill;
+
+            createView.OnBack += async () =>
+            {
+                this.Controls.Remove(createView);
+                SetAllControlsVisible(true);
+                await LoadAndRender();
+            };
+
+            SetAllControlsVisible(false);
+            this.Controls.Add(createView);
+            createView.BringToFront();
+        }
+
+        private void SetAllControlsVisible(bool visible)
+        {
+            foreach (Control c in this.Controls)
+            {
+                c.Visible = visible;
+            }
         }
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
@@ -119,8 +265,18 @@ namespace EDU_HUB_AI.View
             if (e.Action == TableAction.Edit)
             {
                 string mealDate = target.ContainsKey("mealDate") ? target["mealDate"].ToString() : "";
-                bool result = CafeteriaEditModal.Show(this.FindForm(), mealDate);
-                if (result) await LoadAndRender();
+
+                var existingList = _allDetail
+                    .Where(d => d.mealDate == mealDate)
+                    .ToList();
+
+                using var modal = new CafeteriaEditModal(mealDate);
+                modal.LoadExistingData(existingList);
+
+                if (modal.ShowDialog(this.FindForm()) != DialogResult.OK) return;
+
+                await _adminCafeteriaController.SaveCafeteriaList(modal.Result);
+                await LoadAndRender();
             }
             else if (e.Action == TableAction.Delete)
             {
@@ -137,14 +293,25 @@ namespace EDU_HUB_AI.View
             if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
             var target = _pageItems[e.RowIndex];
             string mealDate = target.ContainsKey("mealDate") ? target["mealDate"].ToString() : "";
-            bool result = CafeteriaEditModal.Show(this.FindForm(), mealDate);
-            if (result) await LoadAndRender();
+
+            var existingList = _allDetail
+                .Where(d => d.mealDate == mealDate)
+                .ToList();
+
+            using var modal = new CafeteriaEditModal(mealDate);
+            modal.LoadExistingData(existingList);
+
+            if (modal.ShowDialog(this.FindForm()) != DialogResult.OK) return;
+
+            await _adminCafeteriaController.SaveCafeteriaList(modal.Result);
+            await LoadAndRender();
         }
 
         private async Task DeleteByDate(string mealDate)
         {
-            var res = await _adminCafeteriaController.GetCafeteriaDetail(mealDate);
-            var list = res?.Data ?? new List<CafeteriaDto>();
+            var list = _allDetail
+                .Where(d => d.mealDate == mealDate)
+                .ToList();
 
             foreach (var item in list)
             {
