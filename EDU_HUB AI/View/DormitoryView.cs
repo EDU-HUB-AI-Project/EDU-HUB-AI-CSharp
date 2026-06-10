@@ -11,7 +11,7 @@ using System.Diagnostics;
 namespace EDU_HUB_AI.View
 {
     public partial class DormitoryView : UserControl
-    {
+    {   
         private AppDataGrid _assignGrid;
         private AppDataGrid _waitingGrid;
         private AppDataGrid _dormInGrid;
@@ -69,6 +69,13 @@ namespace EDU_HUB_AI.View
             LoadDormView();
         }
 
+        // Refactoring 방향
+        // 기존에는 동일한 로직의 Grid생성과, Render로직이 반복
+        // 중복부분을 헬퍼 메소드를 통하여 분리
+        // BuildGridPanel : 패널/그리드/페이지네이션 UI 구성
+        // RenderGrid<T>  : 페이지 계산 및 데이터 바인딩
+        // 각 Grid별로 다른 부분(Rows.Add 컬럼 구성)은 Action<T>를 사용하여 외부에서 주입
+        // OnRowAction 계열은 호출 API와 처리 로직이 달라 리팩토링 대상에서 제외
         private async void LoadDormView(bool showOverlay = true)
         {
             bodyPanel.Controls.Clear();
@@ -222,7 +229,7 @@ namespace EDU_HUB_AI.View
         }
 
         
-
+        // 생활관 배정 현황 RowAction
         private async void OnRowActionAssign(object? sender, TableActionEventArgs e)
         {
             Action<DormAssignDto> addAssignRow = a => _assignGrid.Rows.Add(a.studentName, a.eduId, a.phone, a.dormitoryRoomName, a.assignStatus);
@@ -243,7 +250,6 @@ namespace EDU_HUB_AI.View
                     {
                         var idx = _assignData.IndexOf(target);
                         if (idx >= 0) _assignData[idx] = edited;
-                        RenderGrid(_assignData, _pagination1, 1, _assignGrid, addAssignRow);
                         LoadDormView(showOverlay: false);
                     }
                     else
@@ -269,6 +275,7 @@ namespace EDU_HUB_AI.View
             }
         }
 
+        // 생활관 대기 현황 RowAction
         private async void OnRowActionWaiting(object? sender, TableActionEventArgs e)
         {
             Action<DormInOutDto> waitingRow = d => _waitingGrid.Rows.Add(d.studentName, d.dormitoryRoomName);
@@ -293,7 +300,6 @@ namespace EDU_HUB_AI.View
                     {
                         // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
                         _waitingData.Remove(target);
-                        RenderGrid(_waitingData, _pagination2, 1, _waitingGrid, waitingRow);
                         LoadDormView(showOverlay: false);
                     }
                     else
@@ -317,7 +323,7 @@ namespace EDU_HUB_AI.View
                 }
             }
         }
-
+        // 생활관 입실 현황 RowAction
         private async void OnRowActionDormOut(object? sender, TableActionEventArgs e)
         {
             Action<DormInOutDto> dormInRow = d => _dormInGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.dorm);
@@ -342,7 +348,6 @@ namespace EDU_HUB_AI.View
                     {
                         // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
                         _dormInData.Remove(target);
-                        RenderGrid(_dormInData, _pagination3, 1, _dormInGrid, dormInRow);
                         LoadDormView(showOverlay: false);
                     }
                     else
