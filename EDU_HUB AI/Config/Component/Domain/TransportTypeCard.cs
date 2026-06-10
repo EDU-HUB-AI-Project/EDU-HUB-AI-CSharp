@@ -26,15 +26,17 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _typeCode = typeCode;
 
             BackColor = ThemeColors.Surface;
-            Padding = new Padding(16);
+            Padding = new Padding(0);
             MinimumSize = new Size(360, 280);
             Margin = new Padding(0, 0, 16, 16);
 
+            // ── 헤더 ───────────────────────────────────────────
             var header = new Panel
             {
                 Dock = DockStyle.Top,
                 Height = 72,
-                BackColor = ThemeColors.Surface
+                BackColor = ThemeColors.Surface,
+                Padding = new Padding(16, 12, 16, 0)
             };
 
             _lblTitle = new Label
@@ -43,7 +45,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Font = new Font(ThemeFonts.Body.FontFamily, 11F, FontStyle.Bold),
                 ForeColor = ThemeColors.Text,
                 AutoSize = true,
-                Location = new Point(0, 0)
+                Location = new Point(16, 12)
             };
 
             _lblRoute = new Label
@@ -52,8 +54,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Font = ThemeFonts.BodySm,
                 ForeColor = ThemeColors.TextMuted,
                 AutoSize = false,
-                Location = new Point(0, 28),
-                Size = new Size(400, 40)
+                Location = new Point(16, 38),
+                Size = new Size(400, 22)
             };
 
             _btnCreate = new AppButton
@@ -62,23 +64,65 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Variant = ButtonVariant.Primary,
                 Small = true,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(280, 0)
+                Location = new Point(280, 12)
             };
             _btnCreate.Click += (_, _) => CreateRequested?.Invoke(this, EventArgs.Empty);
+
+            // 헤더 하단 구분선
+            var divider = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = ThemeColors.TableBorder
+            };
 
             header.Controls.Add(_lblTitle);
             header.Controls.Add(_lblRoute);
             header.Controls.Add(_btnCreate);
+            header.Controls.Add(divider);
 
+            // ── 그리드 ─────────────────────────────────────────
             _grid = new AppDataGrid
             {
                 Dock = DockStyle.Fill,
-                RowTemplate = { Height = 40 },
+                RowTemplate = { Height = 44 },
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
                 ReadOnly = true,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                EnableHeadersVisualStyles = false,
+                RowHeadersVisible = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                BackgroundColor = ThemeColors.Surface,
+                BorderStyle = BorderStyle.None,
+                GridColor = ThemeColors.TableBorder,
+                ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single,
+                ColumnHeadersHeight = 38,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = ThemeColors.TableHeader,
+                    ForeColor = ThemeColors.Text,
+                    Font = ThemeFonts.TableHeader,
+                    SelectionBackColor = ThemeColors.TableHeader,
+                    Alignment = DataGridViewContentAlignment.MiddleLeft,
+                    Padding = new Padding(12, 0, 8, 0)
+                },
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = ThemeColors.Surface,
+                    ForeColor = ThemeColors.Text,
+                    Font = ThemeFonts.TableCell,
+                    SelectionBackColor = ThemeColors.TableHover,
+                    SelectionForeColor = ThemeColors.Text,
+                    Padding = new Padding(12, 0, 8, 0),
+                    WrapMode = DataGridViewTriState.False
+                },
+                AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = ThemeColors.TableStripe
+                }
             };
 
             SetupGrid();
@@ -86,7 +130,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Controls.Add(_grid);
             Controls.Add(header);
 
-            Resize += (_, _) => _btnCreate.Left = Math.Max(0, Width - _btnCreate.Width - 32);
+            Resize += (_, _) => _btnCreate.Left = Math.Max(0, Width - _btnCreate.Width - 16);
         }
 
         private void SetupGrid()
