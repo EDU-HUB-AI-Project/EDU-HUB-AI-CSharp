@@ -217,7 +217,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.Name = "pageHeader1";
             pageHeader1.Size = new Size(1479, 85);
             pageHeader1.TabIndex = 0;
-            pageHeader1.Title = "생활관 현황";
+            pageHeader1.Title = "생활관 배정 현황";
             // 
             // DormitoryView
             // 

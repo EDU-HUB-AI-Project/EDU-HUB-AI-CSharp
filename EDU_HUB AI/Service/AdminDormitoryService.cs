@@ -40,10 +40,11 @@ namespace EDU_HUB_AI.Service
             return await _apiClient.Get<List<DormInOutDto>>(url);
         }
 
-        public async Task<ApiResponse<List<DormitoryDto>>> GettDormRoomAssignStatus()
+        public async Task<ApiResponse<List<DormitoryDto>>> GetDormRoomAssignStatus(string? dormitoryId)
         {
-            Debug.WriteLine("Called::GettDormRoomAssignStatus");
-            string url = _url + $"/assign-status";
+            Debug.WriteLine("Called::GetDormRoomAssignStatus");
+            string url = _url + $"/assign-status?";
+            if (dormitoryId != null) url += "dormitoryId=" + dormitoryId;
             return await _apiClient.Get<List<DormitoryDto>> (url);
         }
         public async Task<ApiResponse<DormitoryDto>> GetDormRoomAssignStatusById(string dormitoryId)

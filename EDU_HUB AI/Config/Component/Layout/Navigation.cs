@@ -56,6 +56,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 (MenuKey.Trainees, "교육생 정보", "users"),
                 (MenuKey.Attendance, "출석 현황", "clipboard-check"),
                 (MenuKey.Dormitory, "생활관 배정", "bed-double"),
+                (MenuKey.DormRoom, "생활관 관리", "Dormitory-room"),
                 (MenuKey.EduInfo, "교육과정 관리", "eduInfo"),
                 (MenuKey.Subject, "과목 관리", "subject")
             ]);

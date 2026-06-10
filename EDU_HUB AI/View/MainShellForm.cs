@@ -30,6 +30,7 @@ namespace EDU_HUB_AI.View
                 MenuKey.Transport => new TransportView(),
                 MenuKey.Dashboard => new DashboardView(NavigateTo),
                 MenuKey.Dormitory => new DormitoryView(),
+                MenuKey.DormRoom => new DormRoomView(),
                 MenuKey.Attendance => new AttendanceView(),
                 MenuKey.EduInfo => new EduInfoView(),
                 MenuKey.Classroom => new ClassroomView(),
