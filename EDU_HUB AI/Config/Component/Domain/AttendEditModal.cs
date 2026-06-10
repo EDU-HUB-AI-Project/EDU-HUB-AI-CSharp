@@ -163,38 +163,38 @@ namespace EDU_HUB_AI.Config.Component.Domain
             return cmb;
         }
 
-            private DateTimePicker AddDTPField(TableLayoutPanel parent, string label, int row)
+        private DateTimePicker AddDTPField(TableLayoutPanel parent, string label, int row)
+        {
+            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            var panel = new Panel
             {
-                parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-                var panel = new Panel
-                {
-                    Dock = DockStyle.Fill,
-                    AutoSize = true,
-                    BackColor = ThemeColors.Surface,
-                    Margin = new Padding(0, 0, 0, 14)
-                };
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                BackColor = ThemeColors.Surface,
+                Margin = new Padding(0, 0, 0, 14)
+            };
 
-                var lbl = new Label
-                {
-                    Text = label,
-                    Font = ThemeFonts.BodySm,
-                    ForeColor = ThemeColors.TextMuted,
-                    AutoSize = true,
-                    Dock = DockStyle.Top
-                };
-                var dtp = new DateTimePicker
-                {
-                    Dock = DockStyle.Top,
-                    Font = ThemeFonts.Body,
-                    BackColor = ThemeColors.Surface,
-                    Format = DateTimePickerFormat.Custom,
-                    CustomFormat = "yyyy-MM-dd"
-                };
-                panel.Controls.Add(dtp);
-                panel.Controls.Add(lbl);
-                parent.Controls.Add(panel, 0, row);
-                return dtp;
-            }
+            var lbl = new Label
+            {
+                Text = label,
+                Font = ThemeFonts.BodySm,
+                ForeColor = ThemeColors.TextMuted,
+                AutoSize = true,
+                Dock = DockStyle.Top
+            };
+            var dtp = new DateTimePicker
+            {
+                Dock = DockStyle.Top,
+                Font = ThemeFonts.Body,
+                BackColor = ThemeColors.Surface,
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "yyyy-MM-dd"
+            };
+            panel.Controls.Add(dtp);
+            panel.Controls.Add(lbl);
+            parent.Controls.Add(panel, 0, row);
+            return dtp;
+        }
         private static TextField AddField(TableLayoutPanel parent, string label, string? value, string placeholder, int row)
         {
             parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
