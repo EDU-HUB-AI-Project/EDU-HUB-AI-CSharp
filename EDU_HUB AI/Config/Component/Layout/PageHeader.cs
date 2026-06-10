@@ -4,7 +4,6 @@ using EDU_HUB_AI.Config.Theme;
 
 namespace EDU_HUB_AI.Config.Component.Layout
 {
-    /// <summary>페이지 상단 헤더 — 타이틀 · 시계 · 동기화 버튼. 도구상자에서 모든 페이지에 사용.</summary>
     [ToolboxItem(true)]
     public partial class PageHeader : UserControl
     {
@@ -12,6 +11,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
 
         public PageHeader()
         {
+            DoubleBuffered = true;
             InitializeComponent();
             ApplyTheme();
             btnSync.Click += (_, _) => SyncClicked?.Invoke(this, EventArgs.Empty);
@@ -20,6 +20,12 @@ namespace EDU_HUB_AI.Config.Component.Layout
             _clock.Tick += (_, _) => UpdateClock();
             HandleCreated += (_, _) => { if (ShowClock) _clock.Start(); };
             HandleDestroyed += (_, _) => _clock.Stop();
+        }
+
+        // Designer.cs가 Height를 임의로 덮어쓰는 것을 차단
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
+            base.SetBoundsCore(x, y, width, 80, specified);
         }
 
         [Category("EDU-HUB")]
@@ -59,7 +65,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
 
         private void ApplyTheme()
         {
-            Height = 64;
+            Height = 100;
             BackColor = ThemeColors.HeaderBg;
             lblTitle.Font = ThemeFonts.PageTitle;
             lblTitle.ForeColor = ThemeColors.Text;

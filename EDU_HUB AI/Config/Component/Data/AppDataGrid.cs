@@ -24,9 +24,6 @@ namespace EDU_HUB_AI.Config.Component.Data
         public string? CustomKey { get; }
     }
 
-    /// <summary>
-    /// reference eh-table — 액션 열은 텍스트 링크(수정 / 삭제)로 단순화
-    /// </summary>
     public class AppDataGrid : DataGridView
     {
         public const string EditColumnName = "__eh_edit";
@@ -42,7 +39,6 @@ namespace EDU_HUB_AI.Config.Component.Data
 
         private void EnableDoubleBuffering()
         {
-            // DataGridView.DoubleBuffered 는 protected 라 리플렉션으로 활성화 (행 갱신 시 깜빡임 방지)
             typeof(DataGridView).InvokeMember("DoubleBuffered",
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
                 null, this, new object[] { true });
@@ -63,8 +59,8 @@ namespace EDU_HUB_AI.Config.Component.Data
             RowHeadersVisible = false;
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            ColumnHeadersHeight = compact ? 32 : 36;
-            RowTemplate.Height = compact ? 28 : 36;
+            ColumnHeadersHeight = compact ? 32 : 38;
+            RowTemplate.Height = compact ? 32 : 56;
             Font = ThemeFonts.TableCell;
 
             ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
@@ -74,7 +70,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                 Font = ThemeFonts.TableHeader,
                 SelectionBackColor = ThemeColors.TableHeader,
                 Alignment = DataGridViewContentAlignment.MiddleLeft,
-                Padding = new Padding(8, 0, 8, 0)
+                Padding = new Padding(12, 0, 8, 0)
             };
 
             DefaultCellStyle = new DataGridViewCellStyle
@@ -83,7 +79,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                 ForeColor = ThemeColors.Text,
                 SelectionBackColor = ThemeColors.TableHover,
                 SelectionForeColor = ThemeColors.Text,
-                Padding = new Padding(8, 0, 8, 0)
+                Padding = new Padding(12, 0, 8, 0)
             };
 
             AlternatingRowsDefaultCellStyle = striped
@@ -91,7 +87,6 @@ namespace EDU_HUB_AI.Config.Component.Data
                 : DefaultCellStyle;
         }
 
-        /// <summary>텍스트 링크 액션 열 추가 — 아이콘 버튼 대신 "수정" / "삭제"</summary>
         public void AddTextActionColumns(bool includeEdit = true, bool includeDelete = true)
         {
             if (includeEdit)
@@ -106,7 +101,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                     ActiveLinkColor = ThemeColors.PrimaryHover,
                     VisitedLinkColor = ThemeColors.Link,
                     TrackVisitedState = false,
-                    Width = 72,
+                    Width = 90,
                     AutoSizeMode = DataGridViewAutoSizeColumnMode.None
                 });
             }
@@ -123,7 +118,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                     ActiveLinkColor = ThemeColors.Danger,
                     VisitedLinkColor = ThemeColors.LinkDanger,
                     TrackVisitedState = false,
-                    Width = 72,
+                    Width = 90,
                     AutoSizeMode = DataGridViewAutoSizeColumnMode.None
                 });
             }
