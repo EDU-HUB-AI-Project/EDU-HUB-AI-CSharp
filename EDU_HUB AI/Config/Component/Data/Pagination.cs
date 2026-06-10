@@ -8,18 +8,28 @@ namespace EDU_HUB_AI.Config.Component.Data
     {
         private int _totalCount = 128;
         private int _pageIndex = 1;
-        private int _pageSize = 10;
+        private int _pageSize = 15;
 
         public Pagination()
         {
             InitializeComponent();
             DoubleBuffered = true;
+            //EnableDoubleBuffer(flowPages);
             ApplyTheme();
             if (DesignTimeHelper.IsDesignMode(this))
                 ShowDesignPreview();
             else
                 UpdateDisplay();
         }
+
+        //private static void EnableDoubleBuffer(Control control)
+        //{
+        //    typeof(Control).InvokeMember("doubleBuffered",
+        //        System.Reflection.BindingFlags.SetProperty |
+        //        System.Reflection.BindingFlags.Instance |
+        //        System.Reflection.BindingFlags.NonPublic,
+        //        null, control, new object[] { true });
+        //}
 
         public int TotalCount
         {
@@ -87,17 +97,46 @@ namespace EDU_HUB_AI.Config.Component.Data
                     flowPages.Controls.Add(new Label
                     {
                         Text = "…",
-                        AutoSize = true,
-                        Padding = new Padding(4, 6, 4, 0),
-                        ForeColor = ThemeColors.TextMuted
+                        AutoSize = false,
+                        Width = 24,
+                        Height = 32,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        ForeColor = ThemeColors.TextMuted,
+                        Font = ThemeFonts.BodySm,
+                        Padding = new Padding(0)
                     });
                     continue;
                 }
 
-                var btn = ButtonStyles.Create(page.ToString(),
-                    page == _pageIndex ? ButtonVariant.Primary : ButtonVariant.Ghost, small: true);
-                btn.Width = 32;
-                btn.Padding = new Padding(4, 4, 4, 4);
+                var isActive = page == _pageIndex;
+                var btn = new Button
+                {
+                    Text = page.ToString(),
+                    AutoSize = false,
+                    Width = 32,
+                    Height = 32,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = ThemeFonts.ButtonSm,
+                    Cursor = Cursors.Hand,
+                    Margin = new Padding(1, 0, 1, 0),
+                    Padding = new Padding(0)
+                };
+
+                if(isActive)
+                {
+                    btn.BackColor = ThemeColors.Primary;
+                    btn.ForeColor = Color.White;
+                    btn.FlatAppearance.BorderSize = 0;
+                    btn.FlatAppearance.MouseOverBackColor = ThemeColors.PrimaryHover;
+                }
+                else
+                {
+                    btn.BackColor = ThemeColors.Surface;
+                    btn.ForeColor = ThemeColors.Text;
+                    btn.FlatAppearance.BorderSize = 0;
+                    btn.FlatAppearance.MouseOverBackColor = ThemeColors.Background;
+                }
+                
                 var captured = page;
                 btn.Click += (_, _) => GoToPage(captured);
                 flowPages.Controls.Add(btn);
@@ -107,9 +146,7 @@ namespace EDU_HUB_AI.Config.Component.Data
             btnNext.Enabled = _pageIndex < TotalPages;
 
             if (!DesignTimeHelper.IsDesignMode(this))
-            {
                 ApplyNavIcons();
-            }
         }
 
         private void ApplyNavIcons()
@@ -124,8 +161,10 @@ namespace EDU_HUB_AI.Config.Component.Data
             btnNext.ImageAlign = ContentAlignment.MiddleCenter;
             btnPrev.Image = IconHelper.Get("chevron-left", 16, ThemeColors.TextMuted);
             btnNext.Image = IconHelper.Get("chevron-right", 16, ThemeColors.TextMuted);
-            btnPrev.Size = new Size(32, 28);
-            btnNext.Size = new Size(32, 28);
+            btnPrev.Size = new Size(32, 32);
+            btnNext.Size = new Size(32, 32);
+            btnPrev.Margin = new Padding(0, 0, 6, 0);
+            btnNext.Margin = new Padding(6, 0, 0, 0);
         }
 
         private bool _laying;
@@ -169,11 +208,19 @@ namespace EDU_HUB_AI.Config.Component.Data
                 for (var i = 1; i <= total; i++) yield return i;
                 yield break;
             }
-            yield return 1;
-            yield return 2;
-            yield return 3;
-            yield return -1;
-            yield return total;
+
+            var start = Math.Max(1, _pageIndex - 2);
+            var end = Math.Min(total, _pageIndex + 2);
+
+            if (end - start < 4)
+            {
+                if (start == 1) end = Math.Min(total, 5);
+                else if (end == total) start = Math.Max(1, total - 4);
+            }
+
+            if (start > 1) { yield return 1; if (start > 2) yield return -1; }
+            for (var i = start; i <= end; i++) yield return i;
+            if (end < total) { if (end < total - 1) yield return -1; yield return total; }
         }
 
         private void GoToPage(int page)
@@ -186,9 +233,7 @@ namespace EDU_HUB_AI.Config.Component.Data
         }
 
         private void Pagination_Resize(object? sender, EventArgs e) => LayoutControls();
-
         private void btnPrev_Click(object? sender, EventArgs e) => GoToPage(_pageIndex - 1);
-
         private void btnNext_Click(object? sender, EventArgs e) => GoToPage(_pageIndex + 1);
     }
 }

@@ -39,13 +39,12 @@
             navigation1.Dock = DockStyle.Left;
             navigation1.Location = new Point(0, 0);
             navigation1.Name = "navigation1";
-            navigation1.Size = new Size(390, 1024);
             navigation1.TabIndex = 0;
             // 
             // contentPanel
             // 
             contentPanel.Dock = DockStyle.Fill;
-            contentPanel.Location = new Point(390, 0);
+            contentPanel.Location = new Point(280, 0);
             contentPanel.Name = "contentPanel";
             contentPanel.Size = new Size(1508, 1024);
             contentPanel.TabIndex = 2;

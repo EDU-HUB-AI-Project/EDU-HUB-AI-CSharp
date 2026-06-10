@@ -99,7 +99,8 @@ namespace EDU_HUB_AI.View
                     Title = "출석 현황",
                     Value = $"{attend}명",
                     SubText = GetRatio(attend),
-                    AccentColor = Color.Green,
+                    AccentColor = ThemeColors.Ok,
+                    ProgressValue = total > 0 ? (float)attend / total : 0f,
                     Size = new Size(cardW, 165),
                     Location = new Point(0, 0),
                     LinkText = "바로가기 →"
@@ -110,7 +111,8 @@ namespace EDU_HUB_AI.View
                     Title = "결석 현황",
                     Value = $"{absence}명",
                     SubText = GetRatio(absence),
-                    AccentColor = Color.FromArgb(220, 53, 69),
+                    AccentColor = ThemeColors.Danger,
+                    ProgressValue = total > 0 ? (float)absence / total : 0f,
                     Size = new Size(cardW, 165),
                     Location = new Point(cardW + gap, 0),
                     LinkText = "바로가기 →"
@@ -121,7 +123,8 @@ namespace EDU_HUB_AI.View
                     Title = "지각 현황",
                     Value = $"{late}명",
                     SubText = GetRatio(late),
-                    AccentColor = Color.DarkOrange,
+                    AccentColor = ThemeColors.Warn,
+                    ProgressValue = total > 0 ? (float)late / total : 0f,
                     Size = new Size(cardW, 165),
                     Location = new Point(2 * (cardW + gap), 0),
                     LinkText = "바로가기 →"
@@ -132,7 +135,8 @@ namespace EDU_HUB_AI.View
                     Title = "조퇴 현황",
                     Value = $"{earlyLeave}명",
                     SubText = GetRatio(earlyLeave),
-                    AccentColor = Color.DarkGoldenrod,
+                    AccentColor = ThemeColors.Warn,
+                    ProgressValue = total > 0 ? (float)earlyLeave / total : 0f,
                     Size = new Size(cardW, 165),
                     Location = new Point(3 * (cardW + gap), 0),
                     LinkText = "바로가기 →"
@@ -312,7 +316,7 @@ namespace EDU_HUB_AI.View
                     Title = "진행중 과정",
                     Value = $"{activeEduCount}개",
                     SubText = "현재 운영중인 교육과정",
-                    AccentColor = Color.SteelBlue,
+                    AccentColor = ThemeColors.Primary,
                     Size = new Size(eduCardW, 165),
                     Location = new Point(logW + gap, botY),
                     LinkText = "바로가기 →"
@@ -323,7 +327,7 @@ namespace EDU_HUB_AI.View
                     Title = "총 수강생",
                     Value = $"{totalStudentsEdu}명",
                     SubText = "진행중 과정 수강생 합계",
-                    AccentColor = Color.Green,
+                    AccentColor = ThemeColors.Ok,
                     Size = new Size(eduCardW, 165),
                     Location = new Point(logW + gap + eduCardW + gap, botY),
                     LinkText = "바로가기 →"
@@ -334,7 +338,8 @@ namespace EDU_HUB_AI.View
                     Title = "평균 출석률",
                     Value = $"{avgAttendRate:F2}%",
                     SubText = "오늘 기준 전체 출석률",
-                    AccentColor = Color.DarkOrange,
+                    AccentColor = ThemeColors.Warn,
+                    ProgressValue = (float)(avgAttendRate / 100),
                     Size = new Size(eduCardW, 165),
                     Location = new Point(logW + gap, eduRow2Y),
                     LinkText = "바로가기 →"
@@ -345,7 +350,7 @@ namespace EDU_HUB_AI.View
                     Title = "주의 필요 과정",
                     Value = $"{warningEduCount}개",
                     SubText = "출석률 80% 미만 과정",
-                    AccentColor = Color.Red,
+                    AccentColor = ThemeColors.Danger,
                     Size = new Size(eduCardW, 165),
                     Location = new Point(logW + gap + eduCardW + gap, eduRow2Y),
                     LinkText = "바로가기 →"
@@ -388,21 +393,21 @@ namespace EDU_HUB_AI.View
                 {
                     Location = new Point(x, y),
                     Size = new Size(width, height),
-                    BackColor = Color.White,
+                    BackColor = ThemeColors.Surface,
                     Padding = new Padding(10, 35, 10, 10)
                 };
 
                 panel.Paint += (s, e) =>
                 {
-                    using var pen = new Pen(Color.FromArgb(226, 232, 240), 1);
+                    using var pen = new Pen(ThemeColors.Border, 1);
                     e.Graphics.DrawRectangle(pen, 0, 0, panel.Width - 1, panel.Height - 1);
                 };
 
                 panel.Controls.Add(new Label
                 {
                     Text = title,
-                    Font = new Font("맑은 고딕", 9F, FontStyle.Bold),
-                    ForeColor = Color.FromArgb(15, 23, 42),
+                    Font = ThemeFonts.Section,
+                    ForeColor = ThemeColors.Text,
                     Location = new Point(12, 10),
                     AutoSize = true
                 });

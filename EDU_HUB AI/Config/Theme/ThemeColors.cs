@@ -43,5 +43,7 @@ namespace EDU_HUB_AI.Config.Theme
         public static Color ModalScrim => Color.FromArgb(248, 250, 252);
         // 모달 베일 — Paint 전용, 캡처 위에 덮는 연한 흰색 (alpha 200 ≈ 78%)
         public static Color ModalVeil => Color.FromArgb(200, 248, 250, 252);
+
+        public static Color SidebarTextHover => Color.FromArgb(203, 213, 225);
     }
 }

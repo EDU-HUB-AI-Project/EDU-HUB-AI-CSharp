@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using EDU_HUB_AI.Config.Theme;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 
 namespace EDU_HUB_AI.Config.Component.Layout
 {
+    [ToolboxItem(true)]
     public partial class CardControl : UserControl
     {
         private string _title = "";
@@ -18,6 +14,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
         private Color _accentColor = Color.Green;
 
         private string _linkText = "";
+        private float _progressValue = 0f;
 
         public string Title
         {
@@ -50,52 +47,77 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 Invalidate();
             }
         }
+        [DefaultValue(0f)]
+        public float ProgressValue
+        {
+            get => _progressValue;
+            set { _progressValue = Math.Clamp(value, 0f, 1f); Invalidate(); }
+        }
+
         public CardControl()
         {
+            DoubleBuffered = true;
             InitializeComponent();
-            BackColor = Color.White;
-            Size = new Size(300, 140);
+            BackColor = ThemeColors.Surface;
+            Size = new Size(300, 165);
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
             var g = e.Graphics;
-            const int margin = 16;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            using var titleFont = new Font("맑은 고딕", 9f);
-            using var valueFont = new Font("맑은 고딕", 26f, FontStyle.Bold);
-            using var subFont = new Font("맑은 고딕", 8f);
-            using var linkFont = new Font("맑은 고딕", 8f, FontStyle.Underline);
-            using var gray = new SolidBrush(Color.Gray);
-            using var dark = new SolidBrush(Color.FromArgb(15, 23, 42));
-            using var blue = new SolidBrush(Color.SteelBlue);
-            using var bgBrush = new SolidBrush(Color.FromArgb(220, 220, 220));
-            using var fgBrush = new SolidBrush(_accentColor);
+            const int pad = 20;
+            const int barH = 5;
+            int barY = Height - barH;
 
-            float subY = 38 + g.MeasureString(_value, valueFont).Height + 4;
-            float subH = g.MeasureString("A", subFont).Height;
-            int barY = Height - 20;
-            int barW = Width - margin * 2;
+            // 배경
+            using (var bg = new SolidBrush(ThemeColors.Surface))
+                g.FillRectangle(bg, ClientRectangle);
+
+            // 테두리
+            using (var border = new Pen(ThemeColors.Border))
+                g.DrawRectangle(border, 0, 0, Width - 1, Height - 1);
 
             // 타이틀
-            g.DrawString(_title, titleFont, gray, margin, 16);
-            // 큰 숫자
-            g.DrawString(_value, valueFont, dark, margin, 38);
-            // 서브텍스트
-            g.DrawString(_subText, subFont, gray, margin, subY);
+            using var titleFont = ThemeFonts.FieldLabel;
+            using (var titleBrush = new SolidBrush(ThemeColors.TextMuted))
+                g.DrawString(_title, titleFont, titleBrush, pad, 16);
 
-            // 바로가기 링크
+            // 큰 값
+            using var bodyBase = ThemeFonts.Body;
+            using var valueFont = new Font(bodyBase.FontFamily, 22f, FontStyle.Bold);
+            using (var valueBrush = new SolidBrush(ThemeColors.Text))
+                g.DrawString(_value, valueFont, valueBrush, pad, 36);
+
+            // 서브텍스트 / 링크
+            float valueH = g.MeasureString(_value, valueFont).Height;
+            float subY = 36 + valueH + 2;
+            using var bodySmFont = ThemeFonts.BodySm;
+            using (var subBrush = new SolidBrush(ThemeColors.TextMuted))
+                g.DrawString(_subText, bodySmFont, subBrush, pad, subY);
+
             if (!string.IsNullOrEmpty(_linkText))
             {
-                SizeF linkSize = g.MeasureString(_linkText, linkFont);
-                float linkY = Math.Min(subY + subH + 4, barY - linkSize.Height - 2);
-                g.DrawString(_linkText, linkFont, blue, Width - linkSize.Width - margin, linkY);
+                SizeF linkSize = g.MeasureString(_linkText, bodySmFont);
+                float linkX = Width - pad - linkSize.Width;
+                float linkY = barY - linkSize.Height - 8;
+                using (var linkBrush = new SolidBrush(ThemeColors.Link))
+                    g.DrawString(_linkText, bodySmFont, linkBrush, linkX, linkY);
             }
 
-            // 하단 프로그레스바
-            g.FillRectangle(bgBrush, new Rectangle(margin, barY, barW, 6));
-            g.FillRectangle(fgBrush, new Rectangle(margin, barY, barW / 2, 6));
+            // 프로그레스바 배경 (전체 너비)
+            using (var bgBar = new SolidBrush(ThemeColors.Border))
+                g.FillRectangle(bgBar, new Rectangle(0, barY, Width, barH));
+
+            // 프로그레스바 foreground
+            int fgW = (int)(Width * _progressValue);
+            if (fgW > 0)
+            {
+                using var fgBrush = new SolidBrush(_accentColor);
+                g.FillRectangle(fgBrush, new Rectangle(0, barY, fgW, barH));
+            }
         }
     }
 }

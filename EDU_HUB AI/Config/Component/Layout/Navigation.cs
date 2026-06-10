@@ -1,17 +1,28 @@
 using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Theme;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 
 namespace EDU_HUB_AI.Config.Component.Layout
 {
     public partial class Navigation : UserControl
     {
-        private readonly Dictionary<MenuKey, Button> _menuButtons = new();
+        private readonly Dictionary<MenuKey, Panel> _menuButtons = new();
+        private readonly Dictionary<MenuKey, string> _iconNames = new();
+        
         private MenuKey _activeKey = MenuKey.Dashboard;
+        private MenuKey? _hoverKey;
+
+        // 네이게이션 너비
+        private const int NavWidth = 240;
 
         public Navigation()
         {
             InitializeComponent();
-            BuildNavigation();
+            if(!DesignMode)
+            {
+                BuildNavigation();
+            }
         }
 
         public MenuKey ActiveMenu
@@ -25,27 +36,20 @@ namespace EDU_HUB_AI.Config.Component.Layout
         private void BuildNavigation()
         {
             BackColor = ThemeColors.Sidebar;
-            Width = 260;
+            Width = NavWidth;
             Dock = DockStyle.Left;
 
             Controls.Clear();
             _menuButtons.Clear();
-
-            var scroll = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
-                BackColor = ThemeColors.Sidebar
-            };
+            _iconNames.Clear();
 
             var stack = new FlowLayoutPanel
             {
-                Dock = DockStyle.Top,
+                Dock = DockStyle.Fill,          
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Padding = new Padding(16, 22, 16, 22),
+                AutoScroll = false,
+                Padding = new Padding(0, 16, 0, 16),
                 BackColor = ThemeColors.Sidebar
             };
 
@@ -68,8 +72,12 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 (MenuKey.Transport, "교통 정보", "bus")
             ]);
 
-            Controls.Add(scroll);
-            scroll.Controls.Add(stack);
+            typeof(FlowLayoutPanel)
+                .GetProperty("DoubleBuffered",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.SetValue(stack, true);
+
+            Controls.Add(stack);
             SetActiveMenu(MenuKey.Dashboard, raiseEvent: false);
         }
 
@@ -77,9 +85,9 @@ namespace EDU_HUB_AI.Config.Component.Layout
         {
             var panel = new Panel
             {
-                Width = 166,
-                Height = 44,   // 이미지 크기
-                Margin = new Padding(0, 8, 0, 12),
+                Width = NavWidth,
+                Height = 52,   // 이미지 크기
+                Margin = new Padding(0, 0, 0, 16),
                 BackColor = ThemeColors.Sidebar
             };
             var pic = new PictureBox
@@ -87,7 +95,8 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 Dock = DockStyle.Fill,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 BackColor = ThemeColors.Sidebar,
-                Image = Properties.Resources.logoNav
+                Image = Properties.Resources.logoNav,
+                Padding = new Padding(0, 4, 0, 4)
             };
             panel.Controls.Add(pic);
             return panel;
@@ -100,69 +109,113 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 Text = label,
                 Font = ThemeFonts.NavGroup,
                 ForeColor = ThemeColors.SidebarGroupText,
-                Width = 206,
-                Height = 38,
-                Padding = new Padding(0, 20, 0, 0)
+                AutoSize = false,
+                Width = NavWidth,
+                Height = 44,
+                Padding = new Padding(16, 22, 0, 0),
+                TextAlign = ContentAlignment.TopLeft
             });
 
             foreach (var (key, text, icon) in items)
             {
-                var btn = CreateMenuButton(key, text, icon);
-                parent.Controls.Add(btn);
-                _menuButtons[key] = btn;
+                var pnl = CreateMenuButton(key, text, icon);
+                parent.Controls.Add(pnl);
+                _menuButtons[key] = pnl;
             }
         }
 
-        private Button CreateMenuButton(MenuKey key, string text, string iconName)
+        private Panel CreateMenuButton(MenuKey key, string text, string iconName)
         {
-            var btn = new Button
+            _iconNames[key] = iconName;
+
+            var panel = new Panel
             {
-                Text = "" + text,
-                Width = 206,
-                Height = 49,
-                FlatStyle = FlatStyle.Flat,
-                TextAlign = ContentAlignment.MiddleLeft,
-                ImageAlign = ContentAlignment.MiddleLeft,
-                TextImageRelation = TextImageRelation.ImageBeforeText,
-                Tag = key,
-                Font = ThemeFonts.NavItem,
-                ForeColor = ThemeColors.SidebarText,
+                Width = NavWidth,
+                Height = 52,
+                Cursor = Cursors.Hand,
+                Margin = new Padding(0, 1, 0, 1),
                 BackColor = ThemeColors.Sidebar,
-                Margin = new Padding(0, 2, 0, 2),
-                Padding = new Padding(6, 0, 6, 0),
-                Cursor = Cursors.Hand
             };
-            btn.FlatAppearance.BorderSize = 0;
-            btn.FlatAppearance.MouseOverBackColor = ThemeColors.SidebarHover;
 
-            var image = IconHelper.Get(iconName, 18, ThemeColors.SidebarText);
-            if (image != null)
-                btn.Image = PadRight(image, 4);
+            panel.Paint += (_, e) => PaintNavItem(e.Graphics, panel, key, text);
+            panel.MouseEnter += (_, _) => { _hoverKey = key; panel.Invalidate(); };
+            panel.MouseLeave += (_, _) => { if (_hoverKey == key) { _hoverKey = null; panel.Invalidate(); } };
+            panel.Click += (_, _) => SetActiveMenu(key, raiseEvent: true);
 
-            btn.Click += (_, _) => SetActiveMenu(key, raiseEvent: true);
-            return btn;
+            return panel;
         }
 
-        private static Image PadRight(Image src, int pad)
+        private void PaintNavItem(Graphics g, Panel panel, MenuKey key, string text)
         {
-            var bmp = new Bitmap(src.Width + pad, src.Height);
-            using var g = Graphics.FromImage(bmp);
-            g.DrawImage(src, 0, 0, src.Width, src.Height);
-            return bmp;
-        }
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
+            bool active = _activeKey == key;
+            bool hover = _hoverKey == key && !active;
+
+            // 기본 배경
+            using (var bg = new SolidBrush(ThemeColors.Sidebar))
+            {
+                g.FillRectangle(bg, panel.ClientRectangle);
+            }
+
+            // Active / Hover
+            if (active || hover)
+            {
+                var fillColor = active ? ThemeColors.SidebarActiveBg : ThemeColors.SidebarHover;
+                using var brush = new SolidBrush(fillColor);
+                FillRoundedRect(g, brush, new Rectangle(4, 3, panel.Width - 8, panel.Height - 6), 6);
+            }
+
+            // Active
+            if(active)
+            {
+                using var barBrush = new SolidBrush(ThemeColors.Primary);
+                FillRoundedRect(g, barBrush, new Rectangle(0, 12, 3, panel.Height - 24), 2);
+            }
+
+            // 아이콘
+            var iconColor = active ? Color.White
+              : hover ? ThemeColors.SidebarTextHover   
+              : ThemeColors.SidebarText;
+            var icon = IconHelper.Get(_iconNames[key], 20, iconColor);
+
+            if(icon != null)
+            {
+                g.DrawImage(icon, 16, (panel.Height - 20) / 2, 20, 20);
+            }
+
+            // 텍스트
+            var textColor = active ? Color.White
+              : hover ? ThemeColors.SidebarTextHover   
+              : ThemeColors.SidebarText;
+
+            using var baseFont = ThemeFonts.NavItem;
+            using var boldFont = active ? new Font(baseFont.FontFamily, baseFont.Size, FontStyle.Bold) : null;
+            var font = boldFont ?? baseFont;
+
+            using var textBrush = new SolidBrush(textColor);
+            g.DrawString(text, font, textBrush,
+                new RectangleF(46, 0, panel.Width - 52, panel.Height),
+                new StringFormat { LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter });
+        }
+        private static void FillRoundedRect(Graphics g, Brush brush, Rectangle rect, int radius)
+        {
+            if (rect.Width <= 0 || rect.Height <= 0) return;
+            int d = radius * 2;
+            using var path = new GraphicsPath();
+            path.AddArc(rect.Left, rect.Top, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Top, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.Left, rect.Bottom - d, d, d, 90, 90);
+            path.CloseAllFigures();
+            g.FillPath(brush, path);
+        }
         private void SetActiveMenu(MenuKey key, bool raiseEvent)
         {
             _activeKey = key;
-            foreach (var (menuKey, btn) in _menuButtons)
-            {
-                var active = menuKey == key;
-                btn.ForeColor = active ? Color.White : ThemeColors.SidebarText;
-                btn.BackColor = active ? ThemeColors.SidebarActiveBg : ThemeColors.Sidebar;
-                btn.Font = active
-                    ? new Font(ThemeFonts.NavItem.FontFamily, ThemeFonts.NavItem.Size, FontStyle.Bold)
-                    : ThemeFonts.NavItem;
-            }
+            foreach (var (_, panel) in _menuButtons)
+                panel.Invalidate();
 
             if (raiseEvent)
                 MenuSelected?.Invoke(this, key);
