@@ -62,7 +62,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
-            var maxCnt = _txtModifyMax.Text.Trim();
+            var maxCnt = _txtRoomMaxCnt.Text.Trim();
 
             if (maxCnt == null || maxCnt == "")
             {
@@ -72,6 +72,11 @@ namespace EDU_HUB_AI.Config.Component.Domain
             if(!int.TryParse(maxCnt, out int maxCount))
             {
                 MessageBox.Show("숫자만 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if(Convert.ToInt32(maxCnt) < _source?.currentCount)
+            {
+                MessageBox.Show("현재 배정인원보다 작은 인원은 입력할 수 없습니다", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             Result = _source != null ? CopyOf(_source) : new DormitoryDto();
