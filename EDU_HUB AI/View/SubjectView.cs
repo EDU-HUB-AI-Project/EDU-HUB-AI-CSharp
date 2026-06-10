@@ -29,11 +29,9 @@ namespace EDU_HUB_AI.View
         private List<SubjectDto> _filtered = new();
         private AdminSubjectController _adminSubjectController = new AdminSubjectController();
 
-
         private List<EduInfoDto> _eduInfos = new();
         private readonly AdminEduInfoController _adminEduInfoController = new AdminEduInfoController();
 
-        
         private bool _suppressFilter = false;
 
         public SubjectView()
@@ -44,18 +42,23 @@ namespace EDU_HUB_AI.View
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
-            //FixDockOrder();
+
+            tableCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, tableCard.Width - 1, tableCard.Height - 1);
+            };
+            filterCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, filterCard.Width - 1, filterCard.Height - 1);
+            };
 
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
-            cmbEdu.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) 
-                {
-                    ApplyFilter(); 
-                    RenderPage(1); 
-                } 
-            };
+            cmbEdu.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) { ApplyFilter(); RenderPage(1); } };
             cmbStatus.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) { ApplyFilter(); RenderPage(1); } };
             txtSearch.TextChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
         }
@@ -69,9 +72,10 @@ namespace EDU_HUB_AI.View
 
         private void FixDockOrder()
         {
-            bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
+            bodyPanel.Controls.SetChildIndex(tableCard, 0);
+            bodyPanel.Controls.SetChildIndex(gapPanel, 1);
+            bodyPanel.Controls.SetChildIndex(filterCard, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -106,10 +110,9 @@ namespace EDU_HUB_AI.View
                 _suppressFilter = true;
                 SetupFilterSource();
                 if (!string.IsNullOrEmpty(prevEduId))
-                {
                     cmbEdu.SelectedValue = prevEduId;
-                }
                 _suppressFilter = false;
+
                 ApplyFilter();
                 RenderPage(page);
             }
@@ -153,7 +156,7 @@ namespace EDU_HUB_AI.View
             grid.SuspendLayout();
             grid.Rows.Clear();
 
-            foreach(var s in _pageItems)
+            foreach (var s in _pageItems)
             {
                 var eduName = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId)?.eduName ?? s.eduId;
                 grid.Rows.Add(s.subjectName, eduName, s.startDate, s.endDate, EndYnLabel(s.endYn));
@@ -162,7 +165,6 @@ namespace EDU_HUB_AI.View
         }
 
         // ===== CRUD =====
-        /// <summary>등록 버튼 Click 이벤트에 연결 (디자이너에서 AppButton 추가 후 연결)</summary>
         protected async void OnCreate(object? sender, EventArgs e)
         {
             var created = SubjectEditModal.Show(this.FindForm(), null);
@@ -175,28 +177,13 @@ namespace EDU_HUB_AI.View
             {
                 var res = await _adminSubjectController.InsertSubject(created);
                 if (res?.Status == 200)
-                {
                     await LoadAndRender(int.MaxValue, showOverlay: false);
-                }
                 else
-                {
-                    MessageBox.Show(res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                    MessageBox.Show(this.FindForm(), res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch(ApiException ex)
-            {
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                _adminSubjectController.OnRetry = null;
-                overlay.Close();
-                overlay.Dispose();
-            }
+            catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { _adminSubjectController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
         }
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
@@ -223,31 +210,16 @@ namespace EDU_HUB_AI.View
                         RenderPage(pagination1.PageIndex);
                     }
                     else
-                    {
-                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex)
-                {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    _adminSubjectController.OnRetry = null;
-                    overlay.Close();
-                    overlay.Dispose();
-                }
+                catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { _adminSubjectController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
             else if (e.Action == TableAction.Delete)
             {
                 if (!ConfirmModal.Show(this.FindForm(), "삭제 확인", $"'{target.subjectName}'을(를) 삭제할까요?"))
-                {
                     return;
-                }
 
                 var overlay = LoadingOverlay.Create(bodyPanel, "삭제 중...");
                 _adminSubjectController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
@@ -262,24 +234,11 @@ namespace EDU_HUB_AI.View
                         RenderPage(pagination1.PageIndex);
                     }
                     else
-                    {
-                        MessageBox.Show(res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex)
-                {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    _adminSubjectController.OnRetry = null;
-                    overlay.Close();
-                    overlay.Dispose();
-                }
+                catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { _adminSubjectController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
         }
 
@@ -289,15 +248,7 @@ namespace EDU_HUB_AI.View
         // ===== 필터링 =====
         private void SetupFilterSource()
         {
-            var eduList = new List<EduInfoDto>
-            {
-                new()
-                {
-                    eduId = "",
-                    eduName = "전체"
-                }
-            };
-
+            var eduList = new List<EduInfoDto> { new() { eduId = "", eduName = "전체" } };
             eduList.AddRange(_eduInfos);
             cmbEdu.DataSource = eduList;
             cmbEdu.DisplayMember = "eduName";
@@ -305,11 +256,10 @@ namespace EDU_HUB_AI.View
 
             var statusList = new[]
             {
-                new {Value = "", Label = "전체" },
-                new {Value = "N", Label = "진행중" },
-                new {Value = "Y", Label = "종료" }
+                new { Value = "", Label = "전체" },
+                new { Value = "N", Label = "진행중" },
+                new { Value = "Y", Label = "종료" }
             };
-
             cmbStatus.DataSource = statusList.ToList();
             cmbStatus.DisplayMember = "Label";
             cmbStatus.ValueMember = "Value";
@@ -320,17 +270,12 @@ namespace EDU_HUB_AI.View
             var result = _all.AsEnumerable();
 
             var eduId = cmbEdu.SelectedValue?.ToString();
-
-            if(!string.IsNullOrEmpty(eduId))
-            {
+            if (!string.IsNullOrEmpty(eduId))
                 result = result.Where(s => s.eduId == eduId);
-            }
 
             var status = cmbStatus.SelectedValue?.ToString();
-            if(!string.IsNullOrEmpty(status))
-            {
+            if (!string.IsNullOrEmpty(status))
                 result = result.Where(s => s.endYn == status);
-            }
 
             var search = txtSearch.Text.Trim();
             if (!string.IsNullOrEmpty(search))

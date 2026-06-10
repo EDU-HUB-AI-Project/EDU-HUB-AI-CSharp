@@ -38,6 +38,17 @@ namespace EDU_HUB_AI.View
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
+            tableCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, tableCard.Width - 1, tableCard.Height - 1);
+            };
+            filterCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, filterCard.Width - 1, filterCard.Height - 1);
+            };
+
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
@@ -54,9 +65,10 @@ namespace EDU_HUB_AI.View
 
         private void FixDockOrder()
         {
-            bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
+            bodyPanel.Controls.SetChildIndex(tableCard, 0);
+            bodyPanel.Controls.SetChildIndex(gapPanel, 1);
+            bodyPanel.Controls.SetChildIndex(filterCard, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -89,21 +101,18 @@ namespace EDU_HUB_AI.View
 
         private void InitFloorCombo()
         {
-            var floors = _all
-                    .Select(c => c.floor)
-                    .Distinct()
-                    .OrderBy(f => f)
-                    .Select(f => $"{f}층")
-                    .Prepend("전체")
-                    .ToArray();
+            var floorItems = new[] { new { Value = (int?)null, Label = "전체" } }
+                .Concat(_all.Select(c => c.floor).Distinct().OrderBy(f => f)
+                    .Select(f => new { Value = (int?)f, Label = $"{f}층" }))
+                .ToList();
 
             cmbFloor.SelectedIndexChanged -= OnFloorChanged;
-            cmbFloor.Items.Clear();
-            cmbFloor.Items.AddRange(floors);
+            cmbFloor.DataSource = floorItems;
+            cmbFloor.DisplayMember = "Label";
+            cmbFloor.ValueMember = "Value";
             cmbFloor.SelectedIndex = 0;
             cmbFloor.SelectedIndexChanged += OnFloorChanged;
         }
-
 
         // ===== 그리드 =====
         private void SetupGrid()
@@ -135,7 +144,7 @@ namespace EDU_HUB_AI.View
             grid.SuspendLayout();
             grid.Rows.Clear();
 
-            foreach(var c in _pageItems)
+            foreach (var c in _pageItems)
             {
                 grid.Rows.Add(c.classroomName, c.floor, c.imageId, c.imagePath);
             }
@@ -143,7 +152,6 @@ namespace EDU_HUB_AI.View
         }
 
         // ===== CRUD =====
-        /// <summary>등록 버튼 Click 이벤트에 연결 (디자이너에서 AppButton 추가 후 연결)</summary>
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
             if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
@@ -167,30 +175,14 @@ namespace EDU_HUB_AI.View
                     RenderPage(pagination1.PageIndex);
                 }
                 else
-                {
-                    MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                    MessageBox.Show(this.FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (ApiException ex)
-            {
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                _adminClassroomController.OnRetry = null;
-                overlay.Close();
-                overlay.Dispose();
-            }
-            
+            catch (ApiException ex) { MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { _adminClassroomController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
         }
-        
-        //
-        // 필터링
-        //
+
+        // ===== 필터링 =====
         private void ApplyFilter()
         {
             var result = _all.AsEnumerable();
@@ -199,11 +191,9 @@ namespace EDU_HUB_AI.View
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(c => c.classroomName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
-            if(cmbFloor.SelectedItem is string selected && selected != "전체")
-            {
-                var floor = int.Parse(selected.Replace("층", ""));
+            if (cmbFloor.SelectedValue is int floor)
                 result = result.Where(c => c.floor == floor);
-            }
+
             _filtered = result.ToList();
         }
 

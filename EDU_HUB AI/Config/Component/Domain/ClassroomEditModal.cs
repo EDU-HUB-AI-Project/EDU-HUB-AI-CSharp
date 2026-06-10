@@ -36,6 +36,13 @@ namespace EDU_HUB_AI.Config.Component.Domain
             AddReadOnlyField(stack, "SVG ID", source?.imageId, 2);
             AddReadOnlyField(stack, "이미지 경로", source?.imagePath, 3);
             Body.Controls.Add(stack);
+            SetCardWidth(440);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            FitCardSize();
         }
 
         public static ClassroomDto? Show(IWin32Window owner, ClassroomDto? source)

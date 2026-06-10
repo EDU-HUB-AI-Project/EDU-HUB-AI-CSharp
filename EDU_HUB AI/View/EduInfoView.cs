@@ -38,7 +38,17 @@ namespace EDU_HUB_AI.View
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
-            //FixDockOrder();
+
+            tableCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, tableCard.Width - 1, tableCard.Height - 1);
+            };
+            filterCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, filterCard.Width - 1, filterCard.Height - 1);
+            };
 
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             btnCreate.Click += OnCreate;
@@ -56,9 +66,10 @@ namespace EDU_HUB_AI.View
 
         private void FixDockOrder()
         {
-            bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
+            bodyPanel.Controls.SetChildIndex(tableCard, 0);
+            bodyPanel.Controls.SetChildIndex(gapPanel, 1);
+            bodyPanel.Controls.SetChildIndex(filterCard, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -146,16 +157,16 @@ namespace EDU_HUB_AI.View
                 }
                 else
                 {
-                    MessageBox.Show(res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch(ApiException ex)
             {
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch(Exception ex)
             {
-                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -190,16 +201,16 @@ namespace EDU_HUB_AI.View
                     }
                     else
                     {
-                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 catch (ApiException ex)
                 {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {
@@ -229,16 +240,16 @@ namespace EDU_HUB_AI.View
                     }
                     else
                     {
-                        MessageBox.Show(res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
                 catch (ApiException ex)
                 {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {

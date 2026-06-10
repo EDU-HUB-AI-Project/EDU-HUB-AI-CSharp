@@ -11,8 +11,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
     {
         private readonly EduInfoDto? _source;
         private readonly TextField _txtEduName;
-        private readonly DateTimePicker _dtpStartDate;
-        private readonly DateTimePicker _dtpEndDate;
+        private readonly DateField _dtpStartDate;
+        private readonly DateField _dtpEndDate;
         private readonly TextField _txtBatchNumber;
         private readonly TextField _txtCapacity;
 
@@ -35,13 +35,43 @@ namespace EDU_HUB_AI.Config.Component.Domain
             };
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
+            for(int i = 0; i < 5; i++)
+            {
+                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            }
+
             _txtEduName = AddField(stack, "과정명", source?.eduName, "과정명 입력", 0);
-            _dtpStartDate = AddDateField(stack, "시작일", source?.startDate, 1);
-            _dtpEndDate = AddDateField(stack, "종료일", source?.endDate, 2);
+
+
+            _dtpStartDate = new DateField
+            {
+                FieldLabel = "시작일",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+            _dtpEndDate = new DateField
+            {
+                FieldLabel = "종료일",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+            _dtpStartDate.SetYyMMdd(source?.startDate);
+            _dtpEndDate.SetYyMMdd(source?.endDate);
+
             _txtBatchNumber = AddField(stack, "기수", source?.batchNumber.ToString(), "숫자 입력", 3);
             _txtCapacity = AddField(stack, "정원", source?.capacity.ToString(), "숫자 입력", 4);
 
+            stack.Controls.Add(_dtpStartDate, 0, 1);
+            stack.Controls.Add(_dtpEndDate, 0, 2);
+
             Body.Controls.Add(stack);
+            SetCardWidth(480);
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            FitCardSize();
         }
 
         public static EduInfoDto? Show(IWin32Window owner, EduInfoDto? source)
@@ -98,47 +128,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             };
             parent.Controls.Add(field, 0, row);
             return field;
-        }
-
-        private static DateTimePicker AddDateField(TableLayoutPanel parent, string label, string? value, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var lbl = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-
-            var dtp = new DateTimePicker
-            {
-                Format = DateTimePickerFormat.Short,
-                Dock = DockStyle.Top
-            };
-
-            if (!string.IsNullOrEmpty(value) && value.Length == 6 
-                &&
-                DateTime.TryParseExact("20" + value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var dt))
-            {
-                dtp.Value = dt;
-            }
-
-
-            panel.Controls.Add(dtp);
-            panel.Controls.Add(lbl);
-            parent.Controls.Add(panel, 0, row);
-            return dtp;
         }
 
         // ====== 리턴 ======

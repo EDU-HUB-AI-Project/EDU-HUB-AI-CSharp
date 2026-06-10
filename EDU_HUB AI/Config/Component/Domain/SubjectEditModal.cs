@@ -11,12 +11,11 @@ namespace EDU_HUB_AI.Config.Component.Domain
     {
         private readonly SubjectDto? _source;
         private readonly TextField _txtSubjectName;
-        private readonly DateTimePicker _dtpStartDate;
-        private readonly DateTimePicker _dtpEndDate;
-        private readonly CheckBox _chkEndYn;
-
-        private readonly ComboBox _cmbEdu;
-        private readonly ComboBox _cmbClassroom;
+        private readonly DateField _dtpStartDate;
+        private readonly DateField _dtpEndDate;
+        private readonly ToggleSwitch _togEndYn;
+        private readonly ComboField _cmbEdu;
+        private readonly ComboField _cmbClassroom;
 
         private readonly AdminClassroomController _classroomController = new AdminClassroomController();
         private readonly AdminEduInfoController _eduInfoController = new AdminEduInfoController();
@@ -40,14 +39,67 @@ namespace EDU_HUB_AI.Config.Component.Domain
             };
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-            _txtSubjectName = AddField(stack, "과목명", source?.subjectName, "과목명 입력", 0);
-            _cmbEdu = AddComboField(stack, "교육과정", 1);
-            _cmbClassroom = AddComboField(stack, "강의실", 2);
-            _dtpStartDate = AddDateField(stack, "시작일", source?.startDate, 3);
-            _dtpEndDate = AddDateField(stack, "종료일", source?.endDate, 4);
-            _chkEndYn = AddCheckField(stack, "종료여부", source?.endYn == "Y", 5);
+            for(int i = 0; i < 6; i++)
+            {
+                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            }
+
+            _txtSubjectName = new TextField
+            {
+                FieldLabel = "과목명",
+                Text = source?.subjectName ?? "",
+                Placeholder = "과목명 입력",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _cmbEdu = new ComboField
+            {
+                FieldLabel = "교육과정",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _cmbClassroom = new ComboField
+            {
+                FieldLabel = "강의실",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _dtpStartDate = new DateField
+            {
+                FieldLabel = "시작일",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _dtpEndDate = new DateField
+            {
+                FieldLabel = "종료일",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+            _dtpStartDate.SetYyMMdd(source?.startDate);
+            _dtpEndDate.SetYyMMdd(source?.endDate);
+
+            _togEndYn = new ToggleSwitch
+            {
+                FieldLabel = "종료 여부",
+                InlineLabel = "종료됨",
+                Checked = source?.endYn == "Y",
+                Margin = new Padding(0, 0, 0, 4)
+            };
+
+            stack.Controls.Add(_txtSubjectName, 0, 0);
+            stack.Controls.Add(_cmbEdu, 0, 1);
+            stack.Controls.Add(_cmbClassroom, 0, 2);
+            stack.Controls.Add(_dtpStartDate, 0, 3);
+            stack.Controls.Add(_dtpEndDate, 0, 4);
+            stack.Controls.Add(_togEndYn, 0, 5);
 
             Body.Controls.Add(stack);
+            SetCardWidth(500);
         }
 
         // ComboBox 등 초기값 로딩
@@ -56,6 +108,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
             base.OnLoad(e);
             await LoadEduInfos();
             await LoadClassrooms();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            FitCardSize();
         }
 
         private async Task LoadEduInfos()
@@ -67,13 +125,9 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _cmbEdu.DisplayMember = "eduName";
             _cmbEdu.ValueMember = "eduId";
 
-            if (_source?.eduId != null)
+            if(_source?.eduId != null && list.Any(e => e.eduId == _source.eduId))
             {
-                var match = list.FirstOrDefault(e => e.eduId == _source.eduId);
-                if (match != null)
-                {
-                    _cmbEdu.SelectedValue = match.eduId;
-                }
+                _cmbEdu.SelectedValue = _source.eduId;
             }
         }
 
@@ -86,13 +140,9 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _cmbClassroom.DisplayMember = "classroomName";
             _cmbClassroom.ValueMember = "classroomId";
 
-            if(_source?.classroomId != null)
+            if(_source?.classroomId != null && list.Any(c => c.classroomId == _source.classroomId))
             {
-                var match = list.FirstOrDefault(c => c.classroomId == _source.classroomId);
-                if(match != null)
-                {
-                    _cmbClassroom.SelectedValue = match.classroomId;
-                }
+                _cmbClassroom.SelectedValue = _source.classroomId;
             }
         }
 
@@ -107,20 +157,23 @@ namespace EDU_HUB_AI.Config.Component.Domain
             var subjectName = _txtSubjectName.Text.Trim();
             var eduId = _cmbEdu.SelectedValue?.ToString();
             var classroomId = _cmbClassroom.SelectedValue?.ToString();
-            var startDate = _dtpStartDate.Value.ToString("yyMMdd");
-            var endDate = _dtpEndDate.Value.ToString("yyMMdd");
+            var startDate = _dtpStartDate.ToYyMMdd();
+            var endDate = _dtpEndDate.ToYyMMdd();
 
             if (string.IsNullOrWhiteSpace(subjectName))
             {
-                MessageBox.Show("과목이름 을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _txtSubjectName.HasError = true;
+                MessageBox.Show("과목명을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if(string.IsNullOrEmpty(eduId))
+            _txtSubjectName.HasError = false;
+
+            if (string.IsNullOrEmpty(eduId))
             {
                 MessageBox.Show("교육과정을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if(string.IsNullOrEmpty(classroomId))
+            if (string.IsNullOrEmpty(classroomId))
             {
                 MessageBox.Show("강의실을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -133,138 +186,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Result.classroomId = classroomId;
             Result.startDate = startDate;
             Result.endDate = endDate;
-            Result.endYn = _chkEndYn.Checked ? "Y" : "N";
+            Result.endYn = _togEndYn.Checked ? "Y" : "N";
             base.OnConfirm();
-        }
-
-        // ====== UI 헬퍼 ======
-        private ComboBox AddComboField(TableLayoutPanel parent, string label, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var lbl = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-
-            var cmb = new ComboBox
-            {
-                Dock = DockStyle.Top,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Font = ThemeFonts.Body,
-                BackColor = ThemeColors.Surface
-            };
-
-            panel.Controls.Add(cmb);
-            panel.Controls.Add(lbl);
-            parent.Controls.Add(panel, 0, row);
-            return cmb;
-        }
-
-        private static TextField AddField(TableLayoutPanel parent, string label, string? value, string placeholder, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var field = new TextField
-            {
-                FieldLabel = label,
-                Text = value ?? "",
-                Placeholder = placeholder,
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-            parent.Controls.Add(field, 0, row);
-            return field;
-        }
-
-        private CheckBox AddCheckField(TableLayoutPanel parent, string label, bool isChecked, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var lbl = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-
-            var chk = new CheckBox
-            {
-                Text = "종료 여부",
-                Checked = isChecked,
-                Font = ThemeFonts.Body,
-                ForeColor = ThemeColors.Text,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-
-            panel.Controls.Add(chk);
-            panel.Controls.Add(lbl);
-            parent.Controls.Add(panel, 0, row);
-            return chk;
-        }
-
-        private static DateTimePicker AddDateField(TableLayoutPanel parent, string label, string? value, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var lbl = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-
-            var dtp = new DateTimePicker
-            {
-                Format = DateTimePickerFormat.Short,
-                Dock = DockStyle.Top
-            };
-
-            if (!string.IsNullOrEmpty(value) && value.Length == 6
-                &&
-                DateTime.TryParseExact("20" + value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var dt))
-            {
-                dtp.Value = dt;
-            }
-
-
-            panel.Controls.Add(dtp);
-            panel.Controls.Add(lbl);
-            parent.Controls.Add(panel, 0, row);
-            return dtp;
         }
 
         // ====== 리턴 ======
