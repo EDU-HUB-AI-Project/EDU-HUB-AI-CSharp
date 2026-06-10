@@ -94,8 +94,32 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
+            var invalidMeals = new List<string>();
+
+            for (int m = 0; m < 3; m++)
+            {
+                string menuText = _mealInputList[m].Text.Trim();
+                if (!string.IsNullOrWhiteSpace(menuText) && !IsValidMenu(menuText))
+                {
+                    invalidMeals.Add(MealLabels[m]);
+                }
+            }
+
+            if (invalidMeals.Count > 0)
+            {
+                string mealList = string.Join(", ", invalidMeals);
+                MessageBox.Show($"{mealList} 메뉴에 허용되지 않는 특수문자가 포함되어 있습니다.", "알림");
+                return;
+            }
+
             Result = BuildResult();
             base.OnConfirm();
+        }
+
+        private bool IsValidMenu(string menuText)
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                menuText, @"^[가-힣a-zA-Z0-9\s,]+$");
         }
 
         private List<CafeteriaDto> BuildResult()
@@ -146,12 +170,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             }
 
             return result;
-        }
-
-        public static bool Show(IWin32Window owner, string date)
-        {
-            using var modal = new CafeteriaEditModal(date);
-            return modal.ShowDialog(owner) == DialogResult.OK;
         }
 
         private Label CreateHeaderCell(string text)

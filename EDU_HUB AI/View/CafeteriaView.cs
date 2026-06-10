@@ -234,7 +234,7 @@ namespace EDU_HUB_AI.View
 
         private void OnCreate(object? sender, EventArgs e)
         {
-            var createView = new CafeteriaCreateView();
+            var createView = new CafeteriaCreateView(_allDetail);
             createView.Dock = DockStyle.Fill;
 
             createView.OnBack += async () =>

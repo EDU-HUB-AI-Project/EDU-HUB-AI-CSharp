@@ -20,17 +20,19 @@ namespace EDU_HUB_AI.View
         private DateTimePicker _datePicker;
         private ComboBox _cmbMeal;
 
-        // 각 식사 종류별 독립적인 날짜 리스트
         private List<DateTime> _datesBreakfast = new List<DateTime>();
         private List<DateTime> _datesLunch = new List<DateTime>();
         private List<DateTime> _datesDinner = new List<DateTime>();
 
         private static readonly string[] MealTypes = { "BREAKFAST", "LUNCH", "DINNER" };
 
+        private readonly List<CafeteriaDto> _allDetail;
+
         public event Action? OnBack;
 
-        public CafeteriaCreateView()
+        public CafeteriaCreateView(List<CafeteriaDto> allDetail)
         {
+            _allDetail = allDetail;
             InitializeComponent();
             Dock = DockStyle.Fill;
             BackColor = ThemeColors.Background;
@@ -176,24 +178,9 @@ namespace EDU_HUB_AI.View
             mainPanel.Controls.Add(bottomPanel, 0, 2);
 
             Controls.Add(mainPanel);
-
-            // 각 식사 종류별 초기 날짜 세팅
-            InitDatesFor(_datesBreakfast);
-            InitDatesFor(_datesLunch);
-            InitDatesFor(_datesDinner);
-
-            RebuildRows(_gridBreakfast, _datesBreakfast);
-            RebuildRows(_gridLunch, _datesLunch);
-            RebuildRows(_gridDinner, _datesDinner);
-
-            UpdateGridHeight(_gridBreakfast, _datesBreakfast.Count);
-            UpdateGridHeight(_gridLunch, _datesLunch.Count);
-            UpdateGridHeight(_gridDinner, _datesDinner.Count);
-
             ShowSection(0);
         }
 
-        // 현재 선택된 식사 종류의 날짜 리스트 반환
         private List<DateTime> GetCurrentDates()
         {
             return _cmbMeal.SelectedIndex switch
@@ -205,7 +192,6 @@ namespace EDU_HUB_AI.View
             };
         }
 
-        // 현재 선택된 식사 종류의 그리드 반환
         private DataGridView GetCurrentGrid()
         {
             return _cmbMeal.SelectedIndex switch
@@ -219,7 +205,6 @@ namespace EDU_HUB_AI.View
 
         private void OnMealChanged(object? sender, EventArgs e)
         {
-            // 드롭다운 전환 시 해당 식사 종류의 시작일을 DatePicker에 반영
             var dates = GetCurrentDates();
             if (dates.Count > 0)
             {
@@ -246,14 +231,28 @@ namespace EDU_HUB_AI.View
             var dates = GetCurrentDates();
             var grid = GetCurrentGrid();
 
-            DateTime next = dates[dates.Count - 1].AddDays(1);
+            DateTime next = dates.Count == 0
+                ? _datePicker.Value.Date
+                : dates[dates.Count - 1].AddDays(1);
+
             while (next.DayOfWeek == DayOfWeek.Saturday || next.DayOfWeek == DayOfWeek.Sunday)
             {
                 next = next.AddDays(1);
             }
+
+            if (next > DateTime.Now.AddMonths(1))
+            {
+                MessageBox.Show("오늘로부터 1달 이내의 날짜만 추가할 수 있습니다.", "알림");
+                return;
+            }
+
             dates.Add(next);
 
-            RebuildRows(grid, dates);
+            string dateStr = next.ToString("yyyy-MM-dd");
+            string dayLabel = next.ToString("M/d") + "(" + GetDayOfWeek(next) + ")";
+            grid.Rows.Add(dayLabel, "");
+            grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
+
             UpdateGridHeight(grid, dates.Count);
         }
 
@@ -381,11 +380,72 @@ namespace EDU_HUB_AI.View
 
         private async void OnSave(object? sender, EventArgs e)
         {
-            var result = BuildResult();
+            var pastCheck = _datesBreakfast.Concat(_datesLunch).Concat(_datesDinner).Distinct();
+            if (pastCheck.Any(d => d.Date < DateTime.Now.Date))
+            {
+                if (MessageBox.Show("과거 날짜가 포함되어 있습니다. 계속 저장하시겠습니까?", "확인",
+                    MessageBoxButtons.YesNo) == DialogResult.No)
+                    return;
+            }
 
-            if (result.Count == 0)
+            if (_datesBreakfast.Count == 0 && _datesLunch.Count == 0 && _datesDinner.Count == 0)
             {
                 MessageBox.Show("입력된 식단이 없습니다.", "알림");
+                return;
+            }
+
+            var invalidMeals = new List<string>();
+            var grids = new[] { _gridBreakfast, _gridLunch, _gridDinner };
+            string[] mealLabels = { "조식", "중식", "석식" };
+
+            for (int m = 0; m < 3; m++)
+            {
+                foreach (DataGridViewRow row in grids[m].Rows)
+                {
+                    string menuText = row.Cells["menu"].Value?.ToString()?.Trim() ?? "";
+                    if (!string.IsNullOrWhiteSpace(menuText) && !IsValidMenu(menuText))
+                    {
+                        invalidMeals.Add(mealLabels[m]);
+                        break;
+                    }
+                }
+            }
+
+            if (invalidMeals.Count > 0)
+            {
+                string mealList = string.Join(", ", invalidMeals);
+                MessageBox.Show($"{mealList} 메뉴에 허용되지 않는 특수문자가 포함되어 있습니다.", "알림");
+                return;
+            }
+
+            var result = BuildResult();
+
+            var existingDates = _allDetail
+                .Select(d => d.mealDate)
+                .Distinct()
+                .ToHashSet();
+
+            var allDates = result
+                .Select(d => d.mealDate)
+                .Distinct()
+                .ToHashSet();
+
+            if (allDates.Any(d => DateTime.Parse(d) > DateTime.Now.AddMonths(1)))
+            {
+                MessageBox.Show("오늘로부터 1달 이내의 날짜만 등록할 수 있습니다.", "알림");
+                return;
+            }
+
+            var duplicates = allDates
+                .Where(d => existingDates.Contains(d))
+                .ToList();
+
+            if (duplicates.Count > 0)
+            {
+                string dateList = string.Join(", ", duplicates);
+                MessageBox.Show(
+                    $"이미 등록된 날짜입니다.\n{dateList}\n해당 날짜를 제거 후 저장해주세요.",
+                    "알림");
                 return;
             }
 
@@ -397,7 +457,6 @@ namespace EDU_HUB_AI.View
         private List<CafeteriaDto> BuildResult()
         {
             var result = new List<CafeteriaDto>();
-
             var grids = new[] { _gridBreakfast, _gridLunch, _gridDinner };
 
             for (int m = 0; m < 3; m++)
@@ -411,14 +470,15 @@ namespace EDU_HUB_AI.View
                     string menuText = row.Cells["menu"].Value?.ToString()?.Trim() ?? "";
 
                     if (string.IsNullOrWhiteSpace(date)) continue;
-                    if (string.IsNullOrWhiteSpace(menuText)) continue;
+                    
+                    bool hasMenu = !string.IsNullOrWhiteSpace(menuText);
 
                     result.Add(new CafeteriaDto
                     {
                         mealDate = date,
                         mealType = mealType,
-                        menu = TextToJson(menuText),
-                        mealClosed = "N"
+                        menu = hasMenu ? TextToJson(menuText) : "[]",
+                        mealClosed = hasMenu ? "N" : "Y"
                     });
                 }
             }
@@ -446,6 +506,12 @@ namespace EDU_HUB_AI.View
                 }
             }
             return "[" + string.Join(", ", quoted) + "]";
+        }
+
+        private bool IsValidMenu(string menuText)
+        {
+            return System.Text.RegularExpressions.Regex.IsMatch(
+                menuText, @"^[가-힣a-zA-Z0-9\s,]+$");
         }
     }
 }
