@@ -223,7 +223,6 @@ namespace EDU_HUB_AI.View
 
             InitDatesFor(dates);
             RebuildRows(grid, dates);
-            UpdateGridHeight(grid, dates.Count);
         }
 
         private void OnAddDay(object? sender, EventArgs e)
@@ -254,6 +253,9 @@ namespace EDU_HUB_AI.View
             grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
 
             UpdateGridHeight(grid, dates.Count);
+
+            grid.Parent?.PerformLayout();
+            grid.Parent?.Parent?.PerformLayout();
         }
 
         private void ShowSection(int index)
@@ -278,7 +280,9 @@ namespace EDU_HUB_AI.View
 
         private void UpdateGridHeight(DataGridView grid, int rowCount)
         {
-            grid.Height = 30 + (rowCount * 30);
+            int headerHeight = grid.ColumnHeadersHeight;
+            int rowHeight = rowCount > 0 ? grid.Rows[0].Height : 30;
+            grid.Height = headerHeight + (rowCount * rowHeight);
         }
 
         private DataGridView CreateMealGrid()
@@ -294,7 +298,8 @@ namespace EDU_HUB_AI.View
                 BorderStyle = BorderStyle.Fixed3D,
                 Font = ThemeFonts.Body,
                 AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
-                ScrollBars = ScrollBars.None
+                ScrollBars = ScrollBars.None,
+                Height = 30
             };
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
@@ -333,8 +338,9 @@ namespace EDU_HUB_AI.View
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 BackColor = ThemeColors.Background,
-                Margin = new Padding(0, 0, 0, 16)
+                Padding = new Padding(0, 0, 0, 16)
             };
 
             var lblMeal = new Label
@@ -376,6 +382,10 @@ namespace EDU_HUB_AI.View
                 grid.Rows.Add(dayLabel, savedMenu);
                 grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
             }
+
+            UpdateGridHeight(grid, dates.Count);
+            grid.Parent?.PerformLayout();
+            grid.Parent?.Parent?.PerformLayout();
         }
 
         private async void OnSave(object? sender, EventArgs e)
