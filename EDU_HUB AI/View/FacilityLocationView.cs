@@ -36,15 +36,7 @@ namespace EDU_HUB_AI.View
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            FixDockOrder();
             await LoadAndRender(1);
-        }
-
-        private void FixDockOrder()
-        {
-            bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
         }
 
         private async Task<List<FacilityInfoDto>> LoadData()
