@@ -85,44 +85,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _grid = new AppDataGrid
             {
                 Dock = DockStyle.Fill,
-                RowTemplate = { Height = 44 },
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                AllowUserToResizeRows = false,
-                ReadOnly = true,
-                EnableHeadersVisualStyles = false,
-                RowHeadersVisible = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = ThemeColors.Surface,
-                BorderStyle = BorderStyle.None,
-                GridColor = ThemeColors.TableBorder,
-                ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single,
-                ColumnHeadersHeight = 38,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
-                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-                {
-                    BackColor = ThemeColors.TableHeader,
-                    ForeColor = ThemeColors.Text,
-                    Font = ThemeFonts.TableHeader,
-                    SelectionBackColor = ThemeColors.TableHeader,
-                    Alignment = DataGridViewContentAlignment.MiddleLeft,
-                    Padding = new Padding(12, 0, 8, 0)
-                },
-                DefaultCellStyle = new DataGridViewCellStyle
-                {
-                    BackColor = ThemeColors.Surface,
-                    ForeColor = ThemeColors.Text,
-                    Font = ThemeFonts.TableCell,
-                    SelectionBackColor = ThemeColors.TableHover,
-                    SelectionForeColor = ThemeColors.Text,
-                    Padding = new Padding(12, 0, 8, 0),
-                    WrapMode = DataGridViewTriState.False
-                },
-                AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-                {
-                    BackColor = ThemeColors.TableStripe
-                }
+                RowTemplate = { Height = 44 }
             };
 
             SetupGrid();

@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -5,24 +6,10 @@ using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
-using System.Data;
 
 namespace EDU_HUB_AI.View
 {
-    /// <summary>
-    /// CRUD 테이블 화면 템플릿 (목데이터 기반).
-    ///
-    /// ── 사용법 ────────────────────────────────────────────
-    /// 1. 이 Form을 복사
-    /// 2. StudentDto → 사용할 DTO로 바꾸고 컬럼/입력 필드를 교체
-    /// 3. LoadData() 안의 목업을 실제 Controller 호출로 교체
-    /// 4. pageHeader1.Title 설정 · SyncClicked 이벤트 연결
-    /// 5. actionPanel(ActionBar) 안에 AppButton을 드래그해 추가 — 자동 우측 정렬, Click 연결
-    /// 6. OnRowAction()/OnCreate()의 // TODO: API 지점을 연결
-    /// 페이지네이션은 전체 목록을 메모리에 두고 클라이언트에서 자르기
-    /// ──────────────────────────────────────────────────────────
-    /// </summary>
-    public partial class SubjectView : UserControl
+    public partial class SubjectView : UserControl, ISearchFocusable
     {
         private List<SubjectDto> _all = new();
         private List<SubjectDto> _pageItems = new();
@@ -31,6 +18,10 @@ namespace EDU_HUB_AI.View
 
         private List<EduInfoDto> _eduInfos = new();
         private readonly AdminEduInfoController _adminEduInfoController = new AdminEduInfoController();
+
+        private List<ClassroomDto> _classrooms = new();
+        private readonly AdminClassroomController _adminClassroomController = new AdminClassroomController();
+
 
         private bool _suppressFilter = false;
 
@@ -58,6 +49,17 @@ namespace EDU_HUB_AI.View
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
+
             cmbEdu.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) { ApplyFilter(); RenderPage(1); } };
             cmbStatus.SelectedIndexChanged += (_, _) => { if (!_suppressFilter) { ApplyFilter(); RenderPage(1); } };
             txtSearch.TextChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
@@ -68,6 +70,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             await LoadAndRender(1);
+            grid.Focus();
         }
 
         private void FixDockOrder()
@@ -105,6 +108,16 @@ namespace EDU_HUB_AI.View
                     _eduInfos = new List<EduInfoDto>();
                 }
 
+                try
+                {
+                    var classrRes = await _adminClassroomController.GetClassrooms();
+                    _classrooms = classrRes?.Data ?? new List<ClassroomDto>();
+                }
+                catch
+                {
+                    _classrooms = new List<ClassroomDto>();
+                }
+
                 var prevEduId = cmbEdu.SelectedValue?.ToString();
 
                 _suppressFilter = true;
@@ -129,6 +142,7 @@ namespace EDU_HUB_AI.View
         {
             grid.Columns.Add("subjectName", "과목명");
             grid.Columns.Add("edu", "교육과정");
+            grid.Columns.Add("classroom", "강의실");
             grid.Columns.Add("startDate", "시작일");
             grid.Columns.Add("endDate", "종료일");
             grid.Columns.Add("endYn", "상태");
@@ -136,11 +150,13 @@ namespace EDU_HUB_AI.View
 
             grid.Columns["subjectName"].FillWeight = 250;
             grid.Columns["edu"].FillWeight = 250;
+            grid.Columns["classroom"].FillWeight = 120;
             grid.Columns["startDate"].FillWeight = 120;
             grid.Columns["endDate"].FillWeight = 120;
             grid.Columns["endYn"].FillWeight = 80;
 
             grid.ActionClicked += OnRowAction;
+            grid.CellFormatting += OnCellFormatting;
         }
 
         private void RenderPage(int page)
@@ -158,8 +174,10 @@ namespace EDU_HUB_AI.View
 
             foreach (var s in _pageItems)
             {
+                var classroomName = _classrooms.FirstOrDefault(c => c.classroomId == s.classroomId)?.classroomName ?? "-";
                 var eduName = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId)?.eduName ?? s.eduId;
-                grid.Rows.Add(s.subjectName, eduName, s.startDate, s.endDate, EndYnLabel(s.endYn));
+                var idx = grid.Rows.Add(s.subjectName, eduName, classroomName, s.startDate, s.endDate, EndYnLabel(s));
+                grid.Rows[idx].Tag = s;
             }
             grid.ResumeLayout();
         }
@@ -188,8 +206,16 @@ namespace EDU_HUB_AI.View
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
-            var target = _pageItems[e.RowIndex];
+            if(e.Action == TableAction.New)
+            {
+                OnCreate(sender, EventArgs.Empty);
+                return;
+            }
+            var target = e.Tag as SubjectDto;
+            if (target == null)
+            {
+                return;
+            }
 
             if (e.Action == TableAction.Edit)
             {
@@ -242,10 +268,45 @@ namespace EDU_HUB_AI.View
             }
         }
 
-        // ===== 헬퍼 =====
-        private static string EndYnLabel(string? endYn) => string.Equals(endYn, "Y", StringComparison.OrdinalIgnoreCase) ? "종료" : "진행중";
+        // ===== 셀 포매팅 =====
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || grid.Columns[e.ColumnIndex].Name != "endYn") return;
+            switch (e.Value?.ToString())
+            {
+                case "진행중":
+                    e.CellStyle.ForeColor = ThemeColors.OkText;
+                    e.CellStyle.BackColor = ThemeColors.OkBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                    break;
+                case "예정":
+                    e.CellStyle.ForeColor = ThemeColors.InfoText;
+                    e.CellStyle.BackColor = ThemeColors.InfoBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                    break;
+                case "종료":
+                    e.CellStyle.ForeColor = ThemeColors.TextMuted;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TextMuted;
+                    break;
+            }
+            e.FormattingApplied = true;
+        }
 
-        // ===== 필터링 =====
+        // ===== 헬퍼 =====
+        private static string EndYnLabel(SubjectDto s)
+        {
+            var today = DateTime.Today;
+            if (DateTime.TryParseExact(s.startDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var start) && start > today)
+                return "예정";
+            if (string.Equals(s.endYn, "Y", StringComparison.OrdinalIgnoreCase) ||
+                (DateTime.TryParseExact(s.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var end) && end < today))
+                return "종료";
+            return "진행중";
+        }
+
+        // ===== 필터 =====
         private void SetupFilterSource()
         {
             var eduList = new List<EduInfoDto> { new() { eduId = "", eduName = "전체" } };
@@ -254,34 +315,70 @@ namespace EDU_HUB_AI.View
             cmbEdu.DisplayMember = "eduName";
             cmbEdu.ValueMember = "eduId";
 
-            var statusList = new[]
+            cmbStatus.DataSource = new[]
             {
-                new { Value = "", Label = "전체" },
-                new { Value = "N", Label = "진행중" },
-                new { Value = "Y", Label = "종료" }
-            };
-            cmbStatus.DataSource = statusList.ToList();
+                new { Value = "",         Label = "전체"  },
+                new { Value = "ACTIVE",   Label = "진행중" },
+                new { Value = "UPCOMING", Label = "예정"  },
+                new { Value = "ENDED",    Label = "종료"  }
+            }.ToList();
             cmbStatus.DisplayMember = "Label";
             cmbStatus.ValueMember = "Value";
         }
 
         private void ApplyFilter()
         {
+            var today = DateTime.Today;
             var result = _all.AsEnumerable();
 
             var eduId = cmbEdu.SelectedValue?.ToString();
             if (!string.IsNullOrEmpty(eduId))
                 result = result.Where(s => s.eduId == eduId);
 
-            var status = cmbStatus.SelectedValue?.ToString();
-            if (!string.IsNullOrEmpty(status))
-                result = result.Where(s => s.endYn == status);
+            switch (cmbStatus.SelectedValue?.ToString())
+            {
+                case "ACTIVE":
+                    result = result.Where(s =>
+                        DateTime.TryParseExact(s.startDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var st) &&
+                        DateTime.TryParseExact(s.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var en) &&
+                        st <= today && en >= today && s.endYn != "Y");
+                    break;
+                case "UPCOMING":
+                    result = result.Where(s =>
+                        DateTime.TryParseExact(s.startDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var st) &&
+                        st > today);
+                    break;
+                case "ENDED":
+                    result = result.Where(s =>
+                        s.endYn == "Y" ||
+                        (DateTime.TryParseExact(s.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var en) && en < today));
+                    break;
+            }
 
             var search = txtSearch.Text.Trim();
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(s => s.subjectName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+        }
+
+        // ===== ISearchFocusable =====
+        public void FocusSearch() => txtSearch.Focus();
+
+        // ===== 키보드 이벤트 =====
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (ActiveControl is TextBox or ComboBox)
+                return base.ProcessCmdKey(ref msg, keyData);
+
+            switch (keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

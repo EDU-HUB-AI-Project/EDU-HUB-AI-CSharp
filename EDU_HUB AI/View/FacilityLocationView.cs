@@ -25,39 +25,75 @@ namespace EDU_HUB_AI.View
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
+            tableCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, tableCard.Width - 1, tableCard.Height - 1);
+            };
+            filterCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, filterCard.Width - 1, filterCard.Height - 1);
+            };
+
             SetupTypeFilter();
 
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
             cmbTypeFilter.SelectedIndexChanged += (_, _) => { ApplyTypeFilter(); RenderPage(1); };
+
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
         }
 
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            FixDockOrder();
             await LoadAndRender(1);
+            grid.Focus();
+        }
+
+        private void FixDockOrder()
+        {
+            bodyPanel.Controls.SetChildIndex(tableCard, 0);
+            bodyPanel.Controls.SetChildIndex(gapPanel, 1);
+            bodyPanel.Controls.SetChildIndex(filterCard, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
         private async Task<List<FacilityInfoDto>> LoadData()
         {
-            try
-            {
                 var res = await _controller.GetFacilityList();
                 return res?.Data ?? new List<FacilityInfoDto>();
-            }
-            catch (ApiException ex)
-            {
-                ShowApiError(ex);
-                return new List<FacilityInfoDto>();
-            }
         }
 
-        private async Task LoadAndRender(int page)
+        private async Task LoadAndRender(int page, bool showOverlay = true)
         {
-            _all = await LoadData();
-            ApplyTypeFilter();
-            RenderPage(page);
+            var overlay = showOverlay ? LoadingOverlay.Create(bodyPanel, "데이터 로딩 중...") : null;
+            _controller.OnRetry = (attempt, max) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
+            try
+            {
+                _all = await LoadData();
+                ApplyTypeFilter();
+                RenderPage(page);
+            }
+            finally
+            {
+                _controller.OnRetry = null;
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         private void SetupGrid()
@@ -99,6 +135,8 @@ namespace EDU_HUB_AI.View
                     ImageCellData(f),
                     f.description ?? "");
 
+                grid.Rows[rowIndex].Tag = f;
+
                 var imageCell = grid.Rows[rowIndex].Cells["image"];
                 if (imageCell.Value is FacilityImageCell imgCell && !string.IsNullOrEmpty(imgCell.FullPath))
                     imageCell.ToolTipText = imgCell.FullPath;
@@ -111,54 +149,81 @@ namespace EDU_HUB_AI.View
             var created = FacilityEditModal.Show(FindForm(), null);
             if (created == null) return;
 
+            var overlay = LoadingOverlay.Create(bodyPanel, "등록 중...");
+            _controller.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
             try
             {
                 var res = await _controller.InsertFacility(created);
                 if (res?.Status == 200)
-                    await LoadAndRender(int.MaxValue);
+                    await LoadAndRender(int.MaxValue, showOverlay: false);
+                else
+                    MessageBox.Show(FindForm(), res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (ApiException ex)
-            {
-                ShowApiError(ex);
-            }
+            catch (ApiException ex) { MessageBox.Show(FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { MessageBox.Show(FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { _controller.OnRetry = null; overlay.Close(); overlay.Dispose(); }
         }
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
-            var target = _pageItems[e.RowIndex];
+            var target = e.Tag as FacilityInfoDto;
+            if(target == null)
+            {
+                return;
+            }
 
             if (e.Action == TableAction.Edit)
             {
                 var edited = FacilityEditModal.Show(FindForm(), target);
                 if (edited == null) return;
 
+                var overlay = LoadingOverlay.Create(bodyPanel, "수정 중...");
+                _controller.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
                 try
                 {
                     var res = await _controller.UpdateFacility(target.facilityId, edited);
                     if (res?.Status == 200)
-                        await LoadAndRender(pagination1.PageIndex);
+                    {
+                        var idx = _all.IndexOf(target);
+                        if (idx >= 0)
+                        {
+                            _all[idx] = edited;
+                        }
+                        ApplyTypeFilter();
+                        RenderPage(pagination1.PageIndex);
+                    }
+                    else
+                        MessageBox.Show(FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex)
-                {
-                    ShowApiError(ex);
-                }
+                catch (ApiException ex) { MessageBox.Show(FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { _controller.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
             else if (e.Action == TableAction.Delete)
             {
                 if (!ConfirmModal.Show(FindForm(), "삭제 확인", $"'{target.name}'을(를) 삭제할까요?"))
                     return;
 
+                var overlay = LoadingOverlay.Create(bodyPanel, "삭제 중...");
+                _controller.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
                 try
                 {
                     var res = await _controller.DeleteFacility(target.facilityId);
                     if (res?.Status == 200)
-                        await LoadAndRender(pagination1.PageIndex);
+                    {
+                        _all.Remove(target);
+                        ApplyTypeFilter();
+                        RenderPage(pagination1.PageIndex);
+                    }
+                    else
+                        MessageBox.Show(FindForm(), res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex)
-                {
-                    ShowApiError(ex);
-                }
+                catch (ApiException ex) { MessageBox.Show(FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { _controller.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
         }
 
@@ -182,9 +247,6 @@ namespace EDU_HUB_AI.View
                 ? _all.ToList()
                 : _all.Where(f => string.Equals(f.facilityType, type, StringComparison.OrdinalIgnoreCase)).ToList();
         }
-
-        private static void ShowApiError(ApiException ex) =>
-            MessageBox.Show($"[{ex.Status}] {ex.Message}", "API 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
         private static string DetailLabel(FacilityInfoDto f)
         {
@@ -311,6 +373,21 @@ namespace EDU_HUB_AI.View
             }
 
             public void Dispose() => Thumbnail?.Dispose();
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (ActiveControl is TextBox or ComboBox)
+                return base.ProcessCmdKey(ref msg, keyData);
+
+            switch (keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

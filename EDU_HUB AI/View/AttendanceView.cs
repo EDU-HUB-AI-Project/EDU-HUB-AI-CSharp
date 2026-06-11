@@ -1,4 +1,5 @@
-﻿using EDU_HUB_AI.Config.Component.Data;
+﻿using EDU_HUB_AI.Config.Component.Common;
+using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
@@ -7,17 +8,16 @@ using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
 using System.Data;
-using System.Data.Common;
-using System.Xml.Linq;
 
 
 namespace EDU_HUB_AI.View
 {
-    public partial class AttendanceView : UserControl
+    public partial class AttendanceView : UserControl, ISearchFocusable
     {
         private List<AttendDto> _all = new();
         private List<AttendDto> _pageItems = new();
-        private List<AttendDto> _filteredList = new();
+        private List<AttendDto> _filtered = new();
+
         private DataTable _dtAttend = new DataTable();
         private readonly ExcelExport excelExport = new ExcelExport();
         private readonly ExcelImport excelImport = new ExcelImport();
@@ -45,12 +45,22 @@ namespace EDU_HUB_AI.View
                 e.Graphics.DrawRectangle(pen, 0, 0, filterCard.Width - 1, filterCard.Height - 1);
             };
 
-            pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
+            pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
-            //btnSearch.Click += BtnSearch_Click;
             btnExport.Click += BtnExport_Click;
             btnImport.Click += BtnImport_Click;
+
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
 
             cmbEdu.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
             cmbStatus.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
@@ -66,6 +76,7 @@ namespace EDU_HUB_AI.View
             ApplyPendingFilter();
             await LoadCmb();
             await LoadAndRender(1);
+            grid.Focus();
         }
 
         private void FixDockOrder()
@@ -76,11 +87,9 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
-        // ===== 데이터 연동 지점 (여기만 바꾸면 됨) =====
+        // ===== 데이터 연동 지점 =====
         private async Task<List<AttendDto>> LoadData()
-        {
-            // [실제 API] 아래 두 줄 주석을 풀고 목업 return 을 지우기
-            
+        {            
             var res = await _adminAttendaceController.GetAttend();
             return res?.Data ?? new List<AttendDto>();
         }
@@ -92,15 +101,16 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                ApplySearchFilter();
                 RenderPage(page);
             }
             catch (ApiException ex)
             {
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -125,10 +135,8 @@ namespace EDU_HUB_AI.View
 
         private void RenderPage(int page)
         {
-            // 필터링을 거친 데이터가 존재할 경우 filteredList
-            // 그렇지 않을 경우 전체 데이터
             bool hasFilter = cmbEdu.SelectedIndex > 0 || cmbStatus.SelectedIndex > 0 || !string.IsNullOrEmpty(txtSearch.Text.Trim()) || dtpDate.Checked;
-            var source = hasFilter ? _filteredList : _all;
+            var source = hasFilter ? _filtered : _all;
             pagination1.TotalCount = source.Count;
             var size = pagination1.PageSize;
             var totalPages = Math.Max(1, (int)Math.Ceiling(source.Count / (double)size));
@@ -140,14 +148,16 @@ namespace EDU_HUB_AI.View
             grid.SuspendLayout();
             grid.Rows.Clear();
             foreach (var a in _pageItems)
-                grid.Rows.Add(a.studentName, a.eduName, a.attendDate, a.status, a.message);
+            {
+                var idx = grid.Rows.Add(a.studentName, a.eduName, a.attendDate, a.status, a.message);
+                grid.Rows[idx].Tag = a;
+            }
             grid.ResumeLayout();
 
             ConvertToTable(source);
         }
 
         // ===== CRUD =====
-        /// <summary>등록 버튼 Click 이벤트에 연결 (디자이너에서 AppButton 추가 후 연결)</summary>
         protected async void OnCreate(object? sender, EventArgs e)
         {
             var created = AttendEditModal.Show(this.FindForm(), null);
@@ -156,29 +166,25 @@ namespace EDU_HUB_AI.View
             var overlay = LoadingOverlay.Create(bodyPanel, "등록 중...");
             _adminAttendaceController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중... \n재시도 {attempt}/{max}");
 
-            // TODO: API 등록 — await new AdminStudentController().InsertStudent(created);
             try
             {
                 var res = await _adminAttendaceController.InsertAttend(created);
                 if (res?.Status == 200)
                 {
                     await LoadAndRender(int.MaxValue, showOverlay: false);
-                    created.attendanceId = Guid.NewGuid().ToString("N")[..8];
-                    _all.Add(created);
-                    RenderPage(int.MaxValue); // 마지막 페이지로 이동해 추가된 행 표시}
                 }
                 else
                 {
-                    MessageBox.Show(res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (ApiException ex)
             {
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -192,8 +198,17 @@ namespace EDU_HUB_AI.View
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
-            var target = _pageItems[e.RowIndex];
+            if(e.Action == TableAction.New)
+            {
+                OnCreate(sender, EventArgs.Empty);
+                return;
+            }
+
+            var target = e.Tag as AttendDto;
+            if(target == null)
+            {
+                return;
+            }
 
             if (e.Action == TableAction.Edit)
             {
@@ -203,7 +218,6 @@ namespace EDU_HUB_AI.View
                 _adminAttendaceController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
                 try
                 {
-                    // TODO: API 수정 — await new AdminStudentController().UpdateStudent(target.studentId, edited);
                     var res = await _adminAttendaceController.UpdateAttendMsg(target.studentId, edited);
                     if(res?.Status == 200) 
                     {
@@ -213,17 +227,17 @@ namespace EDU_HUB_AI.View
                     }
                     else
                     {
-                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this.FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     
                 }
                 catch (ApiException ex)
                 {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {
@@ -242,17 +256,17 @@ namespace EDU_HUB_AI.View
                 _adminAttendaceController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
                 try
                 {
-                    await new AdminAttendaceController().DeleteAttend(target.attendanceId);
+                    await _adminAttendaceController.DeleteAttend(target.attendanceId);
                     _all.Remove(target);
                     RenderPage(pagination1.PageIndex);
                 }
                 catch (ApiException ex)
                 {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this.FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 finally
                 {
@@ -309,42 +323,42 @@ namespace EDU_HUB_AI.View
             }
         }
 
-        // 버튼 이벤트 
-        //private async void BtnSearch_Click(object? sender, EventArgs e)
-        //{
-        //    await LoadAndRender(1);
-        //}
-
         // 출석 상태별 배경 색 변경
         private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e) 
         {
             if(e.RowIndex < 0) return;
-            var value = grid.Rows[e.RowIndex].Cells[3].Value;
+            if (grid.Columns[e.ColumnIndex] is DataGridViewLinkColumn)
+            {
+                return;
+            }
+
+            var statusCol = grid.Columns["status"];
+            if (statusCol == null) return;
+
+            var value = grid.Rows[e.RowIndex].Cells[statusCol.Index].Value;
             if (value == null) return;
             var status = value.ToString();
+
             if (status == "결석")
             {
                 e.CellStyle.ForeColor = ThemeColors.OkText;
                 e.CellStyle.BackColor = ThemeColors.DangerBg;
-                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
-                e.CellStyle.SelectionBackColor = ThemeColors.DangerBg;
-                e.FormattingApplied = true;
+                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
             }
             else if (status == "지각")
             {
                 e.CellStyle.ForeColor = ThemeColors.OkText;
                 e.CellStyle.BackColor = ThemeColors.WarnBg;
-                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
-                e.CellStyle.SelectionBackColor = ThemeColors.WarnBg;
-                e.FormattingApplied = true;
+                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
             }
             else if (status == "조퇴")
             {
                 e.CellStyle.ForeColor = ThemeColors.OkText;
                 e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
-                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
-                e.CellStyle.SelectionBackColor = Color.FromArgb(255, 237, 213);
-                e.FormattingApplied = true;
+                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
             }
         }
 
@@ -388,17 +402,17 @@ namespace EDU_HUB_AI.View
                             }
                             if (string.IsNullOrEmpty(attendDate))
                             {
-                                MessageBox.Show($"{dt.Rows.IndexOf(row) + 1}행: 출석일자가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: 출석일자가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             if (string.IsNullOrEmpty(status))
                             {
-                                MessageBox.Show($"{dt.Rows.IndexOf(row) + 1}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             if (status != "출석" && string.IsNullOrEmpty(message))
                             {
-                                MessageBox.Show($"{dt.Rows.IndexOf(row) + 1}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             list.Add(new AttendDto
@@ -413,16 +427,16 @@ namespace EDU_HUB_AI.View
                         if (response?.Status == 200)
                         {
                             LoadAndRender(int.MaxValue);
-                            MessageBox.Show("저장되었습니다.");
+                            MessageBox.Show(this.FindForm(), "저장되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                     catch (ApiException ex)
                     {
-                        MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(this.FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"오류가 발생했습니다.\n{ex.Message}");
+                        MessageBox.Show(this.FindForm(), $"오류가 발생했습니다.\n{ex.Message}");
                     }
                 }
             }
@@ -479,7 +493,25 @@ namespace EDU_HUB_AI.View
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(a => a.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
-            _filteredList = result.ToList();
+            _filtered = result.ToList();
+        }
+
+        // ============ ISearchFocusable ============
+        public void FocusSearch() => txtSearch.Focus();
+
+        // ============ 키보드 이벤트 ============
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (ActiveControl is TextBox or ComboBox)
+                return base.ProcessCmdKey(ref msg, keyData);
+            switch (keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

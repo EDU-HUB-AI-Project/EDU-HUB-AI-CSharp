@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -5,36 +6,24 @@ using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
+using System.Globalization;
 
 namespace EDU_HUB_AI.View
 {
-    /// <summary>
-    /// CRUD 테이블 화면 템플릿 (목데이터 기반).
-    ///
-    /// ── 사용법 ────────────────────────────────────────────
-    /// 1. 이 Form을 복사
-    /// 2. StudentDto → 사용할 DTO로 바꾸고 컬럼/입력 필드를 교체
-    /// 3. LoadData() 안의 목업을 실제 Controller 호출로 교체
-    /// 4. pageHeader1.Title 설정 · SyncClicked 이벤트 연결
-    /// 5. actionPanel(ActionBar) 안에 AppButton을 드래그해 추가 — 자동 우측 정렬, Click 연결
-    /// 6. OnRowAction()/OnCreate()의 // TODO: API 지점을 연결
-    /// 페이지네이션은 전체 목록을 메모리에 두고 클라이언트에서 자르기
-    /// ──────────────────────────────────────────────────────────
-    /// </summary>
-    public partial class EduInfoView : UserControl
+    public partial class EduInfoView : UserControl, ISearchFocusable
     {
         private List<EduInfoDto> _all = new();
         private List<EduInfoDto> _pageItems = new();
         private readonly AdminEduInfoController _adminEduInfoController = new AdminEduInfoController();
 
         private List<EduInfoDto> _filtered = new();
-        private string? _activeFilter;
 
         public EduInfoView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
+            SetupFilterSource();
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
@@ -54,6 +43,18 @@ namespace EDU_HUB_AI.View
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
+
+            cmbStatus.SelectedIndexChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
             txtSearch.TextChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
         }
 
@@ -62,6 +63,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             await LoadAndRender(1);
+            grid.Focus();
         }
 
         private void FixDockOrder()
@@ -107,15 +109,18 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("endDate", "종료일");
             grid.Columns.Add("batchNumber", "기수");
             grid.Columns.Add("capacity", "정원");
+            grid.Columns.Add("status", "상태");
             grid.AddTextActionColumns();
 
             grid.Columns["eduName"].FillWeight = 300;
-            grid.Columns["startDate"].FillWeight = 130;
-            grid.Columns["endDate"].FillWeight = 130;
-            grid.Columns["batchNumber"].FillWeight = 80;
-            grid.Columns["capacity"].FillWeight = 80;
+            grid.Columns["startDate"].FillWeight = 120;
+            grid.Columns["endDate"].FillWeight = 120;
+            grid.Columns["batchNumber"].FillWeight = 70;
+            grid.Columns["capacity"].FillWeight = 70;
+            grid.Columns["status"].FillWeight = 80;
 
             grid.ActionClicked += OnRowAction;
+            grid.CellFormatting += OnCellFormatting;
         }
 
         private void RenderPage(int page)
@@ -131,15 +136,17 @@ namespace EDU_HUB_AI.View
             grid.SuspendLayout();
             grid.Rows.Clear();
 
-            foreach(var e in _pageItems)
+            foreach(var edu in _pageItems)
             {
-                grid.Rows.Add(e.eduName, e.startDate, e.endDate, $"{e.batchNumber}기", e.capacity);
+                var idx = grid.Rows.Add(
+                    edu.eduName, edu.startDate, edu.endDate,
+                    $"{edu.batchNumber}기", edu.capacity, StatusLabel(edu));
+                grid.Rows[idx].Tag = edu;
             }
             grid.ResumeLayout();
         }
 
         // ===== CRUD =====
-        /// <summary>등록 버튼 Click 이벤트에 연결 (디자이너에서 AppButton 추가 후 연결)</summary>
         protected async void OnCreate(object? sender, EventArgs e)
         {
             var created = EduInfoEditModal.Show(this.FindForm(), null);
@@ -178,8 +185,17 @@ namespace EDU_HUB_AI.View
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
-            var target = _pageItems[e.RowIndex];
+            if(e.Action == TableAction.New)
+            {
+                OnCreate(sender, EventArgs.Empty);
+                return;
+            }
+
+            var target = e.Tag as EduInfoDto;
+            if(target == null)
+            {
+                return;
+            }
 
             if (e.Action == TableAction.Edit)
             {
@@ -260,17 +276,56 @@ namespace EDU_HUB_AI.View
             }
         }
 
+        // ===== 셀 포매팅 =====
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || grid.Columns[e.ColumnIndex].Name != "status") return;
+            switch (e.Value?.ToString())
+            {
+                case "진행중":
+                    e.CellStyle.ForeColor = ThemeColors.OkText;
+                    e.CellStyle.BackColor = ThemeColors.OkBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                    break;
+                case "예정":
+                    e.CellStyle.ForeColor = ThemeColors.InfoText;
+                    e.CellStyle.BackColor = ThemeColors.InfoBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                    break;
+                case "종료":
+                    e.CellStyle.ForeColor = ThemeColors.TextMuted;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TextMuted;
+                    break;
+            }
+            e.FormattingApplied = true;
+        }
+
         // ================= 필터 =================
         private void ApplyFilter()
         {
+            var today = DateTime.Today;
             var result = _all.AsEnumerable();
 
-            if(_activeFilter == "ACTIVE")
+            switch (cmbStatus.SelectedValue?.ToString())
             {
-                var today = DateTime.Today;
-                result = result.Where(e => DateTime.TryParseExact(e.startDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var start)
-                                && DateTime.TryParseExact(e.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var end)
-                                && start <= today && end >= today);
+                case "ACTIVE":
+                    result = result.Where(e =>
+                        DateTime.TryParseExact(e.startDate, "yyMMdd", null, DateTimeStyles.None, out var s) &&
+                        DateTime.TryParseExact(e.endDate, "yyMMdd", null, DateTimeStyles.None, out var en) &&
+                        s <= today && en >= today);
+                    break;
+                case "UPCOMING":
+                    result = result.Where(e =>
+                        DateTime.TryParseExact(e.startDate, "yyMMdd", null, DateTimeStyles.None, out var s) &&
+                        s > today);
+                    break;
+                case "ENDED":
+                    result = result.Where(e =>
+                        DateTime.TryParseExact(e.endDate, "yyMMdd", null, DateTimeStyles.None, out var en) &&
+                        en < today);
+                    break;
             }
 
             var search = txtSearch.Text.Trim();
@@ -282,7 +337,64 @@ namespace EDU_HUB_AI.View
 
         public void SetFilter(string filter)
         {
-            _activeFilter = filter;
+            cmbStatus.SelectedValue = filter;
+        }
+
+        private void SetupFilterSource()
+        {
+            cmbStatus.DataSource = new[]
+            {
+                new {Value = "", Label = "전체" },
+                new {Value = "ACTIVE", Label = "진행중" },
+                new {Value = "UPCOMING", Label = "예정" },
+                new {Value = "ENDED", Label = "종료" }
+            }.ToList();
+
+            cmbStatus.DisplayMember = "Label";
+            cmbStatus.ValueMember = "Value";
+            cmbStatus.SelectedIndex = 0;
+        }
+
+        // ===== 헬퍼 =====
+        private static string StatusLabel(EduInfoDto edu)
+        {
+            var today = DateTime.Today;
+            if(!DateTime.TryParseExact(edu.startDate, "yyMMdd", null, DateTimeStyles.None, out var start) 
+                      || !DateTime.TryParseExact(edu.endDate, "yyMMdd", null, DateTimeStyles.None, out var end))
+            {
+                return "-";
+            }
+
+            if(end < today)
+            {
+                return "종료";
+            }
+            if(start > today)
+            {
+                return "예정";
+            }
+            return "진행중";
+        }
+
+        // ===== ISearchFocusable =====
+        public void FocusSearch() => txtSearch.Focus();
+
+        // ===== 키보드 이벤트 =====
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if(ActiveControl is TextBox or ComboBox)
+            {
+                return base.ProcessCmdKey(ref msg, keyData);
+            }
+
+            switch(keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

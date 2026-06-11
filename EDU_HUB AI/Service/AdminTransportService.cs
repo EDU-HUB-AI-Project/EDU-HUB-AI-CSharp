@@ -38,5 +38,11 @@ namespace EDU_HUB_AI.Service
             Debug.WriteLine("Called::DeleteTransport");
             return await _apiClient.Delete<int>($"{_url}/{transportId}");
         }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _apiClient.OnRetry;
+            set => _apiClient.OnRetry = value;
+        }
     }
 }
