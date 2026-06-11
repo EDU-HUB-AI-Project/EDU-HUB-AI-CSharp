@@ -19,6 +19,7 @@ namespace EDU_HUB_AI.View
 
         private DateTimePicker _datePicker;
         private ComboBox _cmbMeal;
+        private AppButton _btnDeleteSelected;
 
         private List<DateTime> _datesBreakfast = new List<DateTime>();
         private List<DateTime> _datesLunch = new List<DateTime>();
@@ -107,11 +108,22 @@ namespace EDU_HUB_AI.View
             };
             btnAddDay.Click += OnAddDay;
 
+            _btnDeleteSelected = new AppButton
+            {
+                Text = "선택 삭제",
+                Variant = ButtonVariant.Ghost,
+                Small = true,
+                Enabled = false,
+                Margin = new Padding(8, 2, 0, 0)
+            };
+            _btnDeleteSelected.Click += OnDeleteSelected;
+
             topPanel.Controls.Add(lblMealTop);
             topPanel.Controls.Add(_cmbMeal);
             topPanel.Controls.Add(lblDate);
             topPanel.Controls.Add(_datePicker);
             topPanel.Controls.Add(btnAddDay);
+            topPanel.Controls.Add(_btnDeleteSelected);
 
             var scrollPanel = new Panel
             {
@@ -249,11 +261,35 @@ namespace EDU_HUB_AI.View
 
             string dateStr = next.ToString("yyyy-MM-dd");
             string dayLabel = next.ToString("M/d") + "(" + GetDayOfWeek(next) + ")";
-            grid.Rows.Add(dayLabel, "");
+            grid.Rows.Add(false, dayLabel, "");
             grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
 
             UpdateGridHeight(grid, dates.Count);
 
+            grid.Parent?.PerformLayout();
+            grid.Parent?.Parent?.PerformLayout();
+        }
+
+        private void OnDeleteSelected(object? sender, EventArgs e)
+        { 
+            var grid = GetCurrentGrid();
+            var dates = GetCurrentDates();
+
+            var toRemove = grid.Rows
+                .Cast<DataGridViewRow>()
+                .Where(r => Convert.ToBoolean(r.Cells["check"].Value))
+                .ToList();
+
+            if (toRemove.Count == 0) return;
+
+            foreach (var row in toRemove)
+            {
+                string tag = row.Tag?.ToString() ?? "";
+                dates.RemoveAll(d => d.ToString("yyyy-MM-dd") == tag);
+                grid.Rows.Remove(row);
+            }
+
+            UpdateGridHeight(grid, dates.Count);
             grid.Parent?.PerformLayout();
             grid.Parent?.Parent?.PerformLayout();
         }
@@ -299,8 +335,21 @@ namespace EDU_HUB_AI.View
                 Font = ThemeFonts.Body,
                 AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
                 ScrollBars = ScrollBars.None,
-                Height = 30
+                Height = 30,
+                DefaultCellStyle = new DataGridViewCellStyle
+                { 
+                    SelectionBackColor = ThemeColors.Surface,
+                    SelectionForeColor = ThemeColors.Text
+                }
             };
+
+            grid.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                HeaderText = "✓",
+                Name = "check",
+                Width = 30,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -328,6 +377,42 @@ namespace EDU_HUB_AI.View
                     Padding = new Padding(4)
                 }
             });
+
+            grid.CurrentCellDirtyStateChanged += (s, e) =>
+            {
+                if (grid.IsCurrentCellDirty)
+                    grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            };
+
+            grid.CellValueChanged += (s, e) =>
+            {
+                if (e.ColumnIndex != grid.Columns["check"].Index) return;
+
+                bool anyChecked = grid.Rows
+                .Cast<DataGridViewRow>()
+                .Any(r => Convert.ToBoolean(r.Cells["check"].Value));
+
+                _btnDeleteSelected.Enabled = anyChecked;
+            };
+
+            grid.ColumnHeaderMouseClick += (s, e) =>
+            {
+                if (e.ColumnIndex != grid.Columns["check"].Index) return;
+
+                bool allChecked = grid.Rows
+                .Cast<DataGridViewRow>()
+                .All(r => Convert.ToBoolean(r.Cells["check"].Value));
+
+                grid.EndEdit();
+
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    row.Cells["check"].Value = !allChecked;
+                }
+
+                grid.RefreshEdit();
+                _btnDeleteSelected.Enabled = !allChecked && grid.Rows.Count > 0;
+            };
 
             return grid;
         }
@@ -379,7 +464,7 @@ namespace EDU_HUB_AI.View
                 string dayLabel = date.ToString("M/d") + "(" + GetDayOfWeek(date) + ")";
                 string savedMenu = savedMenus.ContainsKey(dateStr) ? savedMenus[dateStr] : "";
 
-                grid.Rows.Add(dayLabel, savedMenu);
+                grid.Rows.Add(false, dayLabel, savedMenu);
                 grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
             }
 
