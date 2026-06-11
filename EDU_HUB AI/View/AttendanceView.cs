@@ -328,6 +328,7 @@ namespace EDU_HUB_AI.View
                 e.CellStyle.BackColor = ThemeColors.DangerBg;
                 e.CellStyle.SelectionForeColor = ThemeColors.OkText;
                 e.CellStyle.SelectionBackColor = ThemeColors.DangerBg;
+                e.FormattingApplied = true;
             }
             else if (status == "지각")
             {
@@ -335,6 +336,7 @@ namespace EDU_HUB_AI.View
                 e.CellStyle.BackColor = ThemeColors.WarnBg;
                 e.CellStyle.SelectionForeColor = ThemeColors.OkText;
                 e.CellStyle.SelectionBackColor = ThemeColors.WarnBg;
+                e.FormattingApplied = true;
             }
             else if (status == "조퇴")
             {
@@ -342,8 +344,8 @@ namespace EDU_HUB_AI.View
                 e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
                 e.CellStyle.SelectionForeColor = ThemeColors.OkText;
                 e.CellStyle.SelectionBackColor = Color.FromArgb(255, 237, 213);
+                e.FormattingApplied = true;
             }
-            e.FormattingApplied = true;
         }
 
         // 엑셀로 내보내기
@@ -470,7 +472,7 @@ namespace EDU_HUB_AI.View
                 : null;
             if (!string.IsNullOrEmpty(status))
                 result = result.Where(a => a.status == status);
-            var date = dtpDate.ToDateString();
+            var date = dtpDate.Checked ? dtpDate.ToDateString() : null;
             if(!string.IsNullOrEmpty(date))
                 result = result.Where(a => a.attendDate == date);
             var search = txtSearch.Text.Trim();
