@@ -42,7 +42,26 @@ namespace EDU_HUB_AI.Config.Component.Layout
             BackColor = ThemeColors.ModalScrim;
             Font = ThemeFonts.Body;
             KeyPreview = true;
-            KeyDown += (_, e) => { if (e.KeyCode == Keys.Escape) Cancel(); };
+            KeyDown += (_, e) => 
+            {
+                if (e.KeyCode == Keys.Escape)
+                {
+                    Cancel();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+                else if (e.KeyCode == Keys.Enter && !e.Shift)
+                {
+                    var focused = ActiveControl;
+                    if(focused is TextBox { Multiline: true } || focused is Button || focused is ComboBox)
+                    {
+                        return;
+                    }
+                    OnConfirm();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
+            };
 
             // ── 오버레이 ───────────────────────────────
             _overlay = new Panel

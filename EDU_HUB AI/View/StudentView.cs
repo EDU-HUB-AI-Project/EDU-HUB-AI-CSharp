@@ -12,7 +12,7 @@ using System.Data;
 
 namespace EDU_HUB_AI.View
 {
-    public partial class StudentView : UserControl
+    public partial class StudentView : UserControl, ISearchFocusable
     {
         private List<StudentDto> _all = new();
         private List<StudentDto> _pageItems = new();
@@ -50,6 +50,17 @@ namespace EDU_HUB_AI.View
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
 
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
+
             cmbEdu.SelectedIndexChanged += (_, _) =>
             {
                 if (!_suppressFilter)
@@ -68,6 +79,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             await LoadAndRender(1);
+            grid.Focus();
         }
 
         private void FixDockOrder()
@@ -171,7 +183,8 @@ namespace EDU_HUB_AI.View
                 var edu = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId);
                 var eduName = edu?.eduName ?? s.eduId;
                 var batchLabel = edu?.batchNumber is > 0 ? $"{edu.batchNumber}기" : "-";
-                grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, eduName, batchLabel, DormLabel(s.dormYn));
+                var idx = grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, eduName, batchLabel, DormLabel(s.dormYn));
+                grid.Rows[idx].Tag = s;
             }
             grid.ResumeLayout();
         }
@@ -211,8 +224,14 @@ namespace EDU_HUB_AI.View
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
-            var target = _pageItems[e.RowIndex];
+            if(e.Action == TableAction.New)
+            {
+                OnCreate(sender, EventArgs.Empty);
+                return;
+            }
+
+            var target = e.Tag as StudentDto;
+            if (target == null) return;
 
             if (e.Action == TableAction.Edit)
             {
@@ -276,8 +295,8 @@ namespace EDU_HUB_AI.View
             {
                 e.CellStyle.ForeColor = ThemeColors.OkText;
                 e.CellStyle.BackColor = ThemeColors.OkBg;
-                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
-                e.CellStyle.SelectionBackColor = ThemeColors.OkBg;
+                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
             }
             else
             {
@@ -428,6 +447,28 @@ namespace EDU_HUB_AI.View
                 result = result.Where(s => s.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+        }
+
+        // ── 이벤트 영역 ─────────────────────────────────
+        // ISearchFocusable Interface 구현
+        public void FocusSearch() => txtSearch.Focus();
+
+        // 페이지네이션 이벤트 할당
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if(ActiveControl is TextBox or ComboBox)
+            {
+                return base.ProcessCmdKey(ref msg, keyData);
+            }
+
+            switch (keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }
