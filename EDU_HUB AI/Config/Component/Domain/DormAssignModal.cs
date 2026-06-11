@@ -55,8 +55,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 };
                 btnCancel.Click += (_, _) =>
                 {
-                    if (MessageBox.Show("배정을 취소하시겠습니까?", "확인",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                    if (!ConfirmModal.Show(Owner, "배정 취소", "배정을 취소하시겠습니까?", "취소", ButtonVariant.Danger))
+                        return;
                     {
                         _isCancelAssign = true;  // 배정 취소시 여기서 처리
                         Result = CopyOf(source);
@@ -100,6 +100,15 @@ namespace EDU_HUB_AI.Config.Component.Domain
         protected override void OnConfirm()
         {
             if (_isCancelAssign) return; // 배정 취소는 앞에서 이미 처리됨을 알림
+
+            bool isEdit = _source?.dormitoryId != null;
+            if (!ConfirmModal.Show(Owner,
+                isEdit ? "변경 확인" : "배정 확인",
+                isEdit ? "생활관을 변경하시겠습니까?" : "생활관을 배정하시겠습니까?",
+                isEdit ? "변경" : "배정",
+                ButtonVariant.Primary))
+                return;
+
             Result = _source != null ? CopyOf(_source) : new DormAssignDto();
             Result.dormitoryId= _cmbDormitory.SelectedValue.ToString();
             base.OnConfirm();
