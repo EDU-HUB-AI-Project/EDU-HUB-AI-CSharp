@@ -13,11 +13,13 @@ namespace EDU_HUB_AI.Model
         public string dormitoryId { get; set; }
         public string dormitoryRoomName { get; set; }
         public string dorm { get; set; }
-
+        public string checkIn { get; set; }
+        public string checkOut { get; set; }
         public override string ToString()
         {
             return $"studentId: {studentId}, studentName: {studentName}, " +
-                $"dormitoryId:{dormitoryId}, dormitoryRoomName: {dormitoryRoomName}  dorm: {dorm}";
+                $"dormitoryId:{dormitoryId}, dormitoryRoomName: {dormitoryRoomName}  dorm: {dorm}, " +
+                $"checkIn: {checkIn}, checkOut: {checkOut}";
         }
     }
 }
