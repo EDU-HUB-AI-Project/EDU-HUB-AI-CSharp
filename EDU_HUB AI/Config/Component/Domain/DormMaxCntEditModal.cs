@@ -79,6 +79,10 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 MessageBox.Show("현재 배정인원보다 작은 인원은 입력할 수 없습니다", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            if (!ConfirmModal.Show(Owner, "수정 확인", "수정하시겠습니까?", "수정", ButtonVariant.Primary))
+                return;
+
             Result = _source != null ? CopyOf(_source) : new DormitoryDto();
             Result.maxCount= Convert.ToInt32(maxCnt);
             base.OnConfirm();

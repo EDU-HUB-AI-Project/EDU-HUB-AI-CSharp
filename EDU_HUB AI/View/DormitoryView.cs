@@ -1,4 +1,5 @@
-﻿using EDU_HUB_AI.Config.Component.Data;
+﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
@@ -284,8 +285,8 @@ namespace EDU_HUB_AI.View
 
             if (e.Action == TableAction.Edit)
             {
-                if (MessageBox.Show($"{target.studentName} 학생을 입실 처리하시겠습니까?", "입실 확인",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+                if (!ConfirmModal.Show(this.FindForm(), "입실 확인", $"{target.studentName} 학생을 입실 처리하시겠습니까?", "입실", ButtonVariant.Primary))
+                    return;
 
                 var overlay = LoadingOverlay.Create(bodyPanel, "처리 중...");
                 _adminDormitoryController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
@@ -332,8 +333,8 @@ namespace EDU_HUB_AI.View
 
             if (e.Action == TableAction.Edit)
             {
-                if (MessageBox.Show($"{target.studentName} 학생을 퇴실 처리하시겠습니까?", "퇴실 확인",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+                if (!ConfirmModal.Show(this.FindForm(), "퇴실 확인", $"{target.studentName} 학생을 퇴실 처리하시겠습니까?", "퇴실", ButtonVariant.Danger))
+                    return;
 
                 var overlay = LoadingOverlay.Create(bodyPanel, "처리 중...");
                 _adminDormitoryController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
