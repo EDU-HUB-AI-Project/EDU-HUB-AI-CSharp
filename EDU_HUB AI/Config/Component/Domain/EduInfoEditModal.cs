@@ -1,5 +1,4 @@
 using EDU_HUB_AI.Config.Component.Basic;
-using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Model;
@@ -24,30 +23,20 @@ namespace EDU_HUB_AI.Config.Component.Domain
             ModalTitle = source == null ? "교육과정 등록" : "교육과정 수정";
             ConfirmText = "저장";
 
-            var stack = new TableLayoutPanel
+            _txtEduName = new TextField
             {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                ColumnCount = 1,
-                RowCount = 5,
-                Padding = new Padding(0),
-                BackColor = ThemeColors.Surface
+                FieldLabel = "과정명",
+                Text = source?.eduName ?? "",
+                Placeholder = "과정명 입력",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
             };
-            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-
-            for(int i = 0; i < 5; i++)
-            {
-                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            }
-
-            _txtEduName = AddField(stack, "과정명", source?.eduName, "과정명 입력", 0);
-
 
             _dtpStartDate = new DateField
             {
                 FieldLabel = "시작일",
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
+                Margin = new Padding(0, 0, 8, 14)
             };
             _dtpEndDate = new DateField
             {
@@ -58,11 +47,71 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _dtpStartDate.SetYyMMdd(source?.startDate);
             _dtpEndDate.SetYyMMdd(source?.endDate);
 
-            _txtBatchNumber = AddField(stack, "기수", source?.batchNumber.ToString(), "숫자 입력", 3);
-            _txtCapacity = AddField(stack, "정원", source?.capacity.ToString(), "숫자 입력", 4);
+            _txtBatchNumber = new TextField
+            {
+                FieldLabel = "기수",
+                Text = source?.batchNumber > 0 ? source.batchNumber.ToString() : "",
+                Placeholder = "숫자 입력",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 8, 14)
+            };
+            _txtCapacity = new TextField
+            {
+                FieldLabel = "정원",
+                Text = source?.capacity > 0 ? source.capacity.ToString() : "",
+                Placeholder = "숫자 입력",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
 
-            stack.Controls.Add(_dtpStartDate, 0, 1);
-            stack.Controls.Add(_dtpEndDate, 0, 2);
+            // 시작일 | 종료일
+            var rowDate = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                AutoSize = true,
+                Margin = new Padding(0),
+                BackColor = ThemeColors.Surface
+            };
+            rowDate.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowDate.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowDate.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            rowDate.Controls.Add(_dtpStartDate, 0, 0);
+            rowDate.Controls.Add(_dtpEndDate, 1, 0);
+
+            // 기수 | 정원
+            var rowNumbers = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                AutoSize = true,
+                Margin = new Padding(0),
+                BackColor = ThemeColors.Surface
+            };
+            rowNumbers.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowNumbers.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowNumbers.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            rowNumbers.Controls.Add(_txtBatchNumber, 0, 0);
+            rowNumbers.Controls.Add(_txtCapacity, 1, 0);
+
+            var stack = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                ColumnCount = 1,
+                RowCount = 3,
+                Padding = new Padding(0),
+                BackColor = ThemeColors.Surface
+            };
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            stack.Controls.Add(_txtEduName, 0, 0);
+            stack.Controls.Add(rowDate, 0, 1);
+            stack.Controls.Add(rowNumbers, 0, 2);
 
             Body.Controls.Add(stack);
             SetCardWidth(480);
@@ -85,24 +134,32 @@ namespace EDU_HUB_AI.Config.Component.Domain
             var eduName = _txtEduName.Text.Trim();
             var startDate = _dtpStartDate.Value.ToString("yyMMdd");
             var endDate = _dtpEndDate.Value.ToString("yyMMdd");
-            var batchNumber = _txtBatchNumber.Text.Trim();
-            var capacity = _txtCapacity.Text.Trim();
+            var batchStr = _txtBatchNumber.Text.Trim();
+            var capStr = _txtCapacity.Text.Trim();
 
-            if(string.IsNullOrWhiteSpace(eduName))
+            if (string.IsNullOrWhiteSpace(eduName))
             {
+                _txtEduName.HasError = true;
                 MessageBox.Show("과정명을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if(!int.TryParse(batchNumber, out var batch) || batch <= 0)
+            _txtEduName.HasError = false;
+
+            if (!int.TryParse(batchStr, out var batch) || batch <= 0)
             {
+                _txtBatchNumber.HasError = true;
                 MessageBox.Show("기수는 1 이상의 숫자를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if(!int.TryParse(capacity, out var cap) || cap <= 0)
+            _txtBatchNumber.HasError = false;
+
+            if (!int.TryParse(capStr, out var cap) || cap <= 0)
             {
+                _txtCapacity.HasError = true;
                 MessageBox.Show("정원은 1 이상의 숫자를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            _txtCapacity.HasError = false;
 
             bool isEdit = _source != null;
             if (!ConfirmModal.Show(Owner,
@@ -119,23 +176,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Result.batchNumber = batch;
             Result.capacity = cap;
             base.OnConfirm();
-        }
-
-        // ====== UI 헬퍼 ======
-        private static TextField AddField(TableLayoutPanel parent, string label, string? value, string placeholder, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var field = new TextField
-            {
-                FieldLabel = label,
-                Text = value ?? "",
-                Placeholder = placeholder,
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-            parent.Controls.Add(field, 0, row);
-            return field;
         }
 
         // ====== 리턴 ======

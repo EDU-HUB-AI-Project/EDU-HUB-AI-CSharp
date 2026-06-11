@@ -8,12 +8,12 @@ namespace EDU_HUB_AI.Model
 {
     public class KioskOperationalLogDto
     {
-        public string opLogId;
-        public string studentId;
-        public string printing;
-        public string dorm;
-        public string createdAt;
-        public string delYN;
+        public string opLogId { get; set; }
+        public string studentId { get; set; }
+        public string printing {  get; set; }
+        public string dorm {  get; set; }
+        public string createdAt { get; set; }
+        public string delYN {  get; set; }
 
         public override string ToString()
         {

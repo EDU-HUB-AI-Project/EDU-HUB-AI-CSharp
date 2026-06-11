@@ -68,9 +68,14 @@ namespace EDU_HUB_AI.Config.Component.Domain
             else
                 _mapPicker.Clear();
 
-            _cmbType.Items.AddRange(["INNER", "OUTER"]);
+            _cmbType.Items.AddRange([
+                new TypeItem("INNER", "내부"),
+                new TypeItem("OUTER", "외부")
+                ]);
+            _cmbType.DisplayMember = "Label";
             _cmbType.SelectedIndexChanged += (_, _) => OnFacilityTypeSwitched();
-            _cmbType.SelectedItem = initialType is "OUTER" ? "OUTER" : "INNER";
+            SelectType(initialType);
+
             _btnBrowse.Click += OnBrowseImage;
             _picPreview.Click += OnBrowseImage;
             _picPreview.Cursor = Cursors.Hand;
@@ -78,6 +83,25 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Body.Controls.Add(stack);
             UpdateImageUi();
             UpdateTypePanels();
+        }
+
+        private void SelectType(string? value)
+        {
+            var normalized = value?.Trim().ToUpperInvariant();
+
+            for(var i = 0; i <_cmbType.Items.Count; i++)
+            {
+                if (_cmbType.Items[i] is TypeItem item && string.Equals(item.Value, normalized, StringComparison.OrdinalIgnoreCase))
+                {
+                    _cmbType.SelectedIndex = i;
+                    return;
+                }
+            }
+
+            if(_cmbType.Items.Count > 0)
+            {
+                _cmbType.SelectedIndex = 0;
+            }
         }
 
         public static FacilityInfoDto? Show(IWin32Window owner, FacilityInfoDto? source)
@@ -88,7 +112,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override async void OnConfirm()
         {
-            var type = _cmbType.SelectedItem?.ToString()?.Trim().ToUpperInvariant();
+            var type = GetSelectedFacilityType();
             var name = _txtName.Text.Trim();
             var location = _txtLocation.Text.Trim();
             var description = _txtDescription.Text.Trim();
@@ -156,8 +180,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
                     MessageBox.Show("지도에서 위치를 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-                mapX = Math.Round(_mapPicker.MapX.Value, 1);
-                mapY = Math.Round(_mapPicker.MapY.Value, 1);
+                mapX = Math.Round(_mapPicker.MapX.Value, 6);
+                mapY = Math.Round(_mapPicker.MapY.Value, 6);
             }
 
             bool isEdit = _source != null;
@@ -249,7 +273,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
         }
 
         private string? GetSelectedFacilityType() =>
-            _cmbType.SelectedItem?.ToString()?.Trim().ToUpperInvariant();
+            (_cmbType.SelectedItem as TypeItem)?.Value?.Trim().ToUpperInvariant();
 
         private void ClearImageSelection()
         {
@@ -260,7 +284,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         private void UpdateTypePanels()
         {
-            var inner = string.Equals(_cmbType.SelectedItem?.ToString(), "INNER", StringComparison.OrdinalIgnoreCase);
+            var inner = string.Equals(GetSelectedFacilityType(), "INNER", StringComparison.OrdinalIgnoreCase);
             _panelInner.Visible = inner;
             _panelOuter.Visible = !inner;
             _panelImage.Visible = inner;
@@ -471,5 +495,10 @@ namespace EDU_HUB_AI.Config.Component.Domain
             updatedAt = f.updatedAt,
             delYn = f.delYn
         };
+        private sealed class TypeItem(string value, string label)
+        {
+            public string Value { get; } = value;
+            public string Label { get; } = label;
+        }
     }
 }
