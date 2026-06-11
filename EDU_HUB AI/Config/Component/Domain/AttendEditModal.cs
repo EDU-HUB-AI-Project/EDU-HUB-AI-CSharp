@@ -119,6 +119,15 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 MessageBox.Show("해당하는 사유를 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            bool isEdit = _source != null;
+            if (!ConfirmModal.Show(Owner,
+                isEdit ? "수정 확인" : "등록 확인",
+                isEdit ? "수정하시겠습니까?" : "등록하시겠습니까?",
+                isEdit ? "수정" : "등록",
+                ButtonVariant.Primary))
+                return;
+
             Result = _source != null ? CopyOf(_source) : new AttendDto();
             Result.studentId = studentId;  
             Result.eduId = _cmbEduId.SelectedValue.ToString();

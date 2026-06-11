@@ -174,6 +174,14 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 return;
             }
 
+            bool isEdit = _source != null;
+            if (!ConfirmModal.Show(Owner,
+                isEdit ? "수정 확인" : "등록 확인",
+                isEdit ? "수정하시겠습니까?" : "등록하시겠습니까?",
+                isEdit ? "수정" : "등록",
+                ButtonVariant.Primary))
+                return;
+
             Result = _source != null ? CopyOf(_source) : new StudentDto();
             Result.studentName = name;
             Result.birthDate = birth;

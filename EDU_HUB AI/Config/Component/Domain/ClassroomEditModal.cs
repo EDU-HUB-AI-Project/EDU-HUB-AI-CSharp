@@ -61,6 +61,9 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 return;
             }
 
+            if (!ConfirmModal.Show(Owner, "수정 확인", "수정하시겠습니까?", "수정", ButtonVariant.Primary))
+                return;
+
             Result = CopyOf(_source!);
             Result.classroomName = classroomName;
             base.OnConfirm();

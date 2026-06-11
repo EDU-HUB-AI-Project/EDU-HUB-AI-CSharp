@@ -31,5 +31,6 @@ namespace EDU_HUB_AI.Config.Theme
         public static Font TableHeader => new(Base, 9f, FontStyle.Bold);
         public static Font TableCell => new(Base, 9f, FontStyle.Regular);
         public static Font Tag => new(Base, 8.25f, FontStyle.Regular);
+        public static Font IconLg => new(Base, 18f, FontStyle.Bold);
     }
 }

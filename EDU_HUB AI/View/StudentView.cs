@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
