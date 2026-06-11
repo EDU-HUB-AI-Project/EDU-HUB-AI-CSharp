@@ -7,6 +7,8 @@ using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
 using System.Data;
+using System.Data.Common;
+using System.Xml.Linq;
 
 
 namespace EDU_HUB_AI.View
@@ -15,7 +17,7 @@ namespace EDU_HUB_AI.View
     {
         private List<AttendDto> _all = new();
         private List<AttendDto> _pageItems = new();
-        private List<AttendDto> _listAttend = new();
+        private List<AttendDto> _filteredList = new();
         private DataTable _dtAttend = new DataTable();
         private readonly ExcelExport excelExport = new ExcelExport();
         private readonly ExcelImport excelImport = new ExcelImport();
@@ -31,14 +33,29 @@ namespace EDU_HUB_AI.View
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
-            //FixDockOrder();
+
+            tableCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, tableCard.Width - 1, tableCard.Height - 1);
+            };
+            filterCard.Paint += (_, e) =>
+            {
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, filterCard.Width - 1, filterCard.Height - 1);
+            };
 
             pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
-            btnSearch.Click += BtnSearch_Click;
+            //btnSearch.Click += BtnSearch_Click;
             btnExport.Click += BtnExport_Click;
             btnImport.Click += BtnImport_Click;
+
+            cmbEdu.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            cmbStatus.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            dtpDate.ValueChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            txtSearch.TextChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -53,20 +70,18 @@ namespace EDU_HUB_AI.View
 
         private void FixDockOrder()
         {
-            bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
+            bodyPanel.Controls.SetChildIndex(tableCard, 0);
+            bodyPanel.Controls.SetChildIndex(gapPanel, 1);
+            bodyPanel.Controls.SetChildIndex(filterCard, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
         // ===== 데이터 연동 지점 (여기만 바꾸면 됨) =====
         private async Task<List<AttendDto>> LoadData()
         {
             // [실제 API] 아래 두 줄 주석을 풀고 목업 return 을 지우기
-            string? studentId = cmbStudent.SelectedIndex > 0 ? cmbStudent.SelectedValue.ToString() : null;
-            string? eduId = cmbEdu.SelectedIndex > 0 ? cmbEdu.SelectedValue.ToString() : null;
-            string? attendDate = dtpDate.Checked ? dtpDate.Value.ToString("yyyy-MM-dd") : null; ;
-            string? status = cmbStatus.SelectedIndex > 0 ? cmbStatus.SelectedItem.ToString() : null;
-            var res = await _adminAttendaceController.GetAttend(studentId, eduId, attendDate, status);
+            
+            var res = await _adminAttendaceController.GetAttend();
             return res?.Data ?? new List<AttendDto>();
         }
 
@@ -105,17 +120,22 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("message", "사유");
             grid.AddTextActionColumns();
             grid.ActionClicked += OnRowAction;
+            grid.CellFormatting += OnCellFormatting;
         }
 
         private void RenderPage(int page)
         {
-            pagination1.TotalCount = _all.Count;
+            // 필터링을 거친 데이터가 존재할 경우 filteredList
+            // 그렇지 않을 경우 전체 데이터
+            bool hasFilter = cmbEdu.SelectedIndex > 0 || cmbStatus.SelectedIndex > 0 || !string.IsNullOrEmpty(txtSearch.Text.Trim()) || dtpDate.Checked;
+            var source = hasFilter ? _filteredList : _all;
+            pagination1.TotalCount = source.Count;
             var size = pagination1.PageSize;
-            var totalPages = Math.Max(1, (int)Math.Ceiling(_all.Count / (double)size));
+            var totalPages = Math.Max(1, (int)Math.Ceiling(source.Count / (double)size));
             page = Math.Clamp(page, 1, totalPages);
             pagination1.PageIndex = page;
 
-            _pageItems = _all.Skip((page - 1) * size).Take(size).ToList();
+            _pageItems = source.Skip((page - 1) * size).Take(size).ToList();
 
             grid.SuspendLayout();
             grid.Rows.Clear();
@@ -123,7 +143,7 @@ namespace EDU_HUB_AI.View
                 grid.Rows.Add(a.studentName, a.eduName, a.attendDate, a.status, a.message);
             grid.ResumeLayout();
 
-            ConvertToTable(_all);
+            ConvertToTable(source);
         }
 
         // ===== CRUD =====
@@ -271,21 +291,11 @@ namespace EDU_HUB_AI.View
         // studentId, eduId에 콤보박스 추가
         private async Task LoadCmb()
         {
-            var response = await _adminAttendaceController.GetAttend(null, null, null, null);
+            var response = await _adminAttendaceController.GetAttend();
             if (response?.Status == 200)
             {
                 // 출석 전체조회 응답 데이터를 활용하여 콤보박스 목록을 구성
                 // 별도 API 호출 없이 LINQ로 중복 제거 후 추출
-                // 학생 콤보박스
-                var students = response.Data
-                    .Select(x => new { x.studentId, x.studentName })
-                    .DistinctBy(x => x.studentId)
-                    .ToList();
-                students.Insert(0, new { studentId = "", studentName = "전체" });
-                cmbStudent.DataSource = students;
-                cmbStudent.DisplayMember = "studentName";
-                cmbStudent.ValueMember = "studentId";
-
                 // 교육과정 콤보박스
                 var edus = response.Data
                     .Select(x => new { x.eduId, x.eduName })
@@ -300,10 +310,44 @@ namespace EDU_HUB_AI.View
         }
 
         // 버튼 이벤트 
-        private async void BtnSearch_Click(object? sender, EventArgs e)
+        //private async void BtnSearch_Click(object? sender, EventArgs e)
+        //{
+        //    await LoadAndRender(1);
+        //}
+
+        // 출석 상태별 배경 색 변경
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e) 
         {
-            await LoadAndRender(1);
+            if(e.RowIndex < 0) return;
+            var value = grid.Rows[e.RowIndex].Cells[3].Value;
+            if (value == null) return;
+            var status = value.ToString();
+            if (status == "결석")
+            {
+                e.CellStyle.ForeColor = ThemeColors.OkText;
+                e.CellStyle.BackColor = ThemeColors.DangerBg;
+                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
+                e.CellStyle.SelectionBackColor = ThemeColors.DangerBg;
+                e.FormattingApplied = true;
+            }
+            else if (status == "지각")
+            {
+                e.CellStyle.ForeColor = ThemeColors.OkText;
+                e.CellStyle.BackColor = ThemeColors.WarnBg;
+                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
+                e.CellStyle.SelectionBackColor = ThemeColors.WarnBg;
+                e.FormattingApplied = true;
+            }
+            else if (status == "조퇴")
+            {
+                e.CellStyle.ForeColor = ThemeColors.OkText;
+                e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
+                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
+                e.CellStyle.SelectionBackColor = Color.FromArgb(255, 237, 213);
+                e.FormattingApplied = true;
+            }
         }
+
         // 엑셀로 내보내기
         private void BtnExport_Click(object? sender, EventArgs e)
         {
@@ -414,6 +458,28 @@ namespace EDU_HUB_AI.View
             }
 
             _pendingFilter = null;
+        }
+
+        private void ApplySearchFilter()
+        {
+            var result = _all.AsEnumerable();
+
+            var eduId = cmbEdu.SelectedValue?.ToString();
+            if (!string.IsNullOrEmpty(eduId))
+                result = result.Where(a => a.eduId == eduId);
+            var status = cmbStatus.SelectedIndex > 0
+                ? cmbStatus.SelectedItem?.ToString()
+                : null;
+            if (!string.IsNullOrEmpty(status))
+                result = result.Where(a => a.status == status);
+            var date = dtpDate.Checked ? dtpDate.ToDateString() : null;
+            if(!string.IsNullOrEmpty(date))
+                result = result.Where(a => a.attendDate == date);
+            var search = txtSearch.Text.Trim();
+            if (!string.IsNullOrEmpty(search))
+                result = result.Where(a => a.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
+
+            _filteredList = result.ToList();
         }
     }
 }

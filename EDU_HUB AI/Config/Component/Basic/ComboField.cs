@@ -1,4 +1,5 @@
 ﻿using EDU_HUB_AI.Config.Theme;
+using NPOI.OpenXmlFormats.Wordprocessing;
 using System.ComponentModel;
 using System.Reflection;
 namespace EDU_HUB_AI.Config.Component.Basic
@@ -49,6 +50,8 @@ namespace EDU_HUB_AI.Config.Component.Basic
         [Browsable(false)] public string ValueMember { get => _combo.ValueMember; set => _combo.ValueMember = value; }
         [Browsable(false)] public object? SelectedValue { get => _combo.SelectedValue; set => _combo.SelectedValue = value; }
         [Browsable(false)] public int SelectedIndex { get => _combo.SelectedIndex; set => _combo.SelectedIndex = value; }
+        [Browsable(false)] public ComboBox.ObjectCollection Items => _combo.Items;
+        [Browsable(false)] public object? SelectedItem { get => _combo.SelectedItem; set => _combo.SelectedItem = value;  }
 
         public new event EventHandler? SelectedIndexChanged;
 

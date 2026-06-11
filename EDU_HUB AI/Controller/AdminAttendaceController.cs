@@ -9,13 +9,10 @@ namespace EDU_HUB_AI.Controller
     {
         private readonly AdminAttendaceService _adminAttendaceService = new AdminAttendaceService();
 
-        public async Task<ApiResponse<List<AttendDto>>?> GetAttend(string? studentId=null,
-                                                                   string? eduId = null, 
-                                                                   string? attendDate = null,
-                                                                   string? status = null)
+        public async Task<ApiResponse<List<AttendDto>>?> GetAttend()
         {
             Debug.WriteLine("Called::GetAttend");
-            return await _adminAttendaceService.GetAttend(studentId, eduId, attendDate, status);
+            return await _adminAttendaceService.GetAttend();
         }
 
         public async Task<ApiResponse<Dictionary<string, object>>?> InsertAttend(AttendDto attendDto)

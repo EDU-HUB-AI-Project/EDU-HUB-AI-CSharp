@@ -63,7 +63,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         private async Task LoadCmb()
         {
-            var response = await new AdminAttendaceController().GetAttend(null, null, null, null);
+            var response = await new AdminAttendaceController().GetAttend();
             if (response?.Status == 200)
             {
                 // 교육과정 콤보박스
