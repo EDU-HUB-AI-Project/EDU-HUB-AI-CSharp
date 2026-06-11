@@ -22,21 +22,6 @@ namespace EDU_HUB_AI.Service
             return await _apiClient.Get<List<Dictionary<string, object>>>(url);
         }
 
-        // 날짜별 상세 조회
-        public async Task<ApiResponse<List<CafeteriaDto>>> GetCafeteriaDetail(string date)
-        {
-            Debug.WriteLine("Called::GetCafeteriaDetail");
-            string url = _url + $"/detail/{date}";
-            return await _apiClient.Get<List<CafeteriaDto>>(url);
-        }
-
-        // 등록
-        public async Task<ApiResponse<int>> CreateCafeteria(CafeteriaDto dto)
-        {
-            Debug.WriteLine("Called::CreateCafeteria");
-            return await _apiClient.Post<int>(_url, dto);
-        }
-
         // 수정
         public async Task<ApiResponse<int>> UpdateCafeteria(string id, CafeteriaDto dto)
         {
