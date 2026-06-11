@@ -38,6 +38,11 @@ namespace EDU_HUB_AI.Controller
             Debug.WriteLine("Called::GetDormOut");
             return await _adminDormitoryService.GetDormOut();
         }
+        public async Task<ApiResponse<List<DormInOutDto>>> GetDormInOut()
+        {
+            Debug.WriteLine("Called::GetDormInOut");
+            return await _adminDormitoryService.GetDormInOut();
+        }
         public async Task<ApiResponse<List<DormitoryDto>>> GetDormRoomAssignStatus(string? dormitoryId=null)
         {
             Debug.WriteLine("Called::GettDormRoomAssignStatus");
