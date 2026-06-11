@@ -217,8 +217,20 @@ namespace EDU_HUB_AI.View
 
         private async Task LoadAndRender()
         {
-            _all = await LoadData();
-            RenderPage(1);
+            var overlay = LoadingOverlay.Create(bodyPanel, "데이터 로딩 중");
+            _adminCafeteriaController.OnRetry = (attempt, max) =>
+                overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+            try
+            {
+                _all = await LoadData();
+                RenderPage(1);
+            }
+            finally
+            { 
+                _adminCafeteriaController.OnRetry = null;
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         private void SetupGrid()
