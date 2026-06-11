@@ -16,77 +16,128 @@ namespace EDU_HUB_AI.View
         private List<Dictionary<string, object>> _pageItems = new List<Dictionary<string, object>>();
         private List<CafeteriaDto> _allDetail = new List<CafeteriaDto>();
         private readonly AdminCafeteriaController _adminCafeteriaController = new AdminCafeteriaController();
-        private DateTimePicker _datePickerStart;
-        private DateTimePicker _datePickerEnd;
+        private DateField _datePickerStart;
+        private DateField _datePickerEnd;
+        private Panel _filterCard;
+        private Panel _gapPanel;
 
         public CafeteriaView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
-            var dateRangePanel = new FlowLayoutPanel
+            _filterCard = new Panel
             {
                 Dock = DockStyle.Top,
+                BackColor = ThemeColors.Surface,
+                Padding = new Padding(16, 12, 16, 12),
+                Height = 100
+            };
+
+            var topPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = ThemeColors.Surface
+            };
+
+            var leftPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Left,
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
-                BackColor = ThemeColors.Background,
-                Margin = new Padding(0, 0, 0, 8)
+                BackColor = ThemeColors.Surface,
+                WrapContents = false
             };
 
-            _datePickerStart = new DateTimePicker
+            var rightPanel = new FlowLayoutPanel
             {
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                WrapContents = false
+            };
+
+            var dateStart = new DateField
+            {
+                FieldLabel = "시작일",
                 Format = DateTimePickerFormat.Custom,
                 CustomFormat = "yyyy-MM-dd",
-                Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),  // 이번 달 1일
-                Font = ThemeFonts.Body,
-                Width = 150
+                Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
+                Size = new Size(150, 62),
+                Margin = new Padding(0, 0, 8, 0)
             };
 
-            _datePickerEnd = new DateTimePicker
-            {
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "yyyy-MM-dd",
-                Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)),  // 이번 달 말일
-                Font = ThemeFonts.Body,
-                Width = 150
-            };
-
-            var lblSeparator = new Label
+            var lblSep = new Label
             {
                 Text = "~",
                 Font = ThemeFonts.Body,
                 AutoSize = true,
-                Margin = new Padding(6, 6, 6, 0)
+                Margin = new Padding(0, 35, 8, 0)
+            };
+
+            var dateEnd = new DateField
+            {
+                FieldLabel = "종료일",
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "yyyy-MM-dd",
+                Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month,
+                    DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)),
+                Size = new Size(150, 62),
+                Margin = new Padding(0, 0, 8, 0)
             };
 
             var btnSearch = new AppButton
             {
                 Text = "조회",
                 Variant = ButtonVariant.Primary,
-                Small = true,
-                Margin = new Padding(8, 2, 0, 0)
+                Margin = new Padding(8, 20, 0, 0)
             };
             btnSearch.Click += async (_, _) => await LoadAndRender();
 
-            _datePickerStart.ValueChanged += async (_, _) =>
+            _datePickerStart = dateStart;
+            _datePickerEnd = dateEnd;
+
+            dateStart.ValueChanged += async (_, _) =>
             {
                 await LoadAndRender();
                 ScrollToData(_datePickerStart.Value.ToString("yyyy-MM-dd"));
             };
 
-            dateRangePanel.Controls.Add(_datePickerStart);
-            dateRangePanel.Controls.Add(lblSeparator);
-            dateRangePanel.Controls.Add(_datePickerEnd);
-            dateRangePanel.Controls.Add(btnSearch);
+            leftPanel.Controls.Add(dateStart);
+            leftPanel.Controls.Add(lblSep);
+            leftPanel.Controls.Add(dateEnd);
+            leftPanel.Controls.Add(btnSearch);
 
-            bodyPanel.Controls.Add(dateRangePanel);
+            var btnCreateNew = new AppButton
+            {
+                Text = "+ 식단 추가",
+                Variant = ButtonVariant.Primary,
+                Margin = new Padding(0, 20, 0, 0)
+            };
+            btnCreateNew.Click += OnCreate;
+
+            rightPanel.Controls.Add(btnCreateNew);
+
+            topPanel.Controls.Add(rightPanel);
+            topPanel.Controls.Add(leftPanel);
+            _filterCard.Controls.Add(topPanel);
+
+            _gapPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 14,
+                BackColor = ThemeColors.Background
+            };
+
+            bodyPanel.Controls.Add(_filterCard);
+            bodyPanel.Controls.Add(_gapPanel);
 
             SetupGrid();
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender();
-            btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
         }
 
@@ -100,8 +151,9 @@ namespace EDU_HUB_AI.View
         private void FixDockOrder()
         {
             bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 1);
+            bodyPanel.Controls.SetChildIndex(_gapPanel, 2);
+            bodyPanel.Controls.SetChildIndex(_filterCard, 3);
         }
 
         private async Task<List<Dictionary<string, object>>> LoadData()
@@ -316,7 +368,6 @@ namespace EDU_HUB_AI.View
             foreach (var item in list)
             {
                 if (item.cafeteriaId == null) continue;
-
                 await _adminCafeteriaController.DeleteCafeteria(item.cafeteriaId);
             }
         }

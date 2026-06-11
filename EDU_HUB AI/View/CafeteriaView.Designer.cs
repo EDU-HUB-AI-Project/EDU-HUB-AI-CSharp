@@ -22,17 +22,13 @@ namespace EDU_HUB_AI.View
             DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             bodyPanel = new Panel();
             grid = new AppDataGrid();
-            actionPanel = new ActionBar();
-            btnCreate = new AppButton();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             bodyPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
-            actionPanel.SuspendLayout();
             SuspendLayout();
             // bodyPanel
             bodyPanel.Controls.Add(grid);
-            bodyPanel.Controls.Add(actionPanel);
             bodyPanel.Controls.Add(pagination1);
             bodyPanel.Dock = DockStyle.Fill;
             bodyPanel.Location = new Point(0, 107);
@@ -80,34 +76,6 @@ namespace EDU_HUB_AI.View
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             grid.Size = new Size(1411, 531);
             grid.TabIndex = 0;
-            // actionPanel
-            actionPanel.BackColor = Color.FromArgb(244, 246, 249);
-            actionPanel.Controls.Add(btnCreate);
-            actionPanel.Dock = DockStyle.Top;
-            actionPanel.FlowDirection = FlowDirection.RightToLeft;
-            actionPanel.Location = new Point(34, 40);
-            actionPanel.Name = "actionPanel";
-            actionPanel.Padding = new Padding(0, 7, 0, 13);
-            actionPanel.Size = new Size(1411, 90);
-            actionPanel.TabIndex = 2;
-            actionPanel.WrapContents = false;
-            // btnCreate
-            btnCreate.AutoSize = true;
-            btnCreate.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            btnCreate.BackColor = Color.FromArgb(37, 99, 235);
-            btnCreate.FlatAppearance.BorderColor = Color.FromArgb(37, 99, 235);
-            btnCreate.FlatAppearance.MouseOverBackColor = Color.FromArgb(29, 78, 216);
-            btnCreate.FlatStyle = FlatStyle.Flat;
-            btnCreate.Font = new Font("맑은 고딕", 9F);
-            btnCreate.ForeColor = Color.White;
-            btnCreate.Location = new Point(1257, 7);
-            btnCreate.Name = "btnCreate";
-            btnCreate.Padding = new Padding(17, 10, 17, 10);
-            btnCreate.Size = new Size(154, 57);
-            btnCreate.TabIndex = 0;
-            btnCreate.Tag = ButtonVariant.Primary;
-            btnCreate.Text = "식단 추가";
-            btnCreate.UseVisualStyleBackColor = false;
             // pagination1
             pagination1.BackColor = Color.FromArgb(244, 246, 249);
             pagination1.Dock = DockStyle.Bottom;
@@ -135,8 +103,6 @@ namespace EDU_HUB_AI.View
             Size = new Size(1479, 888);
             bodyPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
-            actionPanel.ResumeLayout(false);
-            actionPanel.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -144,7 +110,5 @@ namespace EDU_HUB_AI.View
         private PageHeader pageHeader1;
         private AppDataGrid grid;
         private Pagination pagination1;
-        private ActionBar actionPanel;
-        private AppButton btnCreate;
     }
 }

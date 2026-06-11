@@ -1,4 +1,5 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
@@ -17,8 +18,9 @@ namespace EDU_HUB_AI.View
         private Panel _sectionLunch;
         private Panel _sectionDinner;
 
-        private DateTimePicker _datePicker;
-        private ComboBox _cmbMeal;
+        private DateField _datePicker;
+        private ComboField _cmbMeal;
+        private AppButton _btnDeleteSelected;
 
         private List<DateTime> _datesBreakfast = new List<DateTime>();
         private List<DateTime> _datesLunch = new List<DateTime>();
@@ -37,87 +39,79 @@ namespace EDU_HUB_AI.View
             Dock = DockStyle.Fill;
             BackColor = ThemeColors.Background;
 
-            var mainPanel = new TableLayoutPanel
+            var bodyPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 3,
                 BackColor = ThemeColors.Background,
-                Padding = new Padding(16)
+                Padding = new Padding(34, 20, 34, 24)
             };
-            mainPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50F));
 
-            var topPanel = new FlowLayoutPanel
+            var filterCard = new Panel
             {
                 Dock = DockStyle.Top,
-                AutoSize = true,
-                FlowDirection = FlowDirection.LeftToRight,
-                BackColor = ThemeColors.Background,
-                Margin = new Padding(0, 0, 0, 8)
+                BackColor = ThemeColors.Surface,
+                Padding = new Padding(16, 12, 16, 12),
+                Height = 100
             };
 
-            var lblMealTop = new Label
+            _cmbMeal = new ComboField
             {
-                Text = "식사",
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Margin = new Padding(0, 6, 4, 0)
+                FieldLabel = "식사",
+                Size = new Size(120, 62),
+                Margin = new Padding(0, 0, 16, 0)
             };
-
-            _cmbMeal = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Font = ThemeFonts.Body,
-                Width = 100,
-                Margin = new Padding(0, 2, 16, 0)
-            };
+            _cmbMeal.PerformLayout();
             _cmbMeal.Items.AddRange(new object[] { "조식", "중식", "석식" });
             _cmbMeal.SelectedIndex = 0;
             _cmbMeal.SelectedIndexChanged += OnMealChanged;
 
-            var lblDate = new Label
+            _datePicker = new DateField
             {
-                Text = "시작일",
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Margin = new Padding(0, 6, 4, 0)
-            };
-
-            _datePicker = new DateTimePicker
-            {
+                FieldLabel = "시작일",
                 Format = DateTimePickerFormat.Custom,
                 CustomFormat = "yyyy-MM-dd",
                 Value = DateTime.Now,
-                Font = ThemeFonts.Body,
-                Width = 150
+                Size = new Size(150, 62),
+                Margin = new Padding(0, 0, 16, 0)
             };
-            _datePicker.ValueChanged += OnDatePickerChanged;
+            _datePicker.PerformLayout();
 
             var btnAddDay = new AppButton
             {
                 Text = "+ 하루 추가",
-                Variant = ButtonVariant.Ghost,
-                Small = true,
-                Margin = new Padding(8, 2, 0, 0)
+                Variant = ButtonVariant.Primary,
+                Margin = new Padding(8, 20, 0, 0)
             };
             btnAddDay.Click += OnAddDay;
 
-            topPanel.Controls.Add(lblMealTop);
-            topPanel.Controls.Add(_cmbMeal);
-            topPanel.Controls.Add(lblDate);
-            topPanel.Controls.Add(_datePicker);
-            topPanel.Controls.Add(btnAddDay);
+            _btnDeleteSelected = new AppButton
+            {
+                Text = "선택 삭제",
+                Variant = ButtonVariant.Ghost,
+                Enabled = false,
+                Margin = new Padding(8, 20, 0, 0)
+            };
+            _btnDeleteSelected.Click += OnDeleteSelected;
+
+            var gapPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 8,
+                BackColor = ThemeColors.Background
+            };
+
+            var tableCard = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = ThemeColors.Surface,
+                Padding = new Padding(16)
+            };
 
             var scrollPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                BackColor = ThemeColors.Background
+                BackColor = ThemeColors.Surface
             };
 
             var gridPanel = new TableLayoutPanel
@@ -126,7 +120,7 @@ namespace EDU_HUB_AI.View
                 AutoSize = true,
                 ColumnCount = 1,
                 RowCount = 3,
-                BackColor = ThemeColors.Background
+                BackColor = ThemeColors.Surface
             };
             gridPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             gridPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -146,39 +140,88 @@ namespace EDU_HUB_AI.View
             gridPanel.Controls.Add(_sectionDinner, 0, 2);
 
             scrollPanel.Controls.Add(gridPanel);
-
-            var bottomPanel = new FlowLayoutPanel
+            tableCard.Controls.Add(scrollPanel);
+            
+            var topPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.RightToLeft,
-                BackColor = ThemeColors.Background,
+                Height = 76,
+                BackColor = ThemeColors.Surface
+            };
+
+            var leftPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Left,
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                WrapContents = false
+            };
+
+            var rightPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                WrapContents = false,
                 Padding = new Padding(0, 8, 0, 0)
             };
 
-            var btnSave = new AppButton
-            {
-                Text = "저장",
-                Variant = ButtonVariant.Primary
-            };
-            btnSave.Click += OnSave;
+            leftPanel.Controls.Add(_cmbMeal);
+            leftPanel.Controls.Add(_datePicker);
+            leftPanel.Controls.Add(btnAddDay);
+            leftPanel.Controls.Add(_btnDeleteSelected);
 
             var btnCancel = new AppButton
             {
                 Text = "취소",
                 Variant = ButtonVariant.Ghost,
-                Margin = new Padding(0, 0, 8, 0)
+                Margin = new Padding(0, 12, 8, 0)
             };
             btnCancel.Click += (_, _) => OnBack?.Invoke();
 
-            bottomPanel.Controls.Add(btnSave);
-            bottomPanel.Controls.Add(btnCancel);
+            var btnSave = new AppButton
+            {
+                Text = "저장",
+                Variant = ButtonVariant.Primary,
+                Margin = new Padding(0, 12, 0, 0)
+            };
+            btnSave.Click += OnSave;
 
-            mainPanel.Controls.Add(topPanel, 0, 0);
-            mainPanel.Controls.Add(scrollPanel, 0, 1);
-            mainPanel.Controls.Add(bottomPanel, 0, 2);
+            rightPanel.Controls.Add(btnCancel);
+            rightPanel.Controls.Add(btnSave);
 
-            Controls.Add(mainPanel);
+            topPanel.Controls.Add(rightPanel);
+            topPanel.Controls.Add(leftPanel);
+
+            filterCard.Controls.Add(topPanel);
+
+            bodyPanel.Controls.Add(tableCard);
+            bodyPanel.Controls.Add(gapPanel);
+            bodyPanel.Controls.Add(filterCard);
+
+            var pageHeader = new PageHeader
+            {
+                Dock = DockStyle.Top,
+                Title = "식단 등록",
+                ShowSyncButton = true,
+                BackColor = ThemeColors.HeaderBg
+            };
+            pageHeader.SyncClicked += (_, _) => OnBack?.Invoke();
+            Controls.Add(bodyPanel);
+            Controls.Add(pageHeader);
             ShowSection(0);
+
+            this.HandleCreated += (_, _) =>
+            {
+                var dates = GetCurrentDates();
+                var grid = GetCurrentGrid();
+                InitDatesFor(dates);
+                RebuildRows(grid, dates);
+
+                _datePicker.ValueChanged += OnDatePickerChanged;
+            };
         }
 
         private List<DateTime> GetCurrentDates()
@@ -223,7 +266,6 @@ namespace EDU_HUB_AI.View
 
             InitDatesFor(dates);
             RebuildRows(grid, dates);
-            UpdateGridHeight(grid, dates.Count);
         }
 
         private void OnAddDay(object? sender, EventArgs e)
@@ -250,10 +292,37 @@ namespace EDU_HUB_AI.View
 
             string dateStr = next.ToString("yyyy-MM-dd");
             string dayLabel = next.ToString("M/d") + "(" + GetDayOfWeek(next) + ")";
-            grid.Rows.Add(dayLabel, "");
+            grid.Rows.Add(false, dayLabel, "");
             grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
 
             UpdateGridHeight(grid, dates.Count);
+
+            grid.Parent?.PerformLayout();
+            grid.Parent?.Parent?.PerformLayout();
+        }
+
+        private void OnDeleteSelected(object? sender, EventArgs e)
+        { 
+            var grid = GetCurrentGrid();
+            var dates = GetCurrentDates();
+
+            var toRemove = grid.Rows
+                .Cast<DataGridViewRow>()
+                .Where(r => Convert.ToBoolean(r.Cells["check"].Value))
+                .ToList();
+
+            if (toRemove.Count == 0) return;
+
+            foreach (var row in toRemove)
+            {
+                string tag = row.Tag?.ToString() ?? "";
+                dates.RemoveAll(d => d.ToString("yyyy-MM-dd") == tag);
+                grid.Rows.Remove(row);
+            }
+
+            UpdateGridHeight(grid, dates.Count);
+            grid.Parent?.PerformLayout();
+            grid.Parent?.Parent?.PerformLayout();
         }
 
         private void ShowSection(int index)
@@ -278,7 +347,9 @@ namespace EDU_HUB_AI.View
 
         private void UpdateGridHeight(DataGridView grid, int rowCount)
         {
-            grid.Height = 30 + (rowCount * 30);
+            int headerHeight = grid.ColumnHeadersHeight;
+            int rowHeight = rowCount > 0 ? grid.Rows[0].Height : 44;
+            grid.Height = headerHeight + (rowCount * rowHeight);
         }
 
         private DataGridView CreateMealGrid()
@@ -289,13 +360,48 @@ namespace EDU_HUB_AI.View
                 AutoSize = false,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
                 RowHeadersVisible = false,
-                BackgroundColor = ThemeColors.Surface,
-                BorderStyle = BorderStyle.Fixed3D,
-                Font = ThemeFonts.Body,
-                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
-                ScrollBars = ScrollBars.None
+                BackgroundColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                Font = new Font("맑은 고딕", 9F),
+                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None,
+                RowTemplate = { Height = 44 },
+                ScrollBars = ScrollBars.None,
+                Height = 30,
+                GridColor = Color.FromArgb(226, 232, 240),
+                EnableHeadersVisualStyles = false,
+                ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single,
+                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
+                ColumnHeadersHeight = 36,
+                ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+                {
+                    Alignment = DataGridViewContentAlignment.MiddleLeft,
+                    BackColor = Color.FromArgb(241, 245, 249),
+                    Font = new Font("맑은 고딕", 9F, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(15, 23, 42),
+                    Padding = new Padding(8, 0, 8, 0),
+                    SelectionBackColor = Color.FromArgb(241, 245, 249)
+                },
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = Color.White,
+                    Font = new Font("맑은 고딕", 9F),
+                    ForeColor = Color.FromArgb(15, 23, 42),
+                    Padding = new Padding(8, 0, 8, 0),
+                    SelectionBackColor = Color.White,
+                    SelectionForeColor = Color.FromArgb(15, 23, 42),
+                    WrapMode = DataGridViewTriState.False
+                }
             };
+
+            grid.Columns.Add(new DataGridViewCheckBoxColumn
+            {
+                HeaderText = "✓",
+                Name = "check",
+                Width = 50,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            });
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -303,13 +409,10 @@ namespace EDU_HUB_AI.View
                 Name = "date",
                 Width = 120,
                 ReadOnly = true,
-                SortMode = DataGridViewColumnSortMode.NotSortable,
-                DefaultCellStyle = new DataGridViewCellStyle
-                {
-                    BackColor = ThemeColors.Background,
-                    ForeColor = ThemeColors.TextMuted
-                }
+                SortMode = DataGridViewColumnSortMode.NotSortable
             });
+
+            grid.Columns["date"].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -324,6 +427,81 @@ namespace EDU_HUB_AI.View
                 }
             });
 
+            grid.CurrentCellDirtyStateChanged += (s, e) =>
+            {
+                if (grid.IsCurrentCellDirty)
+                    grid.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            };
+
+            grid.CellValueChanged += (s, e) =>
+            {
+                if (e.ColumnIndex != grid.Columns["check"].Index) return;
+
+                bool anyChecked = grid.Rows
+                .Cast<DataGridViewRow>()
+                .Any(r => Convert.ToBoolean(r.Cells["check"].Value));
+
+                _btnDeleteSelected.Enabled = anyChecked;
+            };
+
+            grid.ColumnHeaderMouseClick += (s, e) =>
+            {
+                if (e.ColumnIndex != grid.Columns["check"].Index) return;
+
+                bool allChecked = grid.Rows
+                .Cast<DataGridViewRow>()
+                .All(r => Convert.ToBoolean(r.Cells["check"].Value));
+
+                grid.EndEdit();
+
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    row.Cells["check"].Value = !allChecked;
+                }
+
+                grid.RefreshEdit();
+                _btnDeleteSelected.Enabled = !allChecked && grid.Rows.Count > 0;
+            };
+
+            grid.CellFormatting += (s, e) =>
+            {
+                  if (e.ColumnIndex == grid.Columns["date"].Index)
+                  {
+                      e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                      e.CellStyle.BackColor = Color.FromArgb(241, 245, 249);
+                      e.CellStyle.ForeColor = Color.FromArgb(100, 116, 139);
+                      e.FormattingApplied = true;
+                  }
+            };
+
+            grid.CellPainting += (s, e) =>
+            {
+                if (e.RowIndex < 0) return;
+                if (grid.Columns[e.ColumnIndex].Name != "date") return;
+
+                e.Paint(e.CellBounds, DataGridViewPaintParts.Background | DataGridViewPaintParts.Border);
+
+                var sf = new StringFormat
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center
+                };
+
+                using var brush = new SolidBrush(Color.FromArgb(100, 116, 139));
+                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(241, 245, 249)), e.CellBounds);
+                e.Graphics.DrawString(e.Value?.ToString(), grid.Font, brush, e.CellBounds, sf);
+                e.Handled = true;
+            };
+
+            grid.RowsAdded += (s, e) =>
+            {
+                for (int i = e.RowIndex; i < e.RowIndex + e.RowCount; i++)
+                {
+                    if (i >= 0 && i < grid.Rows.Count)
+                        grid.Rows[i].Height = 44;
+                }
+            };
+
             return grid;
         }
 
@@ -333,22 +511,12 @@ namespace EDU_HUB_AI.View
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                BackColor = ThemeColors.Background,
-                Margin = new Padding(0, 0, 0, 16)
-            };
-
-            var lblMeal = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.Body,
-                ForeColor = ThemeColors.Text,
-                AutoSize = true,
-                Dock = DockStyle.Top,
-                Margin = new Padding(0, 0, 0, 4)
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                BackColor = ThemeColors.Surface,
+                Padding = new Padding(0, 0, 0, 16)
             };
 
             section.Controls.Add(grid);
-            section.Controls.Add(lblMeal);
             return section;
         }
 
@@ -373,9 +541,13 @@ namespace EDU_HUB_AI.View
                 string dayLabel = date.ToString("M/d") + "(" + GetDayOfWeek(date) + ")";
                 string savedMenu = savedMenus.ContainsKey(dateStr) ? savedMenus[dateStr] : "";
 
-                grid.Rows.Add(dayLabel, savedMenu);
+                grid.Rows.Add(false, dayLabel, savedMenu);
                 grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
             }
+
+            UpdateGridHeight(grid, dates.Count);
+            grid.Parent?.PerformLayout();
+            grid.Parent?.Parent?.PerformLayout();
         }
 
         private async void OnSave(object? sender, EventArgs e)
