@@ -13,9 +13,21 @@ namespace EDU_HUB_AI.Config.Component.Layout
         private MenuKey _activeKey = MenuKey.Dashboard;
         private MenuKey? _hoverKey;
 
-        // 네이게이션 너비
-        private const int NavWidth = 240;
+        // 네비게이션 너비
+        private const int NavWidth = 260;
 
+        private static readonly Dictionary<MenuKey, string> _shortcuts = new()
+            {
+                { MenuKey.Dashboard,  "^1" },
+                { MenuKey.Trainees,   "^2" },
+                { MenuKey.Attendance, "^3" },
+                { MenuKey.Dormitory,  "^4" },
+                { MenuKey.EduInfo,    "^5" },
+                { MenuKey.Subject,    "^6" },
+                { MenuKey.Facilities, "^7" },
+                { MenuKey.Cafeteria,  "^8" },
+                { MenuKey.Transport,  "^9" },
+            };
         public Navigation()
         {
             InitializeComponent();
@@ -196,8 +208,22 @@ namespace EDU_HUB_AI.Config.Component.Layout
 
             using var textBrush = new SolidBrush(textColor);
             g.DrawString(text, font, textBrush,
-                new RectangleF(46, 0, panel.Width - 52, panel.Height),
+                new RectangleF(46, 0, panel.Width - 96, panel.Height),
                 new StringFormat { LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter });
+
+            // 단축키 힌트
+            if(_shortcuts.TryGetValue(key, out var hint))
+            {
+                using var hintFont = ThemeFonts.NavGroup;
+                using var hintBrush = new SolidBrush(ThemeColors.SidebarGroupText);
+                g.DrawString(hint, hintFont, hintBrush
+                    , new RectangleF(panel.Width - 46, 0, 38, panel.Height)
+                    , new StringFormat
+                    {
+                        LineAlignment = StringAlignment.Center,
+                        Alignment = StringAlignment.Far
+                    });
+            }
         }
         private static void FillRoundedRect(Graphics g, Brush brush, Rectangle rect, int radius)
         {
