@@ -201,7 +201,16 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.Add(gapPanel);
             bodyPanel.Controls.Add(filterCard);
 
+            var pageHeader = new PageHeader
+            {
+                Dock = DockStyle.Top,
+                Title = "식단 등록",
+                ShowSyncButton = true,
+                BackColor = ThemeColors.HeaderBg
+            };
+            pageHeader.SyncClicked += (_, _) => OnBack?.Invoke();
             Controls.Add(bodyPanel);
+            Controls.Add(pageHeader);
             ShowSection(0);
 
             this.HandleCreated += (_, _) =>
