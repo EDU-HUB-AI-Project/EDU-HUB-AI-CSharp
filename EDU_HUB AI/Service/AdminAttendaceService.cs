@@ -10,15 +10,14 @@ namespace EDU_HUB_AI.Service
         private readonly string _url = "/admin/attendance";
         private readonly ApiClient _apiClient = new ApiClient();
         // data의 반환 타입에 따라 설정
-        public async Task<ApiResponse<List<AttendDto>>?> GetAttend(string? studentId, string? eduId, string? attendDate, string? status)
+        public async Task<ApiResponse<List<AttendDto>>?> GetAttend()
         {
             Debug.WriteLine("Called::GetAttend");
-            string url = _url + "?";
-            if (studentId != null) url += "studentId=" + studentId + "&";
-            if (eduId != null) url += "eduId=" + eduId + "&";
-            if (attendDate != null) url += "attendDate=" + attendDate + "&";
-            if (status != null) url += "status=" + status + "&";
-            return await _apiClient.Get<List<AttendDto>>(url);
+            //if (studentId != null) url += "studentId=" + studentId + "&";
+            //if (eduId != null) url += "eduId=" + eduId + "&";
+            //if (attendDate != null) url += "attendDate=" + attendDate + "&";
+            //if (status != null) url += "status=" + status + "&";
+            return await _apiClient.Get<List<AttendDto>>(_url);
         }
 
         public async Task<ApiResponse<Dictionary<string, object>>?> InsertAttend(AttendDto attendDto)

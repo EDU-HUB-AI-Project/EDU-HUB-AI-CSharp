@@ -65,43 +65,7 @@ namespace EDU_HUB_AI.View
 
             // ── grid ───────────────────────────────────────────
             grid.Dock = DockStyle.Fill;
-            grid.EnableHeadersVisualStyles = false;
-            grid.ReadOnly = true;
-            grid.RowHeadersVisible = false;
-            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.AllowUserToAddRows = false;
-            grid.AllowUserToDeleteRows = false;
-            grid.AllowUserToResizeRows = false;
-            grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.BorderStyle = BorderStyle.None;
-            grid.BackgroundColor = ThemeColors.Surface;
-            grid.GridColor = ThemeColors.TableBorder;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            grid.ColumnHeadersHeight = 38;
-            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            grid.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.TableHeader,
-                ForeColor = ThemeColors.Text,
-                Font = ThemeFonts.TableHeader,
-                SelectionBackColor = ThemeColors.TableHeader,
-                Alignment = DataGridViewContentAlignment.MiddleLeft,
-                Padding = new Padding(12, 0, 8, 0)
-            };
-            grid.DefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.Surface,
-                ForeColor = ThemeColors.Text,
-                Font = ThemeFonts.TableCell,
-                SelectionBackColor = ThemeColors.TableHover,
-                SelectionForeColor = ThemeColors.Text,
-                Padding = new Padding(12, 0, 8, 0),
-                WrapMode = DataGridViewTriState.False
-            };
-            grid.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.TableStripe
-            };
+            grid.TabIndex = 3;
 
             // ── actionPanel ────────────────────────────────────
             var pnlFilterFlow = new FlowLayoutPanel
@@ -155,16 +119,19 @@ namespace EDU_HUB_AI.View
             txtSearch.Placeholder = "이름으로 검색...";
             txtSearch.Size = new Size(220, 62);
             txtSearch.Margin = new Padding(0, 0, 16, 0);
+            txtSearch.TabIndex = 2;
 
             // ── cmbEdu ────────────────────────────────
             cmbEdu.FieldLabel = "교육과정";
             cmbEdu.Size = new Size(160, 62);
             cmbEdu.Margin = new Padding(0, 0, 8, 0);
+            cmbEdu.TabIndex = 0;
 
             // ── cmbBatch ────────────────────────────
             cmbBatch.FieldLabel = "기수";
             cmbBatch.Size = new Size(100, 62);
             cmbBatch.Margin = new Padding(0, 0, 8, 0);
+            cmbBatch.TabIndex = 1;
 
             // ── pagination1 ────────────────────────────────────
             pagination1.BackColor = ThemeColors.Background;

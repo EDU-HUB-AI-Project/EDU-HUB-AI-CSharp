@@ -13,11 +13,57 @@ namespace EDU_HUB_AI.View
 {
     public partial class MainShellForm : Form
     {
+        private static readonly MenuKey[] _menuShortcuts =
+            [
+                MenuKey.Dashboard,   // Ctrl+1
+                MenuKey.Trainees,    // Ctrl+2
+                MenuKey.Attendance,  // Ctrl+3
+                MenuKey.Dormitory,   // Ctrl+4
+                MenuKey.EduInfo,     // Ctrl+5
+                MenuKey.Subject,     // Ctrl+6
+                MenuKey.Facilities,  // Ctrl+7
+                MenuKey.Cafeteria,   // Ctrl+8
+                MenuKey.Transport,   // Ctrl+9
+            ];
+
+
         public MainShellForm()
         {
             InitializeComponent();
+            KeyPreview = true;
+            KeyDown += OnShellKeyDown;
+
             navigation1.MenuSelected += (_, key) => NavigateTo(key);
-            NavigateTo(MenuKey.Dashboard); // 초기 화면 설정, 추후 대시보드로 변경
+            NavigateTo(MenuKey.Dashboard);
+        }
+
+        private void OnShellKeyDown(object? sender, KeyEventArgs e)
+        {
+            if(e.Control)
+            {
+                var digit = e.KeyCode - Keys.D1;
+                if (digit >= 0 && digit < _menuShortcuts.Length)
+                {
+                    NavigateTo(_menuShortcuts[digit]);
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+
+                if(e.KeyCode == Keys.F)
+                {
+                    contentPanel.Controls.OfType<ISearchFocusable>().FirstOrDefault()?.FocusSearch();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+            }
+
+            if(e.KeyCode == Keys.F5)
+            {
+                NavigateTo(navigation1.ActiveMenu);
+                e.Handled = true;
+            }
         }
 
         private void NavigateTo(MenuKey key, string? filter = null)
@@ -36,7 +82,6 @@ namespace EDU_HUB_AI.View
                 MenuKey.Classroom => new ClassroomView(),
                 MenuKey.Subject => new SubjectView(),
                 _ => null
-                // 여기에 본인 MenuKey 에 따른 UserControl 추가
             };
 
             if(view == null)

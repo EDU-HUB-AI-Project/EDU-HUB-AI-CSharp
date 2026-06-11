@@ -22,15 +22,6 @@ namespace EDU_HUB_AI.Config.Component.Data
                 UpdateDisplay();
         }
 
-        //private static void EnableDoubleBuffer(Control control)
-        //{
-        //    typeof(Control).InvokeMember("doubleBuffered",
-        //        System.Reflection.BindingFlags.SetProperty |
-        //        System.Reflection.BindingFlags.Instance |
-        //        System.Reflection.BindingFlags.NonPublic,
-        //        null, control, new object[] { true });
-        //}
-
         public int TotalCount
         {
             get => _totalCount;
@@ -235,5 +226,11 @@ namespace EDU_HUB_AI.Config.Component.Data
         private void Pagination_Resize(object? sender, EventArgs e) => LayoutControls();
         private void btnPrev_Click(object? sender, EventArgs e) => GoToPage(_pageIndex - 1);
         private void btnNext_Click(object? sender, EventArgs e) => GoToPage(_pageIndex + 1);
+
+        // ── 키보드 페이지 이동용 public 메서드 ──────────────
+        public void GoToFirst() => GoToPage(1);
+        public void GoToPrev() => GoToPage(_pageIndex - 1);
+        public void GoToNext() => GoToPage(_pageIndex + 1);
+        public void GoToLast() => GoToPage(TotalPages);
     }
 }
