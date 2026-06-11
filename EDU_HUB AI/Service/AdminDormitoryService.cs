@@ -39,7 +39,12 @@ namespace EDU_HUB_AI.Service
             string url = _url + $"/check-out";
             return await _apiClient.Get<List<DormInOutDto>>(url);
         }
-
+        public async Task<ApiResponse<List<DormInOutDto>>> GetDormInOut()
+        {
+            Debug.WriteLine("Called::GetDormInOut");
+            string url = _url + $"/in-out";
+            return await _apiClient.Get<List<DormInOutDto>>(url);
+        }
         public async Task<ApiResponse<List<DormitoryDto>>> GetDormRoomAssignStatus(string? dormitoryId)
         {
             Debug.WriteLine("Called::GetDormRoomAssignStatus");

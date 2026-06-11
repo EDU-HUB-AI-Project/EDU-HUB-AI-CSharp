@@ -21,6 +21,7 @@ namespace EDU_HUB_AI.View
     {
         private List<DormitoryDto> _all = new();
         private List<DormitoryDto> _pageItems = new();
+        private List<DormitoryDto> _fiteredList = new();
         private readonly AdminDormitoryController _adminDormitoryController = new();
         public DormRoomView()
         {
@@ -32,7 +33,7 @@ namespace EDU_HUB_AI.View
             pagination1.BackColor = ThemeColors.Background;
             pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
             pagination1.PageChanged += (_, page) => RenderPage(page);
-            btnSearch.Click += BtnSearch_Click;
+            cmbDormRoom.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -45,15 +46,15 @@ namespace EDU_HUB_AI.View
 
         private void FixDockOrder()
         {
-            bodyPanel.Controls.SetChildIndex(grid, 0);
-            bodyPanel.Controls.SetChildIndex(actionPanel, 1);
-            bodyPanel.Controls.SetChildIndex(pagination1, 2);
+            bodyPanel.Controls.SetChildIndex(tableCard, 0);
+            bodyPanel.Controls.SetChildIndex(gapPanel, 1);
+            bodyPanel.Controls.SetChildIndex(filterCard, 2);
+            bodyPanel.Controls.SetChildIndex(pagination1, 3);
         }
 
         private async Task<List<DormitoryDto>> LoadData()
         {
-            string? dormitoryId = cmbDormRoom.SelectedIndex > 0 ? cmbDormRoom.SelectedValue.ToString() : null;
-            var res = await _adminDormitoryController.GetDormRoomAssignStatus(dormitoryId);
+            var res = await _adminDormitoryController.GetDormRoomAssignStatus(null);
             return res?.Data ?? new List<DormitoryDto>();
         }
 
@@ -93,13 +94,15 @@ namespace EDU_HUB_AI.View
 
         private void RenderPage(int page)
         {
-            pagination1.TotalCount = _all.Count;
+            bool hasFilter = cmbDormRoom.SelectedIndex > 0;
+            var source = hasFilter ? _fiteredList : _all;
+            pagination1.TotalCount = source.Count;
             var size = pagination1.PageSize;
-            var totalPages = Math.Max(1, (int)Math.Ceiling(_all.Count / (double)size));
+            var totalPages = Math.Max(1, (int)Math.Ceiling(source.Count / (double)size));
             page = Math.Clamp(page, 1, totalPages);
             pagination1.PageIndex = page;
 
-            _pageItems = _all.Skip((page - 1) * size).Take(size).ToList();
+            _pageItems = source.Skip((page - 1) * size).Take(size).ToList();
 
             grid.SuspendLayout();
             grid.Rows.Clear();
@@ -152,10 +155,10 @@ namespace EDU_HUB_AI.View
 
             }
         }
-        private async void BtnSearch_Click(object? sender, EventArgs e)
-        {
-            await LoadAndRender(1);
-        }
+        //private async void BtnSearch_Click(object? sender, EventArgs e)
+        //{
+        //    await LoadAndRender(1);
+        //}
         private async Task LoadCmb()
         {
             var response = await _adminDormitoryController.GetDormRoomAssignStatus();
@@ -173,6 +176,18 @@ namespace EDU_HUB_AI.View
                 cmbDormRoom.DisplayMember = "dormitoryRoomName";
                 cmbDormRoom.ValueMember = "dormitoryId";
             }
+        }
+
+        private void ApplySearchFilter()
+        {
+            var result = _all.AsEnumerable();
+
+            var dormitoryId = cmbDormRoom.SelectedValue?.ToString();
+            if (!string.IsNullOrEmpty(dormitoryId))
+            {
+                result = result.Where(d => d.dormitoryId == dormitoryId);
+            }
+            _fiteredList = result.ToList();
         }
     }
 }
