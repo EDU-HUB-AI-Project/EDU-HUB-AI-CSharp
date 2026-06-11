@@ -19,18 +19,6 @@ namespace EDU_HUB_AI.Controller
             return await _adminCafeteriaService.GetCafeteriaSummary(date);
         }
 
-        public async Task<ApiResponse<List<CafeteriaDto>>> GetCafeteriaDetail(string date)
-        {
-            Debug.WriteLine("Called::GetcafeteriaDetail");
-            return await _adminCafeteriaService.GetCafeteriaDetail(date);
-        }
-
-        public async Task<ApiResponse<int>> CreateCafeteria(CafeteriaDto dto)
-        {
-            Debug.WriteLine("Called::CreateCafeteria");
-            return await _adminCafeteriaService.CreateCafeteria(dto);
-        }
-
         public async Task<ApiResponse<int>> UpdateCafeteria(string id, CafeteriaDto dto)
         {
             Debug.WriteLine("Called::UpdateCafeteria");
