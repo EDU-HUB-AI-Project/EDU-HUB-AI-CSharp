@@ -48,7 +48,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
-            btnSearch.Click += BtnSearch_Click;
+            //btnSearch.Click += BtnSearch_Click;
             btnExport.Click += BtnExport_Click;
             btnImport.Click += BtnImport_Click;
 
@@ -80,10 +80,8 @@ namespace EDU_HUB_AI.View
         private async Task<List<AttendDto>> LoadData()
         {
             // [실제 API] 아래 두 줄 주석을 풀고 목업 return 을 지우기
-            string? eduId = cmbEdu.SelectedIndex > 0 ? cmbEdu.SelectedValue.ToString() : null;
-            string? attendDate = dtpDate.Checked ? dtpDate.Value.ToString("yyyy-MM-dd") : null; ;
-            string? status = cmbStatus.SelectedIndex > 0 ? cmbStatus.SelectedItem.ToString() : null;
-            var res = await _adminAttendaceController.GetAttend(null, null, null, null);
+            
+            var res = await _adminAttendaceController.GetAttend();
             return res?.Data ?? new List<AttendDto>();
         }
 
@@ -122,6 +120,7 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("message", "사유");
             grid.AddTextActionColumns();
             grid.ActionClicked += OnRowAction;
+            grid.CellFormatting += OnCellFormatting;
         }
 
         private void RenderPage(int page)
@@ -292,7 +291,7 @@ namespace EDU_HUB_AI.View
         // studentId, eduId에 콤보박스 추가
         private async Task LoadCmb()
         {
-            var response = await _adminAttendaceController.GetAttend(null, null, null, null);
+            var response = await _adminAttendaceController.GetAttend();
             if (response?.Status == 200)
             {
                 // 출석 전체조회 응답 데이터를 활용하여 콤보박스 목록을 구성
@@ -311,10 +310,42 @@ namespace EDU_HUB_AI.View
         }
 
         // 버튼 이벤트 
-        private async void BtnSearch_Click(object? sender, EventArgs e)
+        //private async void BtnSearch_Click(object? sender, EventArgs e)
+        //{
+        //    await LoadAndRender(1);
+        //}
+
+        // 출석 상태별 배경 색 변경
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e) 
         {
-            await LoadAndRender(1);
+            if(e.RowIndex < 0) return;
+            var value = grid.Rows[e.RowIndex].Cells[3].Value;
+            if (value == null) return;
+            var status = value.ToString();
+            if (status == "결석")
+            {
+                e.CellStyle.ForeColor = ThemeColors.OkText;
+                e.CellStyle.BackColor = ThemeColors.DangerBg;
+                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
+                e.CellStyle.SelectionBackColor = ThemeColors.DangerBg;
+            }
+            else if (status == "지각")
+            {
+                e.CellStyle.ForeColor = ThemeColors.OkText;
+                e.CellStyle.BackColor = ThemeColors.WarnBg;
+                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
+                e.CellStyle.SelectionBackColor = ThemeColors.WarnBg;
+            }
+            else if (status == "조퇴")
+            {
+                e.CellStyle.ForeColor = ThemeColors.OkText;
+                e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
+                e.CellStyle.SelectionForeColor = ThemeColors.OkText;
+                e.CellStyle.SelectionBackColor = Color.FromArgb(255, 237, 213);
+            }
+            e.FormattingApplied = true;
         }
+
         // 엑셀로 내보내기
         private void BtnExport_Click(object? sender, EventArgs e)
         {
