@@ -145,10 +145,10 @@ namespace EDU_HUB_AI.View
             btnCreate.Tag = ButtonVariant.Primary;
             btnCreate.Text = "출석 현황 추가";
             btnCreate.IconName = "plus";
-            btnCreate.Margin = new Padding(0);
+            btnCreate.Margin = new Padding(0, 0, 8, 0);
 
             // =============== btnImport ===============
-            btnImport.Margin = new Padding(0);
+            btnImport.Margin = new Padding(0, 0, 8, 0);
             btnImport.IconName = "import";
             btnImport.Text = "엑셀 일괄 등록";
             btnImport.Variant = ButtonVariant.Secondary;
