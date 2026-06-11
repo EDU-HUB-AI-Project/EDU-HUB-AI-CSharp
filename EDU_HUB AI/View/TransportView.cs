@@ -65,23 +65,27 @@ namespace EDU_HUB_AI.View
 
         private async Task<List<TransportDto>> LoadData()
         {
-            try
-            {
-                var res = await _controller.GetTransportList();
-                return res?.Data ?? [];
-            }
-            catch (ApiException ex)
-            {
-                ShowApiError(ex);
-                return [];
-            }
+            var res = await _controller.GetTransportList();
+            return res?.Data ?? [];
         }
 
-        private async Task LoadAndRender()
+        private async Task LoadAndRender(bool showOverlay = true)
         {
-            _all = await LoadData();
-            foreach (var (type, card) in _cards)
-                card.BindItems(_all);
+            var overlay = showOverlay ? LoadingOverlay.Create(bodyPanel, "데이터 로딩 중...") : null;
+            _controller.OnRetry = (attempt, max) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
+            try
+            {
+                _all = await LoadData();
+                foreach (var (type, card) in _cards)
+                    card.BindItems(_all);
+            }
+            finally
+            {
+                _controller.OnRetry = null;
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         private async void OnCreate(string type, TransportTypeCard card)
@@ -99,16 +103,20 @@ namespace EDU_HUB_AI.View
             var created = TransportEditModal.Show(FindForm(), draft, type);
             if (created == null) return;
 
+            var overlay = LoadingOverlay.Create(bodyPanel, "등록 중...");
+            _controller.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
             try
             {
                 var res = await _controller.InsertTransport(created);
                 if (res?.Status == 200)
-                    await LoadAndRender();
+                    await LoadAndRender(showOverlay: false);
+                else
+                    MessageBox.Show(FindForm(), res?.Message ?? "등록에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (ApiException ex)
-            {
-                ShowApiError(ex);
-            }
+            catch(ApiException ex) { MessageBox.Show(FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { MessageBox.Show(FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { _controller.OnRetry = null; overlay.Close(); overlay.Dispose(); }
         }
 
         private async void OnRowAction(string type, TransportTypeCard card, TableActionEventArgs e)
@@ -121,16 +129,20 @@ namespace EDU_HUB_AI.View
                 var edited = TransportEditModal.Show(FindForm(), target);
                 if (edited == null || string.IsNullOrWhiteSpace(target.transportId)) return;
 
+                var overlay = LoadingOverlay.Create(bodyPanel, "수정 중...");
+                _controller.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
                 try
                 {
                     var res = await _controller.UpdateTransport(target.transportId, edited);
                     if (res?.Status == 200)
-                        await LoadAndRender();
+                        await LoadAndRender(showOverlay: false);
+                    else
+                        MessageBox.Show(FindForm(), res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex)
-                {
-                    ShowApiError(ex);
-                }
+                catch (ApiException ex) { MessageBox.Show(FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { _controller.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
             else if (e.Action == TableAction.Delete)
             {
@@ -140,20 +152,21 @@ namespace EDU_HUB_AI.View
 
                 if (string.IsNullOrWhiteSpace(target.transportId)) return;
 
+                var overlay = LoadingOverlay.Create(bodyPanel, "삭제 중...");
+                _controller.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+
                 try
                 {
                     var res = await _controller.DeleteTransport(target.transportId);
                     if (res?.Status == 200)
-                        await LoadAndRender();
+                        await LoadAndRender(showOverlay: false);
+                    else
+                        MessageBox.Show(FindForm(), res?.Message ?? "삭제에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                catch (ApiException ex)
-                {
-                    ShowApiError(ex);
-                }
+                catch (ApiException ex) { MessageBox.Show(FindForm(), ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show(FindForm(), $"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                finally { _controller.OnRetry = null; overlay.Close(); overlay.Dispose(); }
             }
         }
-
-        private static void ShowApiError(ApiException ex) =>
-            MessageBox.Show($"[{ex.Status}] {ex.Message}", "API 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 }

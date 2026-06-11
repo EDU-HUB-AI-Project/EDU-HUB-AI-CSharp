@@ -6,7 +6,6 @@ using EDU_HUB_AI.Model;
 
 namespace EDU_HUB_AI.Config.Component.Domain
 {
-    /// <summary>과목 등록/수정 모달 — AppModal 기반.</summary>
     public class SubjectEditModal : AppModal
     {
         private readonly SubjectDto? _source;
@@ -17,8 +16,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
         private readonly ComboField _cmbEdu;
         private readonly ComboField _cmbClassroom;
 
-        private readonly AdminClassroomController _classroomController = new AdminClassroomController();
-        private readonly AdminEduInfoController _eduInfoController = new AdminEduInfoController();
+        private readonly AdminClassroomController _classroomController = new();
+        private readonly AdminEduInfoController _eduInfoController = new();
 
         public SubjectDto? Result { get; private set; }
 
@@ -27,22 +26,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _source = source;
             ModalTitle = source == null ? "과목 등록" : "과목 수정";
             ConfirmText = "저장";
-
-            var stack = new TableLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                ColumnCount = 1,
-                RowCount = 6,
-                Padding = new Padding(0),
-                BackColor = ThemeColors.Surface
-            };
-            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-
-            for(int i = 0; i < 6; i++)
-            {
-                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            }
 
             _txtSubjectName = new TextField
             {
@@ -57,9 +40,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             {
                 FieldLabel = "교육과정",
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
+                Margin = new Padding(0, 0, 8, 14)
             };
-
             _cmbClassroom = new ComboField
             {
                 FieldLabel = "강의실",
@@ -71,9 +53,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             {
                 FieldLabel = "시작일",
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
+                Margin = new Padding(0, 0, 8, 14)
             };
-
             _dtpEndDate = new DateField
             {
                 FieldLabel = "종료일",
@@ -91,18 +72,61 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Margin = new Padding(0, 0, 0, 4)
             };
 
+            // 교육과정 | 강의실
+            var rowCombo = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                AutoSize = true,
+                Margin = new Padding(0),
+                BackColor = ThemeColors.Surface
+            };
+            rowCombo.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowCombo.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowCombo.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            rowCombo.Controls.Add(_cmbEdu, 0, 0);
+            rowCombo.Controls.Add(_cmbClassroom, 1, 0);
+
+            // 시작일 | 종료일
+            var rowDate = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                AutoSize = true,
+                Margin = new Padding(0),
+                BackColor = ThemeColors.Surface
+            };
+            rowDate.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowDate.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            rowDate.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            rowDate.Controls.Add(_dtpStartDate, 0, 0);
+            rowDate.Controls.Add(_dtpEndDate, 1, 0);
+
+            var stack = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                ColumnCount = 1,
+                RowCount = 4,
+                Padding = new Padding(0),
+                BackColor = ThemeColors.Surface
+            };
+            stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             stack.Controls.Add(_txtSubjectName, 0, 0);
-            stack.Controls.Add(_cmbEdu, 0, 1);
-            stack.Controls.Add(_cmbClassroom, 0, 2);
-            stack.Controls.Add(_dtpStartDate, 0, 3);
-            stack.Controls.Add(_dtpEndDate, 0, 4);
-            stack.Controls.Add(_togEndYn, 0, 5);
+            stack.Controls.Add(rowCombo, 0, 1);
+            stack.Controls.Add(rowDate, 0, 2);
+            stack.Controls.Add(_togEndYn, 0, 3);
 
             Body.Controls.Add(stack);
             SetCardWidth(500);
         }
 
-        // ComboBox 등 초기값 로딩
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -125,10 +149,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _cmbEdu.DisplayMember = "eduName";
             _cmbEdu.ValueMember = "eduId";
 
-            if(_source?.eduId != null && list.Any(e => e.eduId == _source.eduId))
-            {
+            if (_source?.eduId != null && list.Any(e => e.eduId == _source.eduId))
                 _cmbEdu.SelectedValue = _source.eduId;
-            }
         }
 
         private async Task LoadClassrooms()
@@ -140,10 +162,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _cmbClassroom.DisplayMember = "classroomName";
             _cmbClassroom.ValueMember = "classroomId";
 
-            if(_source?.classroomId != null && list.Any(c => c.classroomId == _source.classroomId))
-            {
+            if (_source?.classroomId != null && list.Any(c => c.classroomId == _source.classroomId))
                 _cmbClassroom.SelectedValue = _source.classroomId;
-            }
         }
 
         public static SubjectDto? Show(IWin32Window owner, SubjectDto? source)
@@ -197,7 +217,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             base.OnConfirm();
         }
 
-        // ====== 리턴 ======
         private static SubjectDto CopyOf(SubjectDto s) => new()
         {
             subjectId = s.subjectId,

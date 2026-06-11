@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -8,20 +9,7 @@ using EDU_HUB_AI.Model;
 
 namespace EDU_HUB_AI.View
 {
-    /// <summary>
-    /// CRUD 테이블 화면 템플릿 (목데이터 기반).
-    ///
-    /// ── 사용법 ────────────────────────────────────────────
-    /// 1. 이 Form을 복사
-    /// 2. StudentDto → 사용할 DTO로 바꾸고 컬럼/입력 필드를 교체
-    /// 3. LoadData() 안의 목업을 실제 Controller 호출로 교체
-    /// 4. pageHeader1.Title 설정 · SyncClicked 이벤트 연결
-    /// 5. actionPanel(ActionBar) 안에 AppButton을 드래그해 추가 — 자동 우측 정렬, Click 연결
-    /// 6. OnRowAction()/OnCreate()의 // TODO: API 지점을 연결
-    /// 페이지네이션은 전체 목록을 메모리에 두고 클라이언트에서 자르기
-    /// ──────────────────────────────────────────────────────────
-    /// </summary>
-    public partial class ClassroomView : UserControl
+    public partial class ClassroomView : UserControl, ISearchFocusable
     {
         private List<ClassroomDto> _all = new();
         private List<ClassroomDto> _pageItems = new();
@@ -54,6 +42,17 @@ namespace EDU_HUB_AI.View
 
             txtSearch.TextChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
             cmbFloor.SelectedIndexChanged += OnFloorChanged;
+
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -61,6 +60,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             await LoadAndRender(1);
+            grid.Focus();
         }
 
         private void FixDockOrder()
@@ -121,7 +121,7 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("floor", "층");
             grid.Columns.Add("imageId", "SVG ID");
             grid.Columns.Add("imagePath", "이미지 경로");
-            grid.AddTextActionColumns();
+            grid.AddTextActionColumns(includeDelete: false);
 
             grid.Columns["classroomName"].FillWeight = 200;
             grid.Columns["floor"].FillWeight = 80;
@@ -146,7 +146,8 @@ namespace EDU_HUB_AI.View
 
             foreach (var c in _pageItems)
             {
-                grid.Rows.Add(c.classroomName, c.floor, c.imageId, c.imagePath);
+                var idx = grid.Rows.Add(c.classroomName, c.floor, c.imageId, c.imagePath);
+                grid.Rows[idx].Tag = c;
             }
             grid.ResumeLayout();
         }
@@ -154,9 +155,11 @@ namespace EDU_HUB_AI.View
         // ===== CRUD =====
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
-            if (e.Action != TableAction.Edit) return;
-            var target = _pageItems[e.RowIndex];
+            var target = e.Tag as ClassroomDto;
+            if(target == null || e.Action != TableAction.Edit)
+            {
+                return;
+            }
 
             var edited = ClassroomEditModal.Show(this.FindForm(), target);
             if (edited == null) return;
@@ -182,7 +185,7 @@ namespace EDU_HUB_AI.View
             finally { _adminClassroomController.OnRetry = null; overlay.Close(); overlay.Dispose(); }
         }
 
-        // ===== 필터링 =====
+        // ===== 필터 =====
         private void ApplyFilter()
         {
             var result = _all.AsEnumerable();
@@ -201,6 +204,25 @@ namespace EDU_HUB_AI.View
         {
             ApplyFilter();
             RenderPage(1);
+        }
+
+        // ===== ISearchFocusable =====
+        public void FocusSearch() => txtSearch.Focus();
+
+        // ===== 키보드 이벤트 =====
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (ActiveControl is TextBox or ComboBox)
+                return base.ProcessCmdKey(ref msg, keyData);
+
+            switch (keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }

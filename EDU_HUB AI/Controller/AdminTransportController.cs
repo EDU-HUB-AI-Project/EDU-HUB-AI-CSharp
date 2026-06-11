@@ -21,5 +21,11 @@ namespace EDU_HUB_AI.Controller
 
         public Task<ApiResponse<int>> DeleteTransport(string transportId)
             => _service.DeleteTransport(transportId);
+
+        public Action<int, int>? OnRetry
+        {
+            get => _service.OnRetry;
+            set => _service.OnRetry = value;
+        }
     }
 }

@@ -3,17 +3,6 @@ using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
-using Org.BouncyCastle.Asn1.Cmp;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace EDU_HUB_AI.Config.Component.Domain
 {
@@ -21,10 +10,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
     {
         private readonly AttendDto? _source;
         private readonly TextField _txtStudentId;
-        private readonly ComboBox _cmbEduId;
-        private readonly DateTimePicker _dtpAttendDate;
-        private readonly ComboBox _cmbStatus;
+        private readonly ComboField _cmbEduId;
+        private readonly DateField _dtpAttendDate;
+        private readonly ComboField _cmbStatus;
         private readonly TextField _txtMessage;
+
+        private readonly AdminEduInfoController _eduInfoController = new AdminEduInfoController();
 
         public AttendDto? Result { get; private set; }
 
@@ -33,6 +24,46 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _source = source;
             ModalTitle = source == null ? "출석부 등록" : "출석부 수정";
             ConfirmText = "저장";
+
+            _txtStudentId = new TextField
+            {
+                FieldLabel = source == null ? "학생 ID" : "학생",
+                Text = source == null ? "" : (source.studentName ?? source.studentId ?? ""),
+                Placeholder = source == null ? "STU_xxxxx" : "",
+                ReadOnly = source != null,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _cmbEduId = new ComboField
+            {
+                FieldLabel = "교육과정",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _dtpAttendDate = new DateField
+            {
+                FieldLabel = "출석일자",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _cmbStatus = new ComboField
+            {
+                FieldLabel = "출석상태",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
+
+            _txtMessage = new TextField
+            {
+                FieldLabel = "사유",
+                Text = source?.message ?? "",
+                Placeholder = "조퇴, 지각, 결석일 경우 입력",
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 0, 0, 14)
+            };
 
             var stack = new TableLayoutPanel
             {
@@ -44,14 +75,17 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 BackColor = ThemeColors.Surface
             };
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            for (int i = 0; i < 5; i++)
+                stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            _txtStudentId = AddField(stack, "학생id", source?.studentId, "STU_xxxxx", 0);
-            _cmbEduId = AddComboField(stack, "교육id", 1);
-            _dtpAttendDate = AddDTPField(stack, "출석일자", 2);
-            _cmbStatus = AddComboField(stack, "출석상태", 3);
-            _txtMessage = AddField(stack, "사유", source?.message, "조퇴, 지각, 결석일 경우 입력", 4);
+            stack.Controls.Add(_txtStudentId, 0, 0);
+            stack.Controls.Add(_cmbEduId, 0, 1);
+            stack.Controls.Add(_dtpAttendDate, 0, 2);
+            stack.Controls.Add(_cmbStatus, 0, 3);
+            stack.Controls.Add(_txtMessage, 0, 4);
 
             Body.Controls.Add(stack);
+            SetCardWidth(500);
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -59,33 +93,40 @@ namespace EDU_HUB_AI.Config.Component.Domain
             base.OnLoad(e);
             await LoadCmb();
             LoadCmbStatus();
+
+            if(_source?.attendDate != null && DateTime.TryParse(_source.attendDate, out var dt))
+            {
+                _dtpAttendDate.Value = dt;
+            }
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            FitCardSize();
         }
 
         private async Task LoadCmb()
         {
-            var response = await new AdminAttendaceController().GetAttend();
-            if (response?.Status == 200)
+            var response = await _eduInfoController.GetEduInfos();
+            var list = response?.Data ?? new List<EduInfoDto>();
+
+            _cmbEduId.DataSource = list;
+            _cmbEduId.DisplayMember = "eduName";
+            _cmbEduId.ValueMember = "eduId";
+
+            if (_source?.eduId != null && list.Any(e => e.eduId == _source.eduId))
             {
-                // 교육과정 콤보박스
-                var edus = response.Data
-                    .Select(x => new { x.eduId, x.eduName })
-                    .DistinctBy(x => x.eduId)
-                    .ToList();
-                _cmbEduId.DataSource = edus;
-                _cmbEduId.DisplayMember = "eduName";
-                _cmbEduId.ValueMember = "eduId";
+                _cmbEduId.SelectedValue = _source.eduId;
             }
         }
 
         private void LoadCmbStatus()
         {
-            _cmbStatus.Items.Add("출석");
-            _cmbStatus.Items.Add("결석");
-            _cmbStatus.Items.Add("지각");
-            _cmbStatus.Items.Add("조퇴");
+            _cmbStatus.DataSource = new[] { "출석", "결석", "지각", "조퇴" };
             _cmbStatus.SelectedIndex = 0;
-            if (_source?.status != null) _cmbStatus.SelectedItem = _source.status;
-            else _cmbStatus.SelectedIndex = 0;
+            if (_source?.status != null)
+                _cmbStatus.SelectedItem = _source.status;
         }
         
         public static AttendDto? Show(IWin32Window owner, AttendDto? source)
@@ -96,27 +137,40 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
-            var studentId = _txtStudentId.Text.Trim();
-            var attendDate = _dtpAttendDate.Value;
-            var status = _cmbStatus.SelectedItem.ToString();
+            var studentId = _source != null ? _source.studentId : _txtStudentId.Text.Trim();
+            var eduId = _cmbEduId.SelectedValue?.ToString();
+            var status = _cmbStatus.SelectedItem?.ToString();
             var msg = _txtMessage.Text.Trim();
-            Debug.WriteLine($"선택한 날짜: {attendDate.Date}");
-            Debug.WriteLine($"오늘 날짜: {DateTime.Today}");
 
-            if (studentId == null || studentId == "")
+            if(string.IsNullOrWhiteSpace(studentId))
             {
-                MessageBox.Show("학생 Id를 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if(_source == null)
+                {
+                    _txtStudentId.HasError = true;
+                }
+                MessageBox.Show("학생 ID를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if (attendDate.Date > DateTime.Today)
+            if(_source == null)
             {
-                MessageBox.Show("오늘 이후의 날짜는 입력할 수 없습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _txtStudentId.HasError = false;
+            }
+
+            if (string.IsNullOrEmpty(eduId))
+            {
+                MessageBox.Show("교육과정을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            // 출석상태가 출석이 아니면서 사유가 존재하지 않는 경우
-            if(!status.Equals("출석") && (msg == null || msg == ""))
+
+            if (_dtpAttendDate.Value.Date > DateTime.Today)
             {
-                MessageBox.Show("해당하는 사유를 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("오늘 이후의 날짜는 입력할 수 없습니다.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (status != "출석" && string.IsNullOrWhiteSpace(msg))
+            {
+                MessageBox.Show("해당하는 사유를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -129,95 +183,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 return;
 
             Result = _source != null ? CopyOf(_source) : new AttendDto();
-            Result.studentId = studentId;  
-            Result.eduId = _cmbEduId.SelectedValue.ToString();
-            Result.attendDate = attendDate.ToString("yyyy-MM-dd");
+            Result.studentId = studentId;
+            Result.eduId = eduId;
+            Result.attendDate = _dtpAttendDate.Value.ToString("yyyy-MM-dd");
             Result.status = status;
             Result.message = msg;
             base.OnConfirm();
-        }
-
-        private ComboBox AddComboField(TableLayoutPanel parent, string label, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var lbl = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-
-            var cmb = new ComboBox
-            {
-                Dock = DockStyle.Top,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Font = ThemeFonts.Body,
-                BackColor = ThemeColors.Surface
-            };
-
-            panel.Controls.Add(cmb);
-            panel.Controls.Add(lbl);
-            parent.Controls.Add(panel, 0, row);
-            return cmb;
-        }
-
-        private DateTimePicker AddDTPField(TableLayoutPanel parent, string label, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var lbl = new Label
-            {
-                Text = label,
-                Font = ThemeFonts.BodySm,
-                ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Dock = DockStyle.Top
-            };
-            var dtp = new DateTimePicker
-            {
-                Dock = DockStyle.Top,
-                Font = ThemeFonts.Body,
-                BackColor = ThemeColors.Surface,
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "yyyy-MM-dd"
-            };
-            panel.Controls.Add(dtp);
-            panel.Controls.Add(lbl);
-            parent.Controls.Add(panel, 0, row);
-            return dtp;
-        }
-        private static TextField AddField(TableLayoutPanel parent, string label, string? value, string placeholder, int row)
-        {
-            parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var field = new TextField
-            {
-                FieldLabel = label,
-                Text = value ?? "",
-                Placeholder = placeholder,
-                Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
-            };
-            parent.Controls.Add(field, 0, row);
-            return field;
         }
 
         private static AttendDto CopyOf(AttendDto s) => new()
@@ -228,9 +199,10 @@ namespace EDU_HUB_AI.Config.Component.Domain
             eduId = s.eduId,
             eduName = s.eduName,
             status = s.status,
+            message = s.message,
+            attendDate = s.attendDate,
             createdAt = s.createdAt,
-            updatedAt = s.updatedAt,
-            attendDate = s.attendDate
+            updatedAt = s.updatedAt
         };
     }
 }

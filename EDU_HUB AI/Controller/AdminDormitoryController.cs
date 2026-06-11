@@ -75,8 +75,8 @@ namespace EDU_HUB_AI.Controller
 
         public Action<int, int>? OnRetry
         {
-            get => _apiClient.OnRetry;
-            set => _apiClient.OnRetry = value;
+            get => _adminDormitoryService.OnRetry;
+            set => _adminDormitoryService.OnRetry = value;
         }
     }
 }

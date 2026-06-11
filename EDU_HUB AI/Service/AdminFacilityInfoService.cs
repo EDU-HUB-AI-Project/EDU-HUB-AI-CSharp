@@ -44,5 +44,10 @@ namespace EDU_HUB_AI.Service
         {
             return await _apiClient.PostMultipartAsync<FacilityImageUploadDto>($"{_url}/upload", localFilePath);
         }
+        public Action<int, int>? OnRetry
+        {
+            get => _apiClient.OnRetry;
+            set => _apiClient.OnRetry = value;
+        }
     }
 }

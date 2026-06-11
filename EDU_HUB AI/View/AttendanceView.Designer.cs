@@ -27,7 +27,6 @@ namespace EDU_HUB_AI.View
             btnCreate = new AppButton();
             btnImport = new AppButton();
             btnExport = new AppButton();
-            //btnSearch = new AppButton();
             txtSearch = new TextField();
             cmbStatus = new ComboField();
             cmbEdu = new ComboField();
@@ -68,43 +67,7 @@ namespace EDU_HUB_AI.View
 
             // =============== grid ===================
             grid.Dock = DockStyle.Fill;
-            grid.EnableHeadersVisualStyles = false;
-            grid.ReadOnly = true;
-            grid.RowHeadersVisible = false;
-            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.AllowUserToAddRows = false;
-            grid.AllowUserToDeleteRows = false;
-            grid.AllowUserToResizeRows = false;
-            grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.BorderStyle = BorderStyle.None;
-            grid.BackgroundColor = ThemeColors.Surface;
-            grid.GridColor = ThemeColors.TableBorder;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            grid.ColumnHeadersHeight = 38;
-            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            grid.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.TableHeader,
-                ForeColor = ThemeColors.Text,
-                Font = ThemeFonts.TableHeader,
-                SelectionBackColor = ThemeColors.TableHeader,
-                Alignment = DataGridViewContentAlignment.MiddleLeft,
-                Padding = new Padding(12, 0, 8, 0)
-            };
-            grid.DefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.Surface,
-                ForeColor = ThemeColors.Text,
-                Font = ThemeFonts.TableCell,
-                SelectionBackColor = ThemeColors.TableHover,
-                SelectionForeColor = ThemeColors.Text,
-                Padding = new Padding(12, 0, 8, 0),
-                WrapMode = DataGridViewTriState.False
-            };
-            grid.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.TableStripe
-            };
+            grid.TabIndex = 0;
 
             // ============= actionPanel =============
             var pnlFilterFlow = new FlowLayoutPanel
@@ -113,7 +76,6 @@ namespace EDU_HUB_AI.View
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
                 AutoSize = true,
-                //BackColor = ThemeColors.Surface,
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
@@ -127,17 +89,14 @@ namespace EDU_HUB_AI.View
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
                 AutoSize = true,
-                //BackColor = ThemeColors.Surface,
                 Padding = new Padding(12, 8, 0, 8)
             };
             pnlButtonFlow.Controls.Add(btnCreate);
             pnlButtonFlow.Controls.Add(btnImport);
             pnlButtonFlow.Controls.Add(btnExport);
-            //pnlButtonFlow.Controls.Add(btnSearch);
             actionPanel.Controls.Add(pnlFilterFlow);
             actionPanel.Controls.Add(pnlButtonFlow);
             actionPanel.Dock = DockStyle.Fill;
-            //actionPanel.BackColor = ThemeColors.Surface;
             actionPanel.Padding = new Padding(0);
 
             // ============= btnCreate ================
@@ -158,12 +117,6 @@ namespace EDU_HUB_AI.View
             btnExport.IconName = "export";
             btnExport.Text = "엑셀로 내보내기";
             btnExport.Variant = ButtonVariant.Secondary;
-
-            // =============== btnSearch ===============
-            //btnSearch.Margin = new Padding(0, 0, 8, 0);
-            //btnSearch.Name = "btnSearch";
-            //btnSearch.Text = "조회하기";
-            //btnSearch.Variant = ButtonVariant.Primary;
 
             // =============== txtSearch ==================
             txtSearch.FieldLabel = "검색";
@@ -224,7 +177,6 @@ namespace EDU_HUB_AI.View
         private AppButton btnImport;
         private AppButton btnCreate;
         private AppButton btnExport;
-        //private AppButton btnSearch;
         private TextField txtSearch;
         private ComboField cmbStatus;
         private ComboField cmbEdu;

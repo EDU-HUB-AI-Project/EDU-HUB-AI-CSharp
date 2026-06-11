@@ -23,6 +23,7 @@ namespace EDU_HUB_AI.View
             gapPanel = new Panel();
             grid = new AppDataGrid();
             btnCreate = new AppButton();
+            cmbStatus = new ComboField();
             txtSearch = new TextField();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
@@ -63,43 +64,7 @@ namespace EDU_HUB_AI.View
 
             // ── grid ───────────────────────────────────────────
             grid.Dock = DockStyle.Fill;
-            grid.EnableHeadersVisualStyles = false;
-            grid.ReadOnly = true;
-            grid.RowHeadersVisible = false;
-            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.AllowUserToAddRows = false;
-            grid.AllowUserToDeleteRows = false;
-            grid.AllowUserToResizeRows = false;
-            grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.BorderStyle = BorderStyle.None;
-            grid.BackgroundColor = ThemeColors.Surface;
-            grid.GridColor = ThemeColors.TableBorder;
-            grid.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
-            grid.ColumnHeadersHeight = 38;
-            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            grid.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.TableHeader,
-                ForeColor = ThemeColors.Text,
-                Font = ThemeFonts.TableHeader,
-                SelectionBackColor = ThemeColors.TableHeader,
-                Alignment = DataGridViewContentAlignment.MiddleLeft,
-                Padding = new Padding(12, 0, 8, 0)
-            };
-            grid.DefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.Surface,
-                ForeColor = ThemeColors.Text,
-                Font = ThemeFonts.TableCell,
-                SelectionBackColor = ThemeColors.TableHover,
-                SelectionForeColor = ThemeColors.Text,
-                Padding = new Padding(12, 0, 8, 0),
-                WrapMode = DataGridViewTriState.False
-            };
-            grid.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = ThemeColors.TableStripe
-            };
+            grid.TabIndex = 2;
 
             // ── actionPanel ────────────────────────────────────
             var pnlFilterFlow = new FlowLayoutPanel
@@ -111,6 +76,7 @@ namespace EDU_HUB_AI.View
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
+            pnlFilterFlow.Controls.Add(cmbStatus);
             pnlFilterFlow.Controls.Add(txtSearch);
 
             var pnlButtonFlow = new FlowLayoutPanel
@@ -134,11 +100,17 @@ namespace EDU_HUB_AI.View
             btnCreate.IconName = "plus";
             btnCreate.Margin = new Padding(0);
 
+            // ── cmbStatus ──────────────────────────────────────
+            cmbStatus.FieldLabel = "상태";
+            cmbStatus.Size = new Size(110, 62);
+            cmbStatus.Margin = new Padding(0, 0, 8, 0);
+            cmbStatus.TabIndex = 0;
             // ── txtSearch ─────────────────────────────────────
             txtSearch.FieldLabel = "검색";
             txtSearch.Placeholder = "과정명으로 검색...";
             txtSearch.Size = new Size(220, 62);
             txtSearch.Margin = new Padding(0, 0, 16, 0);
+            txtSearch.TabIndex = 1;
 
             // ── pagination1 ────────────────────────────────────
             pagination1.BackColor = ThemeColors.Background;
@@ -175,6 +147,7 @@ namespace EDU_HUB_AI.View
         private Pagination pagination1;
         private Panel actionPanel;
         private AppButton btnCreate;
+        private ComboField cmbStatus;
         private TextField txtSearch;
     }
 }
