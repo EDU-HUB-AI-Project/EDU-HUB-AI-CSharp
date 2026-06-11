@@ -34,7 +34,7 @@ namespace EDU_HUB_AI.View
             txtSearch = new TextField();
             cmbStatus = new ComboField();
             cmbEdu = new ComboField();
-            dtpDate = new DateTimePicker();
+            dtpDate = new DateField();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             bodyPanel.SuspendLayout();
@@ -183,9 +183,9 @@ namespace EDU_HUB_AI.View
             cmbEdu.Margin = new Padding(0, 0, 8, 0);
 
             // =============== dtpDate ====================
+            dtpDate.FieldLabel = "대상일자";
             dtpDate.Margin = new Padding(0, 0, 8, 0);
-            dtpDate.Name = "dtpDate";
-            dtpDate.Size = new Size(100, 23);
+            dtpDate.Size = new Size(200, 23);
 
             // =============== pagination1 ===============
             pagination1.BackColor = ThemeColors.Background;
@@ -229,6 +229,6 @@ namespace EDU_HUB_AI.View
         private TextField txtSearch;
         private ComboField cmbStatus;
         private ComboField cmbEdu;
-        private DateTimePicker dtpDate;
+        private DateField dtpDate;
     }
 }

@@ -53,6 +53,8 @@ namespace EDU_HUB_AI.View
             btnImport.Click += BtnImport_Click;
 
             cmbEdu.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            cmbStatus.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            dtpDate.ValueChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
             txtSearch.TextChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
         }
 
@@ -78,11 +80,10 @@ namespace EDU_HUB_AI.View
         private async Task<List<AttendDto>> LoadData()
         {
             // [실제 API] 아래 두 줄 주석을 풀고 목업 return 을 지우기
-            string? studentId = string.IsNullOrEmpty(txtSearch.Text) ?  null: txtSearch.Text.Trim();
             string? eduId = cmbEdu.SelectedIndex > 0 ? cmbEdu.SelectedValue.ToString() : null;
             string? attendDate = dtpDate.Checked ? dtpDate.Value.ToString("yyyy-MM-dd") : null; ;
             string? status = cmbStatus.SelectedIndex > 0 ? cmbStatus.SelectedItem.ToString() : null;
-            var res = await _adminAttendaceController.GetAttend(studentId, eduId, attendDate, status);
+            var res = await _adminAttendaceController.GetAttend(null, null, null, null);
             return res?.Data ?? new List<AttendDto>();
         }
 
@@ -124,10 +125,11 @@ namespace EDU_HUB_AI.View
         }
 
         private void RenderPage(int page)
-        {   
+        {
             // 필터링을 거친 데이터가 존재할 경우 filteredList
             // 그렇지 않을 경우 전체 데이터
-            var source = _filteredList.Any() ? _filteredList : _all;
+            bool hasFilter = cmbEdu.SelectedIndex > 0 || cmbStatus.SelectedIndex > 0 || !string.IsNullOrEmpty(txtSearch.Text.Trim()) || dtpDate.Checked;
+            var source = hasFilter ? _filteredList : _all;
             pagination1.TotalCount = source.Count;
             var size = pagination1.PageSize;
             var totalPages = Math.Max(1, (int)Math.Ceiling(source.Count / (double)size));
@@ -432,10 +434,14 @@ namespace EDU_HUB_AI.View
             var eduId = cmbEdu.SelectedValue?.ToString();
             if (!string.IsNullOrEmpty(eduId))
                 result = result.Where(a => a.eduId == eduId);
-
-            var status = cmbStatus.SelectedValue?.ToString();
+            var status = cmbStatus.SelectedIndex > 0
+                ? cmbStatus.SelectedItem?.ToString()
+                : null;
             if (!string.IsNullOrEmpty(status))
                 result = result.Where(a => a.status == status);
+            var date = dtpDate.ToDateString();
+            if(!string.IsNullOrEmpty(date))
+                result = result.Where(a => a.attendDate == date);
             var search = txtSearch.Text.Trim();
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(a => a.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
