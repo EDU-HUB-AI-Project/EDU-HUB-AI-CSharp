@@ -43,5 +43,11 @@ namespace EDU_HUB_AI.Service
             Debug.WriteLine("Called::CreateCafeteriaLit");
             return await _apiClient.Post<Dictionary<string, object>>(_url, list);
         }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _apiClient.OnRetry;
+            set => _apiClient.OnRetry = value;
+        }
     }
 }

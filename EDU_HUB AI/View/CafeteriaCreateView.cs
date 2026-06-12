@@ -27,7 +27,6 @@ namespace EDU_HUB_AI.View
         private List<DateTime> _datesDinner = new List<DateTime>();
 
         private static readonly string[] MealTypes = { "BREAKFAST", "LUNCH", "DINNER" };
-
         private readonly List<CafeteriaDto> _allDetail;
 
         public event Action? OnBack;
@@ -141,7 +140,7 @@ namespace EDU_HUB_AI.View
 
             scrollPanel.Controls.Add(gridPanel);
             tableCard.Controls.Add(scrollPanel);
-            
+
             var topPanel = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -179,7 +178,7 @@ namespace EDU_HUB_AI.View
                 Variant = ButtonVariant.Ghost,
                 Margin = new Padding(0, 12, 8, 0)
             };
-            btnCancel.Click += (_, _) => OnBack?.Invoke();
+            btnCancel.Click += (_, _) => TryCancel();
 
             var btnSave = new AppButton
             {
@@ -194,7 +193,6 @@ namespace EDU_HUB_AI.View
 
             topPanel.Controls.Add(rightPanel);
             topPanel.Controls.Add(leftPanel);
-
             filterCard.Controls.Add(topPanel);
 
             bodyPanel.Controls.Add(tableCard);
@@ -208,7 +206,7 @@ namespace EDU_HUB_AI.View
                 ShowSyncButton = true,
                 BackColor = ThemeColors.HeaderBg
             };
-            pageHeader.SyncClicked += (_, _) => OnBack?.Invoke();
+            pageHeader.SyncClicked += (_, _) => ResetView();
             Controls.Add(bodyPanel);
             Controls.Add(pageHeader);
             ShowSection(0);
@@ -219,9 +217,14 @@ namespace EDU_HUB_AI.View
                 var grid = GetCurrentGrid();
                 InitDatesFor(dates);
                 RebuildRows(grid, dates);
-
                 _datePicker.ValueChanged += OnDatePickerChanged;
             };
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            this.Focus();
         }
 
         private List<DateTime> GetCurrentDates()
@@ -255,7 +258,6 @@ namespace EDU_HUB_AI.View
                 _datePicker.Value = dates[0];
                 _datePicker.ValueChanged += OnDatePickerChanged;
             }
-
             ShowSection(_cmbMeal.SelectedIndex);
         }
 
@@ -263,7 +265,6 @@ namespace EDU_HUB_AI.View
         {
             var dates = GetCurrentDates();
             var grid = GetCurrentGrid();
-
             InitDatesFor(dates);
             RebuildRows(grid, dates);
         }
@@ -278,13 +279,11 @@ namespace EDU_HUB_AI.View
                 : dates[dates.Count - 1].AddDays(1);
 
             while (next.DayOfWeek == DayOfWeek.Saturday || next.DayOfWeek == DayOfWeek.Sunday)
-            {
                 next = next.AddDays(1);
-            }
 
-            if (next > DateTime.Now.AddMonths(1))
+            if (next > _datePicker.Value.AddMonths(1))
             {
-                MessageBox.Show("오늘로부터 1달 이내의 날짜만 추가할 수 있습니다.", "알림");
+                MessageBox.Show("선택날로부터 1달 이내의 날짜만 추가할 수 있습니다.", "알림");
                 return;
             }
 
@@ -296,13 +295,12 @@ namespace EDU_HUB_AI.View
             grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
 
             UpdateGridHeight(grid, dates.Count);
-
             grid.Parent?.PerformLayout();
             grid.Parent?.Parent?.PerformLayout();
         }
 
         private void OnDeleteSelected(object? sender, EventArgs e)
-        { 
+        {
             var grid = GetCurrentGrid();
             var dates = GetCurrentDates();
 
@@ -338,9 +336,7 @@ namespace EDU_HUB_AI.View
             DateTime start = _datePicker.Value.Date;
 
             while (start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday)
-            {
                 start = start.AddDays(1);
-            }
 
             dates.Add(start);
         }
@@ -389,8 +385,8 @@ namespace EDU_HUB_AI.View
                     Font = new Font("맑은 고딕", 9F),
                     ForeColor = Color.FromArgb(15, 23, 42),
                     Padding = new Padding(8, 0, 8, 0),
-                    SelectionBackColor = Color.White,
-                    SelectionForeColor = Color.FromArgb(15, 23, 42),
+                    SelectionBackColor = ThemeColors.InfoBg,
+                    SelectionForeColor = ThemeColors.InfoText,
                     WrapMode = DataGridViewTriState.False
                 }
             };
@@ -411,7 +407,6 @@ namespace EDU_HUB_AI.View
                 ReadOnly = true,
                 SortMode = DataGridViewColumnSortMode.NotSortable
             });
-
             grid.Columns["date"].HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
@@ -436,11 +431,9 @@ namespace EDU_HUB_AI.View
             grid.CellValueChanged += (s, e) =>
             {
                 if (e.ColumnIndex != grid.Columns["check"].Index) return;
-
                 bool anyChecked = grid.Rows
-                .Cast<DataGridViewRow>()
-                .Any(r => Convert.ToBoolean(r.Cells["check"].Value));
-
+                    .Cast<DataGridViewRow>()
+                    .Any(r => Convert.ToBoolean(r.Cells["check"].Value));
                 _btnDeleteSelected.Enabled = anyChecked;
             };
 
@@ -449,15 +442,12 @@ namespace EDU_HUB_AI.View
                 if (e.ColumnIndex != grid.Columns["check"].Index) return;
 
                 bool allChecked = grid.Rows
-                .Cast<DataGridViewRow>()
-                .All(r => Convert.ToBoolean(r.Cells["check"].Value));
+                    .Cast<DataGridViewRow>()
+                    .All(r => Convert.ToBoolean(r.Cells["check"].Value));
 
                 grid.EndEdit();
-
                 foreach (DataGridViewRow row in grid.Rows)
-                {
                     row.Cells["check"].Value = !allChecked;
-                }
 
                 grid.RefreshEdit();
                 _btnDeleteSelected.Enabled = !allChecked && grid.Rows.Count > 0;
@@ -465,13 +455,16 @@ namespace EDU_HUB_AI.View
 
             grid.CellFormatting += (s, e) =>
             {
-                  if (e.ColumnIndex == grid.Columns["date"].Index)
-                  {
-                      e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                      e.CellStyle.BackColor = Color.FromArgb(241, 245, 249);
-                      e.CellStyle.ForeColor = Color.FromArgb(100, 116, 139);
-                      e.FormattingApplied = true;
-                  }
+                if (e.RowIndex < 0) return;
+                if (grid.Columns[e.ColumnIndex].Name == "date")
+                {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    e.CellStyle.BackColor = Color.FromArgb(241, 245, 249);
+                    e.CellStyle.ForeColor = Color.FromArgb(100, 116, 139);
+                    e.CellStyle.SelectionBackColor = ThemeColors.InfoBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.InfoText;
+                    e.FormattingApplied = true;
+                }
             };
 
             grid.CellPainting += (s, e) =>
@@ -487,8 +480,12 @@ namespace EDU_HUB_AI.View
                     LineAlignment = StringAlignment.Center
                 };
 
-                using var brush = new SolidBrush(Color.FromArgb(100, 116, 139));
-                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(241, 245, 249)), e.CellBounds);
+                bool isSelected = grid.Rows[e.RowIndex].Selected;
+                Color bgColor = isSelected ? ThemeColors.InfoBg : Color.FromArgb(241, 245, 249);
+                Color textColor = isSelected ? ThemeColors.InfoText : Color.FromArgb(100, 116, 139);
+
+                e.Graphics.FillRectangle(new SolidBrush(bgColor), e.CellBounds);
+                using var brush = new SolidBrush(textColor);
                 e.Graphics.DrawString(e.Value?.ToString(), grid.Font, brush, e.CellBounds, sf);
                 e.Handled = true;
             };
@@ -515,7 +512,6 @@ namespace EDU_HUB_AI.View
                 BackColor = ThemeColors.Surface,
                 Padding = new Padding(0, 0, 0, 16)
             };
-
             section.Controls.Add(grid);
             return section;
         }
@@ -528,9 +524,7 @@ namespace EDU_HUB_AI.View
                 string date = row.Cells["date"].Value?.ToString() ?? "";
                 string menu = row.Cells["menu"].Value?.ToString() ?? "";
                 if (!string.IsNullOrWhiteSpace(date))
-                {
                     savedMenus[date] = menu;
-                }
             }
 
             grid.Rows.Clear();
@@ -544,6 +538,9 @@ namespace EDU_HUB_AI.View
                 grid.Rows.Add(false, dayLabel, savedMenu);
                 grid.Rows[grid.Rows.Count - 1].Tag = dateStr;
             }
+
+            if (grid.Rows.Count > 0)
+                grid.Rows[0].Selected = true;
 
             UpdateGridHeight(grid, dates.Count);
             grid.Parent?.PerformLayout();
@@ -585,22 +582,14 @@ namespace EDU_HUB_AI.View
 
             if (invalidMeals.Count > 0)
             {
-                string mealList = string.Join(", ", invalidMeals);
-                MessageBox.Show($"{mealList} 메뉴에 허용되지 않는 특수문자가 포함되어 있습니다.", "알림");
+                MessageBox.Show($"{string.Join(", ", invalidMeals)} 메뉴에 허용되지 않는 특수문자가 포함되어 있습니다.", "알림");
                 return;
             }
 
             var result = BuildResult();
 
-            var existingDates = _allDetail
-                .Select(d => d.mealDate)
-                .Distinct()
-                .ToHashSet();
-
-            var allDates = result
-                .Select(d => d.mealDate)
-                .Distinct()
-                .ToHashSet();
+            var existingDates = _allDetail.Select(d => d.mealDate).Distinct().ToHashSet();
+            var allDates = result.Select(d => d.mealDate).Distinct().ToHashSet();
 
             if (allDates.Any(d => DateTime.Parse(d) > DateTime.Now.AddMonths(1)))
             {
@@ -608,22 +597,30 @@ namespace EDU_HUB_AI.View
                 return;
             }
 
-            var duplicates = allDates
-                .Where(d => existingDates.Contains(d))
-                .ToList();
-
+            var duplicates = allDates.Where(d => existingDates.Contains(d)).ToList();
             if (duplicates.Count > 0)
             {
-                string dateList = string.Join(", ", duplicates);
-                MessageBox.Show(
-                    $"이미 등록된 날짜입니다.\n{dateList}\n해당 날짜를 제거 후 저장해주세요.",
-                    "알림");
+                MessageBox.Show($"이미 등록된 날짜입니다.\n{string.Join(", ", duplicates)}\n해당 날짜를 제거 후 저장해주세요.", "알림");
                 return;
             }
 
-            await _controller.SaveCafeteriaList(result);
-            MessageBox.Show("저장되었습니다.", "완료");
-            OnBack?.Invoke();
+            if (!ConfirmModal.Show(this.FindForm(), "등록 확인", "등록하시겠습니까?", "등록", ButtonVariant.Primary))
+                return;
+
+            var overlay = LoadingOverlay.Create(this, "등록 중...");
+            _controller.OnRetry = (attempt, max) =>
+                overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
+            try
+            {
+                await _controller.SaveCafeteriaList(result);
+                OnBack?.Invoke();
+            }
+            finally
+            {
+                _controller.OnRetry = null;
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         private List<CafeteriaDto> BuildResult()
@@ -642,9 +639,8 @@ namespace EDU_HUB_AI.View
                     string menuText = row.Cells["menu"].Value?.ToString()?.Trim() ?? "";
 
                     if (string.IsNullOrWhiteSpace(date)) continue;
-                    
-                    bool hasMenu = !string.IsNullOrWhiteSpace(menuText);
 
+                    bool hasMenu = !string.IsNullOrWhiteSpace(menuText);
                     result.Add(new CafeteriaDto
                     {
                         mealDate = date,
@@ -654,8 +650,41 @@ namespace EDU_HUB_AI.View
                     });
                 }
             }
-
             return result;
+        }
+
+        private async void ResetView()
+        {
+            var overlay = LoadingOverlay.Create(this, "데이터 로딩 중...");
+            try
+            {
+                await Task.Delay(300);
+
+                _datesBreakfast.Clear();
+                _datesLunch.Clear();
+                _datesDinner.Clear();
+
+                _gridBreakfast.Rows.Clear();
+                _gridLunch.Rows.Clear();
+                _gridDinner.Rows.Clear();
+
+                _cmbMeal.SelectedIndex = 0;
+
+                _datePicker.ValueChanged -= OnDatePickerChanged;
+                _datePicker.Value = DateTime.Now;
+                _datePicker.ValueChanged += OnDatePickerChanged;
+
+                ShowSection(0);
+                InitDatesFor(_datesBreakfast);
+                RebuildRows(_gridBreakfast, _datesBreakfast);
+
+                _btnDeleteSelected.Enabled = false;
+            }
+            finally
+            {
+                overlay?.Close();
+                overlay?.Dispose();
+            }
         }
 
         private string GetDayOfWeek(DateTime date)
@@ -667,23 +696,65 @@ namespace EDU_HUB_AI.View
         private string TextToJson(string text)
         {
             if (string.IsNullOrWhiteSpace(text)) return "[]";
-
-            var quoted = new List<string>();
-            foreach (var item in text.Split(','))
-            {
-                string trimmed = item.Trim();
-                if (!string.IsNullOrWhiteSpace(trimmed))
-                {
-                    quoted.Add($"\"{trimmed}\"");
-                }
-            }
+            var quoted = text.Split(',')
+                             .Select(i => i.Trim())
+                             .Where(i => !string.IsNullOrWhiteSpace(i))
+                             .Select(i => $"\"{i}\"");
             return "[" + string.Join(", ", quoted) + "]";
         }
 
-        private bool IsValidMenu(string menuText)
+        private void TryCancel()
         {
-            return System.Text.RegularExpressions.Regex.IsMatch(
-                menuText, @"^[가-힣a-zA-Z0-9\s,]+$");
+            bool hasAnyData = _datesBreakfast.Count > 0
+                           || _datesLunch.Count > 0
+                           || _datesDinner.Count > 0;
+
+            if (!hasAnyData)
+            {
+                OnBack?.Invoke();
+                return;
+            }
+
+            if (!ConfirmModal.Show(this.FindForm(), "취소 확인",
+                "작성된 행이 있습니다. 정말 취소하시겠습니까?", "확인", ButtonVariant.Danger))
+                return;
+
+            OnBack?.Invoke();
         }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.Control | Keys.N:
+                    OnAddDay(null, EventArgs.Empty);
+                    return true;
+                case Keys.Control | Keys.A:
+                    var grid = GetCurrentGrid();
+                    bool allChecked = grid.Rows
+                        .Cast<DataGridViewRow>()
+                        .All(r => Convert.ToBoolean(r.Cells["check"].Value));
+                    grid.EndEdit();
+                    foreach (DataGridViewRow row in grid.Rows)
+                        row.Cells["check"].Value = !allChecked;
+                    grid.RefreshEdit();
+                    _btnDeleteSelected.Enabled = !allChecked && grid.Rows.Count > 0;
+                    return true;
+                case Keys.Delete:
+                    if (_btnDeleteSelected.Enabled)
+                        OnDeleteSelected(null, EventArgs.Empty);
+                    return true;
+                case Keys.Control | Keys.Enter:
+                    OnSave(null, EventArgs.Empty);
+                    return true;
+                case Keys.Escape:
+                    TryCancel();
+                    return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private bool IsValidMenu(string menuText) =>
+            System.Text.RegularExpressions.Regex.IsMatch(menuText, @"^[가-힣a-zA-Z0-9\s,]+$");
     }
 }

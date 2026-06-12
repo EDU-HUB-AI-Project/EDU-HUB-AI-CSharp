@@ -59,5 +59,11 @@ namespace EDU_HUB_AI.Controller
                 }
             }
         }
+
+        public Action<int, int>? OnRetry
+        {
+            get => _adminCafeteriaService.OnRetry;
+            set => _adminCafeteriaService.OnRetry = value;
+        }
     }
 }
