@@ -35,6 +35,7 @@ namespace EDU_HUB_AI.View
         private Action<DormInOutDto> _dormInOutRow;
 
         private readonly AdminDormitoryController _adminDormitoryController = new();
+        private bool _isLoading = false; // LoadDormView 중복 호출 방지 플래그 
         public DormitoryView()
         {
             InitializeComponent();
@@ -48,7 +49,7 @@ namespace EDU_HUB_AI.View
             _pagination1 = new Pagination();
             _pagination2 = new Pagination();
             _pagination3 = new Pagination();
-            
+
             _assignRow = a => _assignGrid.Rows.Add(a.studentName, a.eduId, a.phone, a.dormitoryRoomName, a.assignStatus);
             _waitingRow = d => _waitingGrid.Rows.Add(d.studentName, d.dormitoryRoomName);
             _dormInOutRow = d => _dormInOutGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.checkIn, d.checkOut);
@@ -70,7 +71,27 @@ namespace EDU_HUB_AI.View
         // OnRowAction 계열은 호출 API와 처리 로직이 달라 리팩토링 대상에서 제외
         private async void LoadDormView(bool showOverlay = true)
         {
+            if (IsDisposed || !IsHandleCreated) return; // View가 이미 소멸된 경우 무시
+            if (_isLoading) return; // View가 이미 소멸된 경우 무시
+            _isLoading = true;
             ClearBodyPanel();
+
+            // BuildGridPanel()에서 Panel의 자식으로 추가되는 컨트롤은
+            // ClearBodyPanel()이 Panel을 Dispose할 때 자식도 함께 Dispose된다.
+            // 따라서 매 호출마다 새로 생성해야 한다.
+            _pagination1 = new Pagination();
+            _pagination2 = new Pagination();
+            _pagination3 = new Pagination();
+
+            _assignGrid = CreateAssignGrid();      
+            _waitingGrid = CreateWaitingGrid(); 
+            _dormInOutGrid = CreateDormInOutGrid();
+
+            // 위에서 Grid를 새로 생성했으므로 Action도 새 Grid를 참조하도록 재정의
+            _assignRow = a => _assignGrid.Rows.Add(a.studentName, a.eduId, a.phone, a.dormitoryRoomName, a.assignStatus);
+            _waitingRow = d => _waitingGrid.Rows.Add(d.studentName, d.dormitoryRoomName);
+            _dormInOutRow = d => _dormInOutGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.checkIn, d.checkOut);
+
             // 위치 배정
             // 여백 직접 정의
             int pad = 20;                                        
@@ -90,6 +111,8 @@ namespace EDU_HUB_AI.View
                 _adminDormitoryController.OnRetry = (attempt, max) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
                 // ================== 배정 현황 ======================
                 var res1 = await _adminDormitoryController.GetDormAssign();
+                if (IsDisposed || !IsHandleCreated) return; // await 복귀 시점에 View가 소멸됐을 수 있음
+                if (res1?.Status != 200) return;
                 if (res1?.Status != 200) return;
                 _assignData = res1.Data;
                 var panel1 = BuildGridPanel("생활관 배정현황",
@@ -100,6 +123,7 @@ namespace EDU_HUB_AI.View
 
                 // ================== 대기 현황 ======================
                 var res2 = await _adminDormitoryController.GetDormWaiting();
+                if (IsDisposed || !IsHandleCreated) return; // await 복귀 시점에 View가 소멸됐을 수 있음
                 _waitingData = res2.Data;
                 var panel2 = BuildGridPanel("생활관 대기 현황",
                     pad, bottomY, waitingW, bottomH,      
@@ -109,6 +133,7 @@ namespace EDU_HUB_AI.View
 
                 // ================== 입/퇴실 현황 ======================
                 var res3 = await _adminDormitoryController.GetDormInOut();
+                if (IsDisposed || !IsHandleCreated) return; // await 복귀 시점에 View가 소멸됐을 수 있음
                 _dormInOutData = res3.Data;
                 var panel3 = BuildGridPanel("생활관 입/퇴실 현황",
                    pad + waitingW + gap, bottomY, inOutW, bottomH,  
@@ -118,10 +143,12 @@ namespace EDU_HUB_AI.View
             }
             catch (ApiException ex)
             {
+                if (IsDisposed) return;
                 MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
+                if (IsDisposed) return;
                 MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -129,6 +156,7 @@ namespace EDU_HUB_AI.View
                 _adminDormitoryController.OnRetry = null;
                 overlay?.Close();
                 overlay?.Dispose();
+                _isLoading = false; // 로딩 완료, 다음 호출 허용
             }
         }
         
