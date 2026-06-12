@@ -81,7 +81,7 @@ namespace EDU_HUB_AI.View
             // =============== actionPanel ===============
             var pnlButtonFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Right,
+                Dock = DockStyle.Left,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
                 AutoSize = true,

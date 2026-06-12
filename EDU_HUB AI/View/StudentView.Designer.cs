@@ -123,7 +123,7 @@ namespace EDU_HUB_AI.View
 
             // ── cmbEdu ────────────────────────────────
             cmbEdu.FieldLabel = "교육과정";
-            cmbEdu.Size = new Size(160, 62);
+            cmbEdu.Size = new Size(230, 62);
             cmbEdu.Margin = new Padding(0, 0, 8, 0);
             cmbEdu.TabIndex = 0;
 

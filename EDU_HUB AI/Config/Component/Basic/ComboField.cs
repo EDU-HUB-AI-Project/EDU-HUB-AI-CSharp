@@ -28,7 +28,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
             _shell = BuildShell(_combo);
 
             Controls.Add(BuildStack(_label, _shell));
-            Size = new Size(160, 54);
+            Size = new Size(165, 54);
         }
 
         // ── 속성 ──────────────────────────────────────────
@@ -90,7 +90,8 @@ namespace EDU_HUB_AI.Config.Component.Basic
                 Height = InputHeight,
                 BackColor = ThemeColors.Surface,
                 Padding = new Padding(0),
-                TabStop = false
+                TabStop = false,
+                Dock = DockStyle.Fill
             };
             EnableDoubleBuffer(shell);
             shell.Paint += (_, e) => PaintBorder(e, shell);

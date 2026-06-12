@@ -290,20 +290,34 @@ namespace EDU_HUB_AI.View
 
         private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.RowIndex < 0 || grid.Columns[e.ColumnIndex].Name != "dorm") return;
-            if (e.Value?.ToString() == "배정")
+            ///<summary>
+            // 기존로직은 Dorm 칼럼에서만 formatting이 동작
+            // dorm 칼럼에서의 이벤트와
+            // 데이터형태에 따른 정렬 분리
+            ///</ summary >
+            if (e.RowIndex < 0) return;
+
+            // 배정상태에 따른 배경색 분리
+            if (grid.Columns[e.ColumnIndex].Name == "dorm")
             {
-                e.CellStyle.ForeColor = ThemeColors.OkText;
-                e.CellStyle.BackColor = ThemeColors.OkBg;
-                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
-                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                if (e.Value?.ToString() == "배정")
+                {
+                    e.CellStyle.ForeColor = ThemeColors.OkText;
+                    e.CellStyle.BackColor = ThemeColors.OkBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                }
+                {
+                    e.CellStyle.ForeColor = ThemeColors.TextMuted;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TextMuted;
+                }
             }
-            else
+
+            // 연락처 칼럼 가운데 정렬
+            if (grid.Columns[e.ColumnIndex].Name == "phone")
             {
-                e.CellStyle.ForeColor = ThemeColors.TextMuted;
-                e.CellStyle.SelectionForeColor = ThemeColors.TextMuted;
+                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
-            e.FormattingApplied = true;
         }
 
         // ===== 엑셀 업로드 =====

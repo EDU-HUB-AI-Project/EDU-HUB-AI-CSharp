@@ -21,7 +21,6 @@ namespace EDU_HUB_AI.Config.Component.Basic
         private readonly Label _label;
         private readonly Panel _shell;
         private readonly DateTimePicker _dtp;
-
         private bool _focused;
 
         public DateField()
@@ -44,7 +43,8 @@ namespace EDU_HUB_AI.Config.Component.Basic
             {
                 Format = DateTimePickerFormat.Short,
                 Font = ThemeFonts.Body,
-                Location = new Point(1, 1)
+                Location = new Point(1, 1),
+                Dock = DockStyle.Fill
             };
 
             _dtp.Enter += (_, _) => SetFocused(true);

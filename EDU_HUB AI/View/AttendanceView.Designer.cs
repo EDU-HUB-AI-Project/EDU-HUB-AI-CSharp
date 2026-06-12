@@ -128,6 +128,8 @@ namespace EDU_HUB_AI.View
             dtpDate.FieldLabel = "대상일자";
             dtpDate.Margin = new Padding(0, 0, 8, 0);
             dtpDate.Size = new Size(200, 23);
+            dtpDate.ShowCheckBox = true;
+            dtpDate.Checked = false;
 
             // =============== cmbStatus ==================
             cmbStatus.FieldLabel = "출석상태";
@@ -136,7 +138,7 @@ namespace EDU_HUB_AI.View
 
             // =============== cmbEdu =====================
             cmbEdu.FieldLabel = "교육과정";
-            cmbStatus.Size = new Size(100, 54);
+            cmbEdu.Size = new Size(230, 54);
             cmbEdu.Margin = new Padding(0, 0, 8, 0);
 
             // =============== pagination1 ===============

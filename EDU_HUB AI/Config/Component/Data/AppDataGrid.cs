@@ -43,6 +43,18 @@ namespace EDU_HUB_AI.Config.Component.Data
 
         public event EventHandler<TableActionEventArgs>? ActionClicked;
         public event EventHandler<PageNavigation>? PageNavigationRequested;
+        // 공통 날짜 형식
+        private static readonly string[] DateFormats =
+        {
+            "yyyy-MM-dd",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyyMMdd",
+            "yyMMdd",
+            "yy-MM-dd",
+            "yyyy. MM. dd.",
+            "yyyy/MM/dd"
+        };
+
 
         public AppDataGrid()
         {
@@ -86,7 +98,7 @@ namespace EDU_HUB_AI.Config.Component.Data
                 ForeColor = ThemeColors.Text,
                 Font = ThemeFonts.TableHeader,
                 SelectionBackColor = ThemeColors.TableHeader,
-                Alignment = DataGridViewContentAlignment.MiddleLeft,
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
                 Padding = new Padding(12, 0, 8, 0)
             };
 
@@ -161,6 +173,38 @@ namespace EDU_HUB_AI.Config.Component.Data
                 Width = 72,
                 AutoSizeMode = DataGridViewAutoSizeColumnMode.None
             });
+        }
+
+        // 데이터 형태에 따른 정렬
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.Value != null)
+            {
+                Type valueType = e.Value.GetType();
+                string valueString = e.Value.ToString()!.Trim();
+
+                if (valueType == typeof(int) || valueType == typeof(double) || valueType == typeof(decimal))
+                {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                }
+                else if (valueType == typeof(DateTime))
+                {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    e.Value = ((DateTime)e.Value).ToString("yyyy.MM.dd");
+                }
+                else if ( DateTime.TryParseExact(valueString, DateFormats,
+                             System.Globalization.CultureInfo.InvariantCulture,
+                             System.Globalization.DateTimeStyles.None, out DateTime parseDate))
+                {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    e.Value = parseDate.ToString("yyyy.MM.dd");
+                }
+                else
+                {
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                }
+            }
+            base.OnCellFormatting(e);
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
