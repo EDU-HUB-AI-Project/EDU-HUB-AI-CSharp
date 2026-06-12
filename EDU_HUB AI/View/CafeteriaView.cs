@@ -73,7 +73,7 @@ namespace EDU_HUB_AI.View
                 Text = "~",
                 Font = ThemeFonts.Body,
                 AutoSize = true,
-                Margin = new Padding(0, 35, 8, 0)
+                Margin = new Padding(0, 27, 8, 0)
             };
 
             var dateEnd = new DateField
@@ -93,16 +93,15 @@ namespace EDU_HUB_AI.View
                 Variant = ButtonVariant.Primary,
                 Margin = new Padding(8, 20, 0, 0)
             };
-            btnSearch.Click += async (_, _) => await LoadAndRender();
 
-            _datePickerStart = dateStart;
-            _datePickerEnd = dateEnd;
-
-            dateStart.ValueChanged += async (_, _) =>
+            btnSearch.Click += async (_, _) =>
             {
                 await LoadAndRender();
                 ScrollToData(_datePickerStart.Value.ToString("yyyy-MM-dd"));
             };
+
+            _datePickerStart = dateStart;
+            _datePickerEnd = dateEnd;
 
             leftPanel.Controls.Add(dateStart);
             leftPanel.Controls.Add(lblSep);
@@ -137,7 +136,16 @@ namespace EDU_HUB_AI.View
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
-            pageHeader1.SyncClicked += async (_, _) => await LoadAndRender();
+            pageHeader1.SyncClicked += async (_, _) =>
+            {
+                _datePickerStart.Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                _datePickerEnd.Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month,
+                    DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month));
+
+                await LoadAndRender();
+                ScrollToData(_datePickerStart.Value.ToString("yyyy-MM-dd"));
+            };
+
             pagination1.PageChanged += (_, page) => RenderPage(page);
         }
 
@@ -146,6 +154,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             await LoadAndRender();
+            grid.Focus();
         }
 
         private void FixDockOrder()
@@ -217,7 +226,7 @@ namespace EDU_HUB_AI.View
 
         private async Task LoadAndRender()
         {
-            var overlay = LoadingOverlay.Create(bodyPanel, "데이터 로딩 중");
+            var overlay = LoadingOverlay.Create(bodyPanel, "데이터 로딩 중...");
             _adminCafeteriaController.OnRetry = (attempt, max) =>
                 overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
             try
@@ -226,13 +235,14 @@ namespace EDU_HUB_AI.View
                 RenderPage(1);
             }
             finally
-            { 
+            {
                 _adminCafeteriaController.OnRetry = null;
                 overlay?.Close();
                 overlay?.Dispose();
             }
         }
 
+        // ===== 그리드 =====
         private void SetupGrid()
         {
             grid.Columns.Add("mealDate", "날짜");
@@ -242,6 +252,40 @@ namespace EDU_HUB_AI.View
             grid.AddTextActionColumns();
             grid.ActionClicked += OnRowAction;
             grid.CellDoubleClick += OnCellDoubleClick;
+            grid.CellFormatting += OnCellFormatting;
+
+            grid.PageNavigationRequested += (_, nav) =>
+            {
+                switch (nav)
+                {
+                    case PageNavigation.Next: pagination1.GoToNext(); break;
+                    case PageNavigation.Prev: pagination1.GoToPrev(); break;
+                    case PageNavigation.First: pagination1.GoToFirst(); break;
+                    case PageNavigation.Last: pagination1.GoToLast(); break;
+                }
+            };
+        }
+
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            var colName = grid.Columns[e.ColumnIndex].Name;
+
+            if (colName is "breakfast" or "lunch" or "dinner"
+                && e.Value?.ToString() == "X")
+            {
+                e.CellStyle.ForeColor = ThemeColors.DangerText;
+                e.CellStyle.BackColor = ThemeColors.DangerBg;
+                e.CellStyle.SelectionForeColor = ThemeColors.InfoText;
+                e.CellStyle.SelectionBackColor = ThemeColors.InfoBg;
+                e.FormattingApplied = true;
+            }
+            else
+            {
+                e.CellStyle.SelectionForeColor = ThemeColors.InfoText;
+                e.CellStyle.SelectionBackColor = ThemeColors.InfoBg;
+            }
         }
 
         private void RenderPage(int page)
@@ -256,30 +300,27 @@ namespace EDU_HUB_AI.View
             int startIndex = (page - 1) * size;
             int endIndex = Math.Min(startIndex + size, _all.Count);
             for (int i = startIndex; i < endIndex; i++)
-            {
                 _pageItems.Add(_all[i]);
-            }
 
             grid.SuspendLayout();
             grid.Rows.Clear();
-            foreach (var s in _pageItems)
+
+            for (int i = 0; i < _pageItems.Count; i++)
             {
-                string mealDate = "";
-                string breakfast = "X";
-                string lunch = "X";
-                string dinner = "X";
+                var s = _pageItems[i];
+                string mealDate = s.ContainsKey("mealDate") ? s["mealDate"].ToString() : "";
+                string breakfast = GetMenuText(mealDate, "BREAKFAST");
+                string lunch = GetMenuText(mealDate, "LUNCH");
+                string dinner = GetMenuText(mealDate, "DINNER");
 
-                if (s.ContainsKey("mealDate")) mealDate = s["mealDate"].ToString();
-                if (s.ContainsKey("BREAKFAST")) breakfast = s["BREAKFAST"].ToString();
-                if (s.ContainsKey("LUNCH")) lunch = s["LUNCH"].ToString();
-                if (s.ContainsKey("DINNER")) dinner = s["DINNER"].ToString();
-
-                if (breakfast == "0") breakfast = "O";
-                if (lunch == "0") lunch = "O";
-                if (dinner == "0") dinner = "O";
-
-                grid.Rows.Add(mealDate, breakfast, lunch, dinner);
+                var idx = grid.Rows.Add(mealDate, breakfast, lunch, dinner);
+                grid.Rows[idx].Tag = s;
             }
+
+            // 페이지 렌더 시 첫 행 자동 선택
+            if (grid.Rows.Count > 0)
+                grid.Rows[0].Selected = true;
+
             grid.ResumeLayout();
         }
 
@@ -316,13 +357,20 @@ namespace EDU_HUB_AI.View
         private void SetAllControlsVisible(bool visible)
         {
             foreach (Control c in this.Controls)
-            {
                 c.Visible = visible;
-            }
         }
 
         private async void OnRowAction(object? sender, TableActionEventArgs e)
         {
+            if (this.Controls.OfType<CafeteriaCreateView>().Any())
+                return;
+
+            if (e.Action == TableAction.New)
+            {
+                OnCreate(sender, EventArgs.Empty);
+                return;
+            }
+
             if (e.RowIndex < 0 || e.RowIndex >= _pageItems.Count) return;
             var target = _pageItems[e.RowIndex];
 
@@ -382,6 +430,30 @@ namespace EDU_HUB_AI.View
                 if (item.cafeteriaId == null) continue;
                 await _adminCafeteriaController.DeleteCafeteria(item.cafeteriaId);
             }
+        }
+
+        private string GetMenuText(string mealDate, string mealType)
+        {
+            var detail = _allDetail.FirstOrDefault(d => d.mealDate == mealDate && d.mealType == mealType);
+            if (detail == null) return "X";
+            if (detail.mealClosed == "Y") return "X";
+            return detail.menu?
+                .Replace("[", "").Replace("]", "").Replace("\"", "").Trim() ?? "X";
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (ActiveControl is DateTimePicker)
+                return base.ProcessCmdKey(ref msg, keyData);
+
+            switch (keyData)
+            {
+                case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
+                case Keys.Control | Keys.Left: pagination1.GoToPrev(); return true;
+                case Keys.Control | Keys.Home: pagination1.GoToFirst(); return true;
+                case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
     }
 }
