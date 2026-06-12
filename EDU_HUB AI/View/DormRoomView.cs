@@ -5,15 +5,8 @@ using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+
 
 namespace EDU_HUB_AI.View
 {
@@ -90,6 +83,12 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("maxCount", "최대 인원");
             grid.AddTextActionColumns(true, false);
             grid.ActionClicked += OnRowAction;
+            grid.CellFormatting += OnCellFormatting;
+        }
+
+        private void Grid_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private void RenderPage(int page)
@@ -155,10 +154,16 @@ namespace EDU_HUB_AI.View
 
             }
         }
-        //private async void BtnSearch_Click(object? sender, EventArgs e)
-        //{
-        //    await LoadAndRender(1);
-        //}
+
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+
+            if (grid.Columns[e.ColumnIndex].Name == "dormitoryRoomName")
+            {
+                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            }
+        }
+
         private async Task LoadCmb()
         {
             var response = await _adminDormitoryController.GetDormRoomAssignStatus();

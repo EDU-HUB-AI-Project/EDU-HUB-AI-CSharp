@@ -64,8 +64,10 @@ namespace EDU_HUB_AI.View
                 Format = DateTimePickerFormat.Custom,
                 CustomFormat = "yyyy-MM-dd",
                 Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
-                Size = new Size(150, 62),
-                Margin = new Padding(0, 0, 8, 0)
+                Size = new Size(150, 60),
+                Margin = new Padding(0, 0, 8, 0),
+                Dock = DockStyle.Fill,
+                ShowCheckBox = true
             };
 
             var lblSep = new Label
@@ -83,8 +85,10 @@ namespace EDU_HUB_AI.View
                 CustomFormat = "yyyy-MM-dd",
                 Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month,
                     DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)),
-                Size = new Size(150, 62),
-                Margin = new Padding(0, 0, 8, 0)
+                Size = new Size(150, 60),
+                Margin = new Padding(0, 0, 8, 0),
+                Dock = DockStyle.Fill,
+                ShowCheckBox = true
             };
 
             var btnSearch = new AppButton

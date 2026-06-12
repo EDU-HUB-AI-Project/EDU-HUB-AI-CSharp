@@ -201,11 +201,12 @@ namespace EDU_HUB_AI.View
             var grid = new AppDataGrid();
             grid.Columns.Add("studentName", "이름");
             grid.Columns.Add("eduId", "교육Id");
-            grid.Columns.Add("phone", "전화번호");
+            grid.Columns.Add("phone", "연락처");
             grid.Columns.Add("dormitoryRoomName", "호실");
             grid.Columns.Add("assignStatus", "배정상태");
             grid.AddTextActionColumns(true, false);
             grid.ActionClicked += OnRowActionAssign;
+            grid.CellFormatting += OnCellFormatting;
             return grid;
         }
 
@@ -216,6 +217,7 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("dormitoryRoomName", "호실");
             grid.AddTextActionColumns(true, false);
             grid.ActionClicked += OnRowActionWaiting;
+            grid.CellFormatting += OnCellFormatting;
             return grid;
         }
 
@@ -228,6 +230,8 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("checkOut", "퇴실");
             grid.AddTextActionColumns(true, false);
             grid.ActionClicked += OnRowActionDormOut;
+            grid.CellFormatting += OnCellFormatting;
+
             return grid;
         }
         
@@ -371,6 +375,16 @@ namespace EDU_HUB_AI.View
                 }
             }
         }   
+
+       private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            if (sender is not AppDataGrid grid) return;
+            if (grid.Columns[e.ColumnIndex].Name == "dormitoryRoomName" || grid.Columns[e.ColumnIndex].Name == "phone")
+            {
+                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            }
+        }
 
         private Panel CreateGridPanel(string title, int x, int y, int width, int height)
         {

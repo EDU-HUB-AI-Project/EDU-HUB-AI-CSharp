@@ -258,6 +258,7 @@ namespace EDU_HUB_AI.View
                 {
                     await _adminAttendaceController.DeleteAttend(target.attendanceId);
                     _all.Remove(target);
+                    _filtered.Remove(target);
                     RenderPage(pagination1.PageIndex);
                 }
                 catch (ApiException ex)
@@ -323,10 +324,11 @@ namespace EDU_HUB_AI.View
             }
         }
 
-        // 출석 상태별 배경 색 변경
+        // 출석 상태별 배경 색 변경 및 grid 내부 정렬
         private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e) 
         {
-            if(e.RowIndex < 0) return;
+            // ============= 출석상태에 따른 row의 배경 색상 설정 ===============
+            if (e.RowIndex < 0) return;
             if (grid.Columns[e.ColumnIndex] is DataGridViewLinkColumn)
             {
                 return;
@@ -361,7 +363,7 @@ namespace EDU_HUB_AI.View
                 e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
             }
         }
-
+        
         // 엑셀로 내보내기
         private void BtnExport_Click(object? sender, EventArgs e)
         {
