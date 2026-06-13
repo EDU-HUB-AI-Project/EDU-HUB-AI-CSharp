@@ -215,6 +215,50 @@ namespace EDU_HUB_AI.Config.Component.Data
                 e.Handled = true;
                 return;
             }
+            // ========== 관리 칼럼헤더 병합 ========
+            if (e.RowIndex == -1 && e.ColumnIndex >= 0)
+            {
+                var col = Columns[e.ColumnIndex];
+
+                // 수정 칼럼 헤더 → 삭제 칼럼 헤더까지 합쳐서 그림
+                if (col.Name == EditColumnName && Columns.Contains(DeleteColumnName))
+                {
+                    var deleteCol = Columns[DeleteColumnName];
+                    if (deleteCol.Visible)
+                    {
+                        var mergedRect = new Rectangle(
+                            e.CellBounds.Left,
+                            e.CellBounds.Top,
+                            e.CellBounds.Width + deleteCol.Width,
+                            e.CellBounds.Height);
+
+                        using (var backBrush = new SolidBrush(ThemeColors.TableHeader))
+                            e.Graphics.FillRectangle(backBrush, mergedRect);
+
+                        TextRenderer.DrawText(
+                            e.Graphics,
+                            "관리",
+                            ThemeFonts.TableHeader,
+                            mergedRect,
+                            ThemeColors.Text,
+                            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+                        using (var borderPen = new Pen(ThemeColors.TableBorder))
+                            e.Graphics.DrawRectangle(borderPen,
+                                mergedRect.Left, mergedRect.Top,
+                                mergedRect.Width - 1, mergedRect.Height - 1);
+
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                // 삭제 칼럼 헤더는 위에서 이미 그렸으므로 아무것도 안 그림
+                else if (col.Name == DeleteColumnName && Columns.Contains(EditColumnName))
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
             base.OnCellPainting(e);
         }
 

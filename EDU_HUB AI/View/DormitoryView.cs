@@ -205,6 +205,11 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("dormitoryRoomName", "호실");
             grid.Columns.Add("assignStatus", "배정상태");
             grid.AddTextActionColumns(true, false);
+            // 생성된 칼럼의 텍스트만 변경
+            if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn editCol)
+            {
+                editCol.Text = "배정";
+            }
             grid.ActionClicked += OnRowActionAssign;
             grid.CellFormatting += OnCellFormatting;
             return grid;
@@ -216,6 +221,11 @@ namespace EDU_HUB_AI.View
             grid.Columns.Add("studentName", "이름");
             grid.Columns.Add("dormitoryRoomName", "호실");
             grid.AddTextActionColumns(true, false);
+            // 생성된 칼럼의 텍스트만 변경
+            if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn editCol)
+            {
+                editCol.Text = "입실";
+            }
             grid.ActionClicked += OnRowActionWaiting;
             grid.CellFormatting += OnCellFormatting;
             return grid;
