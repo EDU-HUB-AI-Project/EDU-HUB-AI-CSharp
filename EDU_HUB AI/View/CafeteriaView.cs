@@ -112,14 +112,23 @@ namespace EDU_HUB_AI.View
             leftPanel.Controls.Add(dateEnd);
             leftPanel.Controls.Add(btnSearch);
 
+            var btnCreateOne = new AppButton
+            {
+                Text = "+ 하루 추가",
+                Variant = ButtonVariant.Primary,
+                Margin = new Padding(0, 20, 8, 0)
+            };
+            btnCreateOne.Click += OnCreateOne;
+
             var btnCreateNew = new AppButton
             {
                 Text = "+ 식단 추가",
-                Variant = ButtonVariant.Primary,
+                Variant = ButtonVariant.Secondary,
                 Margin = new Padding(0, 20, 0, 0)
             };
             btnCreateNew.Click += OnCreate;
 
+            rightPanel.Controls.Add(btnCreateOne);
             rightPanel.Controls.Add(btnCreateNew);
 
             topPanel.Controls.Add(rightPanel);
@@ -246,7 +255,6 @@ namespace EDU_HUB_AI.View
             }
         }
 
-        // ===== 그리드 =====
         private void SetupGrid()
         {
             grid.Columns.Add("mealDate", "날짜");
@@ -321,7 +329,6 @@ namespace EDU_HUB_AI.View
                 grid.Rows[idx].Tag = s;
             }
 
-            // 페이지 렌더 시 첫 행 자동 선택
             if (grid.Rows.Count > 0)
                 grid.Rows[0].Selected = true;
 
@@ -356,6 +363,20 @@ namespace EDU_HUB_AI.View
             SetAllControlsVisible(false);
             this.Controls.Add(createView);
             createView.BringToFront();
+        }
+
+        private async void OnCreateOne(object? sender, EventArgs e)
+        {
+            var existingDates = _allDetail
+                .Select(d => d.mealDate)
+                .Where(d => d != null)
+                .Distinct();
+
+            using var modal = new CafeteriaCreateModal(existingDates);
+            if (modal.ShowDialog(this.FindForm()) != DialogResult.OK) return;
+
+            await _adminCafeteriaController.SaveCafeteriaList(modal.Result);
+            await LoadAndRender();
         }
 
         private void SetAllControlsVisible(bool visible)
