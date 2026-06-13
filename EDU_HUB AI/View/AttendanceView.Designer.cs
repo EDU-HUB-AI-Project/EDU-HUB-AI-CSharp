@@ -30,7 +30,8 @@ namespace EDU_HUB_AI.View
             txtSearch = new TextField();
             cmbStatus = new ComboField();
             cmbEdu = new ComboField();
-            dtpDate = new DateField();
+            dtpStartDate = new DateField();
+            dtpEndDate = new DateField();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             bodyPanel.SuspendLayout();
@@ -82,7 +83,8 @@ namespace EDU_HUB_AI.View
             pnlFilterFlow.Controls.Add(cmbEdu);
             pnlFilterFlow.Controls.Add(cmbStatus);
             pnlFilterFlow.Controls.Add(txtSearch);
-            pnlFilterFlow.Controls.Add(dtpDate);
+            pnlFilterFlow.Controls.Add(dtpStartDate);
+            pnlFilterFlow.Controls.Add(dtpEndDate);
             var pnlButtonFlow = new FlowLayoutPanel
             {
                 Dock = DockStyle.Right,
@@ -124,12 +126,19 @@ namespace EDU_HUB_AI.View
             txtSearch.Size = new Size(220, 54);
             txtSearch.Margin = new Padding(0, 0, 8, 0);
 
-            // =============== dtpDate ====================
-            dtpDate.FieldLabel = "대상일자";
-            dtpDate.Margin = new Padding(0, 0, 8, 0);
-            dtpDate.Size = new Size(200, 23);
-            dtpDate.ShowCheckBox = true;
-            dtpDate.Checked = false;
+            // =============== dtpStartDate ====================
+            dtpStartDate.FieldLabel = "시작일자";
+            dtpStartDate.Margin = new Padding(0, 0, 8, 0);
+            dtpStartDate.Size = new Size(200, 23);
+            dtpStartDate.ShowCheckBox = true;
+            dtpStartDate.Checked = false;
+
+            // =============== dtpEndDate ====================
+            dtpEndDate.FieldLabel = "종료일자";
+            dtpEndDate.Margin = new Padding(0, 0, 8, 0);
+            dtpEndDate.Size = new Size(200, 23);
+            dtpEndDate.ShowCheckBox = true;
+            dtpEndDate.Checked = false;
 
             // =============== cmbStatus ==================
             cmbStatus.FieldLabel = "출석상태";
@@ -138,7 +147,7 @@ namespace EDU_HUB_AI.View
 
             // =============== cmbEdu =====================
             cmbEdu.FieldLabel = "교육과정";
-            cmbEdu.Size = new Size(230, 54);
+            cmbEdu.Size = new Size(250, 54);
             cmbEdu.Margin = new Padding(0, 0, 8, 0);
 
             // =============== pagination1 ===============
@@ -182,6 +191,7 @@ namespace EDU_HUB_AI.View
         private TextField txtSearch;
         private ComboField cmbStatus;
         private ComboField cmbEdu;
-        private DateField dtpDate;
+        private DateField dtpStartDate;
+        private DateField dtpEndDate;
     }
 }

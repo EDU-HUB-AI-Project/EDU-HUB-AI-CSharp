@@ -61,10 +61,32 @@ namespace EDU_HUB_AI.View
                     case PageNavigation.Last: pagination1.GoToLast(); break;
                 }
             };
+            // 교육과정 선택 시 해당 시작/종료 일자 적용
+            cmbEdu.SelectedIndexChanged += (_, _) =>
+            {
+                dynamic? selected = cmbEdu.SelectedItem;
+                string? startDate = selected?.eduStartDate;
+                string? endDate = selected?.eduEndDate;
 
-            cmbEdu.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+                if (!string.IsNullOrEmpty(startDate) && !string.IsNullOrEmpty(endDate))
+                {
+                    dtpStartDate.Checked = true;
+                    dtpStartDate.Value = DateTime.Parse(startDate);
+                    dtpEndDate.Checked = true;
+                    dtpEndDate.Value = DateTime.Parse(endDate);
+                }
+                else
+                {
+                    dtpStartDate.Checked = false;
+                    dtpEndDate.Checked = false;
+                }
+
+                ApplySearchFilter();
+                RenderPage(1);
+            };
             cmbStatus.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
-            dtpDate.ValueChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            dtpStartDate.ValueChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
+            dtpEndDate.ValueChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
             txtSearch.TextChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
         }
 
@@ -73,8 +95,8 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             LoadCmbStatus();
-            ApplyPendingFilter();
             await LoadCmb();
+            ApplyPendingFilter();
             await LoadAndRender(1);
             grid.Focus();
         }
@@ -124,6 +146,7 @@ namespace EDU_HUB_AI.View
         private void SetupGrid()
         {
             grid.Columns.Add("studentName", "이름");
+            grid.Columns.Add("phone", "연락처");
             grid.Columns.Add("eduName", "교육과정명");
             grid.Columns.Add("attendDate", "해당일자");
             grid.Columns.Add("status", "상태");
@@ -135,7 +158,9 @@ namespace EDU_HUB_AI.View
 
         private void RenderPage(int page)
         {
-            bool hasFilter = cmbEdu.SelectedIndex > 0 || cmbStatus.SelectedIndex > 0 || !string.IsNullOrEmpty(txtSearch.Text.Trim()) || dtpDate.Checked;
+            bool hasFilter = cmbEdu.SelectedIndex > 0 || cmbStatus.SelectedIndex > 0 || 
+                            !string.IsNullOrEmpty(txtSearch.Text.Trim()) || 
+                            dtpStartDate.Checked || dtpEndDate.Checked; 
             var source = hasFilter ? _filtered : _all;
             pagination1.TotalCount = source.Count;
             var size = pagination1.PageSize;
@@ -149,7 +174,7 @@ namespace EDU_HUB_AI.View
             grid.Rows.Clear();
             foreach (var a in _pageItems)
             {
-                var idx = grid.Rows.Add(a.studentName, a.eduName, a.attendDate, a.status, a.message);
+                var idx = grid.Rows.Add(a.studentName, a.phone, a.eduName, a.attendDate, a.status, a.message);
                 grid.Rows[idx].Tag = a;
             }
             grid.ResumeLayout();
@@ -303,7 +328,7 @@ namespace EDU_HUB_AI.View
             cmbStatus.Items.Add("조퇴");
             cmbStatus.SelectedIndex = 0;
         }
-        // studentId, eduId에 콤보박스 추가
+        // eduId에 콤보박스 추가
         private async Task LoadCmb()
         {
             var response = await _adminAttendaceController.GetAttend();
@@ -313,11 +338,11 @@ namespace EDU_HUB_AI.View
                 // 별도 API 호출 없이 LINQ로 중복 제거 후 추출
                 // 교육과정 콤보박스
                 var edus = response.Data
-                    .Select(x => new { x.eduId, x.eduName })
+                    .Select(x => new { x.eduId, x.eduName, x.eduStartDate, x.eduEndDate })
                     .DistinctBy(x => x.eduId)
                     .ToList();
 
-                edus.Insert(0, new { eduId = "", eduName = "전체" });
+                edus.Insert(0, new { eduId = "", eduName = "전체", eduStartDate = (string?)null, eduEndDate = (string?)null });
                 cmbEdu.DataSource = edus;
                 cmbEdu.DisplayMember = "eduName";
                 cmbEdu.ValueMember = "eduId";
@@ -340,27 +365,34 @@ namespace EDU_HUB_AI.View
             var value = grid.Rows[e.RowIndex].Cells[statusCol.Index].Value;
             if (value == null) return;
             var status = value.ToString();
-
-            if (status == "결석")
+            if (grid.Columns[e.ColumnIndex].Name == "status")
             {
-                e.CellStyle.ForeColor = ThemeColors.OkText;
-                e.CellStyle.BackColor = ThemeColors.DangerBg;
-                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
-                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                if (status == "결석")
+                {
+                    e.CellStyle.ForeColor = ThemeColors.OkText;
+                    e.CellStyle.BackColor = ThemeColors.DangerBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                }
+                else if (status == "지각")
+                {
+                    e.CellStyle.ForeColor = ThemeColors.OkText;
+                    e.CellStyle.BackColor = ThemeColors.WarnBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                }
+                else if (status == "조퇴")
+                {
+                    e.CellStyle.ForeColor = ThemeColors.OkText;
+                    e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
+                    e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                }
             }
-            else if (status == "지각")
+            
+            if (grid.Columns[e.ColumnIndex].Name == "phone")
             {
-                e.CellStyle.ForeColor = ThemeColors.OkText;
-                e.CellStyle.BackColor = ThemeColors.WarnBg;
-                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
-                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
-            }
-            else if (status == "조퇴")
-            {
-                e.CellStyle.ForeColor = ThemeColors.OkText;
-                e.CellStyle.BackColor = Color.FromArgb(255, 237, 213);
-                e.CellStyle.SelectionForeColor = ThemeColors.TableSelectedText;
-                e.CellStyle.SelectionBackColor = ThemeColors.TableSelected;
+                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
         }
         
@@ -460,15 +492,19 @@ namespace EDU_HUB_AI.View
             switch (_pendingFilter)
             {
                 case "TODAY":
-                    dtpDate.Checked = true;
-                    dtpDate.Value = DateTime.Today;
+                    dtpStartDate.Checked = true;
+                    dtpStartDate.Value = DateTime.Today;
+                    dtpEndDate.Checked = true;
+                    dtpEndDate.Value = DateTime.Today;
                     break;
                 case "출석":
                 case "결석":
                 case "지각":
                 case "조퇴":
-                    dtpDate.Checked = true;
-                    dtpDate.Value = DateTime.Today;
+                    dtpStartDate.Checked = true;
+                    dtpStartDate.Value = DateTime.Today;
+                    dtpEndDate.Checked = true;
+                    dtpEndDate.Value = DateTime.Today;
                     cmbStatus.SelectedItem = _pendingFilter;
                     break;
             }
@@ -488,9 +524,12 @@ namespace EDU_HUB_AI.View
                 : null;
             if (!string.IsNullOrEmpty(status))
                 result = result.Where(a => a.status == status);
-            var date = dtpDate.Checked ? dtpDate.ToDateString() : null;
-            if(!string.IsNullOrEmpty(date))
-                result = result.Where(a => a.attendDate == date);
+            var startDate = dtpStartDate.Checked ? dtpStartDate.ToDateString() : null;
+            if(!string.IsNullOrEmpty(startDate))
+                result = result.Where(a => string.Compare(a.attendDate, startDate) >= 0);
+            var endDate = dtpEndDate.Checked ? dtpEndDate.ToDateString() : null;
+            if (!string.IsNullOrEmpty(endDate))
+                result = result.Where(a => string.Compare(a.attendDate, endDate) <= 0);
             var search = txtSearch.Text.Trim();
             if (!string.IsNullOrEmpty(search))
                 result = result.Where(a => a.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);

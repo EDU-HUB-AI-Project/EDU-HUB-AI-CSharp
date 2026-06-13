@@ -15,7 +15,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
         private readonly ComboBox _combo;
 
         private bool _focused;
-
+        private bool _hasError;
         public ComboField()
         {
             InitializeComponent();
@@ -53,6 +53,24 @@ namespace EDU_HUB_AI.Config.Component.Basic
         [Browsable(false)] public ComboBox.ObjectCollection Items => _combo.Items;
         [Browsable(false)] public object? SelectedItem { get => _combo.SelectedItem; set => _combo.SelectedItem = value;  }
 
+        // 드롭다운 입력 방식 (DropDownList: 선택만 / DropDown: 직접 입력 가능)
+        [Browsable(false)] public ComboBoxStyle DropDownStyle{ get => _combo.DropDownStyle; set => _combo.DropDownStyle = value; }
+        // 자동완성 모드 (예: SuggestAppend)
+        [Browsable(false)] public AutoCompleteMode AutoCompleteMode { get => _combo.AutoCompleteMode; set => _combo.AutoCompleteMode = value;}
+        // 자동완성 후보 출처 (CustomSource 권장)
+        [Browsable(false)] public AutoCompleteSource AutoCompleteSource { get => _combo.AutoCompleteSource; set => _combo.AutoCompleteSource = value; }
+        // 자동완성 후보 문자열 목록 (AutoCompleteSource.CustomSource일 때 사용)
+        [Browsable(false)] public AutoCompleteStringCollection AutoCompleteCustomSource{ get => _combo.AutoCompleteCustomSource; set => _combo.AutoCompleteCustomSource = value; }
+        // 콤보박스 입력/표시 텍스트 (DropDown 모드에서 사용)
+        [Browsable(false)] public string Text {  get => _combo.Text; set => _combo.Text = value; }
+        [Browsable(false)] public bool HasError { get => _hasError; set
+                                                        {
+                                                            if (_hasError == value) return;
+                                                            _hasError = value;
+                                                            _shell.Invalidate();
+                                                        }
+             }
+
         public new event EventHandler? SelectedIndexChanged;
 
         // ── Builder ──────────────────────────────────────────
@@ -82,6 +100,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
             combo.SelectedIndexChanged += (_, _) => SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
             return combo;
         }
+
 
         private Panel BuildShell(ComboBox combo)
         {
@@ -145,7 +164,12 @@ namespace EDU_HUB_AI.Config.Component.Basic
             var bounds = new Rectangle(0, 0, shell.Width - 1, shell.Height - 1);
             using var fill = new SolidBrush(ThemeColors.Surface);
             e.Graphics.FillRectangle(fill, bounds);
-            using var pen = new Pen(_focused ? ThemeColors.Primary : ThemeColors.Border);
+
+            Color borderColor = _hasError
+                ? ThemeColors.Danger
+                : (_focused ? ThemeColors.Primary : ThemeColors.Border);
+
+            using var pen = new Pen(borderColor);
             e.Graphics.DrawRectangle(pen, bounds);
         }
 

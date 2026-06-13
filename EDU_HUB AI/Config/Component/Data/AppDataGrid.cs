@@ -3,6 +3,8 @@ using EDU_HUB_AI.Config.Theme;
 
 namespace EDU_HUB_AI.Config.Component.Data
 {
+
+
     public enum TableAction
     {
         Edit,
@@ -40,6 +42,8 @@ namespace EDU_HUB_AI.Config.Component.Data
         public const string EditColumnName = "__eh_edit";
         public const string DeleteColumnName = "__eh_delete";
         public const string CustomLinkPrefix = "__eh_link_";
+
+        public string EmptyMessage { get; set; } = "해당 데이터가 존재하지 않습니다.";
 
         public event EventHandler<TableActionEventArgs>? ActionClicked;
         public event EventHandler<PageNavigation>? PageNavigationRequested;
@@ -205,6 +209,38 @@ namespace EDU_HUB_AI.Config.Component.Data
                 }
             }
             base.OnCellFormatting(e);
+        }
+        // 데이터가 존재하지 않을 경우 메시지 표시
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if (Rows.Count > 0)
+            {
+                return;
+            }
+
+            var emptyRect = new Rectangle(
+                0,
+                ColumnHeadersHeight,
+                Width,
+                Height - ColumnHeadersHeight);
+
+            if (emptyRect.Height <= 0)
+            {
+                return;
+            }
+
+            using var backBrush = new SolidBrush(ThemeColors.Surface);
+            e.Graphics.FillRectangle(backBrush, emptyRect);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                EmptyMessage,
+                ThemeFonts.PageTitle,
+                emptyRect,
+                ThemeColors.TextMuted, 
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
