@@ -9,13 +9,15 @@ namespace EDU_HUB_AI.Config.Component.Domain
     public partial class AttendEditModal : AppModal
     {
         private readonly AttendDto? _source;
-        private readonly TextField _txtStudentId;
+        //private readonly TextField _txtStudentId;
+        private readonly ComboField _cmbStudent;
         private readonly ComboField _cmbEduId;
         private readonly DateField _dtpAttendDate;
         private readonly ComboField _cmbStatus;
         private readonly TextField _txtMessage;
 
         private readonly AdminEduInfoController _eduInfoController = new AdminEduInfoController();
+        private readonly AdminStudentController _adminStudentController = new AdminStudentController();
 
         public AttendDto? Result { get; private set; }
 
@@ -25,14 +27,24 @@ namespace EDU_HUB_AI.Config.Component.Domain
             ModalTitle = source == null ? "출석부 등록" : "출석부 수정";
             ConfirmText = "저장";
 
-            _txtStudentId = new TextField
+            //_txtStudentId = new TextField
+            //{
+            //    FieldLabel = source == null ? "학생 ID" : "학생",
+            //    Text = source == null ? "" : (source.studentName ?? source.studentId ?? ""),
+            //    Placeholder = source == null ? "STU_xxxxx" : "",
+            //    ReadOnly = source != null,
+            //    Dock = DockStyle.Fill,
+            //    Margin = new Padding(0, 0, 0, 14)
+            //};
+
+            _cmbStudent = new ComboField
             {
-                FieldLabel = source == null ? "학생 ID" : "학생",
-                Text = source == null ? "" : (source.studentName ?? source.studentId ?? ""),
-                Placeholder = source == null ? "STU_xxxxx" : "",
-                ReadOnly = source != null,
+                FieldLabel = "학생",
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 14)
+                Margin = new Padding(0, 0, 0, 14),
+                DropDownStyle = ComboBoxStyle.DropDown,
+                AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+                AutoCompleteSource = AutoCompleteSource.CustomSource
             };
 
             _cmbEduId = new ComboField
@@ -78,7 +90,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             for (int i = 0; i < 5; i++)
                 stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            stack.Controls.Add(_txtStudentId, 0, 0);
+            //stack.Controls.Add(_txtStudentId, 0, 0);
+            stack.Controls.Add(_cmbStudent, 0, 0);
             stack.Controls.Add(_cmbEduId, 0, 1);
             stack.Controls.Add(_dtpAttendDate, 0, 2);
             stack.Controls.Add(_cmbStatus, 0, 3);
@@ -91,6 +104,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            await LoadCmbStudent();
             await LoadCmb();
             LoadCmbStatus();
 
@@ -121,6 +135,34 @@ namespace EDU_HUB_AI.Config.Component.Domain
             }
         }
 
+        private async Task LoadCmbStudent()
+        {
+            var response = await _adminStudentController.GetStudents();
+            var list = response?.Data ?? new List<StudentDto>();
+
+            var options = list
+            .Select(s => new 
+                {
+                    StudentId = s.studentId,
+                    DisplayName = $"{s.studentName}({s.phoneNumber})"
+                })
+                .ToList();
+
+            _cmbStudent.DataSource = options;
+            _cmbStudent.DisplayMember = "DisplayName";
+            _cmbStudent.ValueMember = "StudentId";
+
+            var autoComplete = new AutoCompleteStringCollection();
+            autoComplete.AddRange(options.Select(o => o.DisplayName).ToArray());
+            _cmbStudent.AutoCompleteCustomSource = autoComplete;
+
+            if (_source != null)
+            {
+                _cmbStudent.SelectedValue = _source.studentId;
+                _cmbStudent.Enabled = false;  // 수정 모드에서는 학생 변경 불가
+            }
+        }
+
         private void LoadCmbStatus()
         {
             _cmbStatus.DataSource = new[] { "출석", "결석", "지각", "조퇴" };
@@ -137,7 +179,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
-            var studentId = _source != null ? _source.studentId : _txtStudentId.Text.Trim();
+            var studentId = _source != null ? _source.studentId : _cmbStudent.SelectedValue?.ToString();
             var eduId = _cmbEduId.SelectedValue?.ToString();
             var status = _cmbStatus.SelectedItem?.ToString();
             var msg = _txtMessage.Text.Trim();
@@ -146,14 +188,14 @@ namespace EDU_HUB_AI.Config.Component.Domain
             {
                 if(_source == null)
                 {
-                    _txtStudentId.HasError = true;
+                    _cmbStudent.HasError = true;
                 }
                 MessageBox.Show("학생 ID를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if(_source == null)
             {
-                _txtStudentId.HasError = false;
+                _cmbStudent.HasError = false;
             }
 
             if (string.IsNullOrEmpty(eduId))
@@ -196,6 +238,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             attendanceId = s.attendanceId,
             studentId = s.studentId,
             studentName = s.studentName,
+            phone = s.phone,
             eduId = s.eduId,
             eduName = s.eduName,
             status = s.status,
