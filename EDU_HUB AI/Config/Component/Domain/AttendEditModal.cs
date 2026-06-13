@@ -46,7 +46,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 AutoCompleteMode = AutoCompleteMode.SuggestAppend,
                 AutoCompleteSource = AutoCompleteSource.CustomSource
             };
-
+            
             _cmbEduId = new ComboField
             {
                 FieldLabel = "교육과정",
@@ -67,7 +67,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Dock = DockStyle.Fill,
                 Margin = new Padding(0, 0, 0, 14)
             };
-
+            _cmbStatus.SelectedIndexChanged += OnStatusChanged;
             _txtMessage = new TextField
             {
                 FieldLabel = "사유",
@@ -112,6 +112,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             {
                 _dtpAttendDate.Value = dt;
             }
+            // 초기 상태 동기화
+            OnStatusChanged(null, EventArgs.Empty);
         }
 
         protected override void OnShown(EventArgs e)
@@ -231,6 +233,17 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Result.status = status;
             Result.message = msg;
             base.OnConfirm();
+        }
+        // 상태가 출석이 선택된 경우 사유 입력 비활성화
+        private void OnStatusChanged(object? sender, EventArgs e)
+        {
+            bool isPresent = _cmbStatus.SelectedItem?.ToString() == "출석";
+            _txtMessage.Enabled = !isPresent;
+
+            if (isPresent)
+            {
+                _txtMessage.Text = "";   // 출석으로 바꾸면 기존 사유도 비워줌
+            }
         }
 
         private static AttendDto CopyOf(AttendDto s) => new()
