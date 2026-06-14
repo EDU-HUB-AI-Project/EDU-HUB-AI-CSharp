@@ -6,429 +6,535 @@ using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.exception;
 using EDU_HUB_AI.Model;
-using System.Diagnostics;
-
 
 namespace EDU_HUB_AI.View
 {
     public partial class DormitoryView : UserControl
-    {   
-        private AppDataGrid _assignGrid;
-        private AppDataGrid _waitingGrid;
-        private AppDataGrid _dormInOutGrid;
-
-        private Pagination _pagination1;
-        private Pagination _pagination2;
-        private Pagination _pagination3;
-
+    {
+        // ── 데이터 ──────────────────────────────────────────────
         private List<DormAssignDto> _assignData = new();
-        private List<DormAssignDto> _assignPageItems = new();
-
         private List<DormInOutDto> _waitingData = new();
-        private List<DormInOutDto> _waitingPageItems = new();
+        private List<DormInOutDto> _inOutData = new();
+        private List<DormitoryDto> _rooms = new();
 
-        private List<DormInOutDto> _dormInOutData = new();
-        private List<DormInOutDto> _dormInOutPageItems = new();
+        private List<DormAssignDto> _assignPage = new();
+        private List<DormInOutDto> _waitingPage = new();
+        private List<DormInOutDto> _inOutPage = new();
 
-        private Action<DormAssignDto> _assignRow;
-        private Action<DormInOutDto> _waitingRow;
-        private Action<DormInOutDto> _dormInOutRow;
+        private readonly AdminEduInfoController _eduInfoController = new();
+        private Dictionary<string, string> _eduMap = new();
+
+        // ── 상태 ────────────────────────────────────────────────
+        private string? _selectedDormId = null;
+        private string _activeTabKey = "assign";
+        private bool _isLoading = false;
+
+        // ── 그리드 / 페이징 ─────────────────────────────────────
+        private AppDataGrid _assignGrid = null!;
+        private AppDataGrid _waitingGrid = null!;
+        private AppDataGrid _inOutGrid = null!;
+        private Pagination _assignPg = null!;
+        private Pagination _waitingPg = null!;
+        private Pagination _inOutPg = null!;
+
+        // ── 컴포넌트 ──────────────────────────────
+        private TabStrip _tabStrip = null!;
+        private TextField _searchField = null!;
+        private Panel _roomListPanel = null!;
 
         private readonly AdminDormitoryController _adminDormitoryController = new();
-        private bool _isLoading = false; // LoadDormView 중복 호출 방지 플래그 
         public DormitoryView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
             bodyPanel.BackColor = ThemeColors.Background;
-
-            _assignGrid = CreateAssignGrid();
-            _waitingGrid = CreateWaitingGrid();
-            _dormInOutGrid = CreateDormInOutGrid();
-
-            _pagination1 = new Pagination();
-            _pagination2 = new Pagination();
-            _pagination3 = new Pagination();
-
-            _assignRow = a => _assignGrid.Rows.Add(a.studentName, a.eduId, a.phone, a.dormitoryRoomName, a.assignStatus);
-            _waitingRow = d => _waitingGrid.Rows.Add(d.studentName, d.dormitoryRoomName);
-            _dormInOutRow = d => _dormInOutGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.checkIn, d.checkOut);
-            pageHeader1.SyncClicked += (_, _) => LoadDormView();
+            pageHeader1.SyncClicked += (_, _) => _ = LoadAll();
         }
 
-        protected override async void OnLoad(EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            BeginInvoke(() => LoadDormView()); // 너비 계산 시점 문제로 UI가 완전히 로딩된 후 LoadDormView 실행
+            BuildLayout();
+            BeginInvoke(() => _ = LoadAll());
         }
 
-        // Refactoring 방향
-        // 기존에는 동일한 로직의 Grid생성과, Render로직이 반복
-        // 중복부분을 헬퍼 메소드를 통하여 분리
-        // BuildGridPanel : 패널/그리드/페이지네이션 UI 구성
-        // RenderGrid<T>  : 페이지 계산 및 데이터 바인딩
-        // 각 Grid별로 다른 부분(Rows.Add 컬럼 구성)은 Action<T>를 사용하여 외부에서 주입
-        // OnRowAction 계열은 호출 API와 처리 로직이 달라 리팩토링 대상에서 제외
-        private async void LoadDormView(bool showOverlay = true)
+        // ── 레이아웃 빌드 ──────────────────────────────
+        private void BuildLayout()
         {
-            if (IsDisposed || !IsHandleCreated) return; // View가 이미 소멸된 경우 무시
-            if (_isLoading) return; // View가 이미 소멸된 경우 무시
+            var split = new SplitContainer
+            {
+                Dock = DockStyle.Fill,
+                Orientation = Orientation.Vertical,
+                SplitterWidth = 1,
+                BackColor = ThemeColors.Border,
+                FixedPanel = FixedPanel.Panel1
+            };
+            BuildLeftPanel(split.Panel1);
+            BuildRightPanel(split.Panel2);
+            bodyPanel.Controls.Add(split);
+            split.SplitterDistance = 280;
+        }
+
+        // ── 왼쪽 ──────────────────────────────
+        private void BuildLeftPanel(SplitterPanel parent)
+        {
+            parent.BackColor = ThemeColors.Surface;
+
+            var header = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 56,
+                BackColor = ThemeColors.Surface
+            };
+            header.Controls.Add(new Label
+            {
+                Text = "호실 목록",
+                Font = ThemeFonts.Panel,
+                ForeColor = ThemeColors.Text,
+                AutoSize = true,
+                Location = new Point(16, 16)
+            });
+            header.Paint += (_, e2) =>
+            {
+                using var pen = new Pen(ThemeColors.Border, 1);
+                e2.Graphics.DrawLine(pen, 0, header.Height - 1, header.Width, header.Height - 1);
+            };
+
+            var searchWrap = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 60,
+                BackColor = ThemeColors.Surface,
+                Padding = new Padding(12, 10, 12, 10)
+            };
+            _searchField = new TextField
+            {
+                Dock = DockStyle.Fill,
+                FieldLabel = "",
+                Placeholder = "호실 검색..."
+            };
+            _searchField.TextChanged += (_, _) => RenderRoomList();
+            searchWrap.Controls.Add(_searchField);
+
+            _roomListPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                AutoScroll = true,
+                BackColor = ThemeColors.Surface
+            };
+            _roomListPanel.Resize += (_, _) => RelayoutRoomItems();
+
+            parent.Controls.Add(_roomListPanel);
+            parent.Controls.Add(searchWrap);
+            parent.Controls.Add(header);
+        }
+
+        // ──────── 오른쪽 패널 ──────────────────────────────────
+        private void BuildRightPanel(SplitterPanel parent)
+        {
+            parent.BackColor = ThemeColors.Background;
+
+            _tabStrip = new TabStrip { Dock = DockStyle.Fill };
+            _tabStrip.AddTab("assign", "배정 현황", BuildGridPanel("assign"));
+            _tabStrip.AddTab("waiting", "입실 대기", BuildGridPanel("waiting"));
+            _tabStrip.AddTab("inout", "입/퇴실 현황", BuildGridPanel("inout"));
+            _tabStrip.TabChanged += (_, key) =>
+            {
+                _activeTabKey = key;
+                RefreshActiveTab();
+            };
+
+            parent.Controls.Add(_tabStrip);
+        }
+
+        private Panel BuildGridPanel(string tabKey)
+        {
+            var grid = new AppDataGrid();
+            var pg = new Pagination
+            {
+                Dock = DockStyle.Bottom,
+                Height = 76
+            };
+
+            switch (tabKey)
+            {
+                case "assign":
+                    grid.Columns.Add("studentName", "이름");
+                    grid.Columns.Add("eduId", "교육과정");
+                    grid.Columns.Add("phone", "연락처");
+                    grid.Columns.Add("dormitoryRoomName", "호실");
+                    grid.Columns.Add("assignStatus", "배정상태");
+                    grid.AddTextActionColumns(true, false);
+                    if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn c0) c0.Text = "배정";
+                    grid.ActionClicked += OnRowActionAssign;
+                    grid.CellFormatting += OnCellFormatting;
+                    _assignGrid = grid; _assignPg = pg;
+                    pg.PageChanged += (_, p2) =>
+                        _assignPage = RenderGrid(_FilterAssign(), _assignPg, p2, _assignGrid,
+                            r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
+                    break;
+
+                case "waiting":
+                    grid.Columns.Add("studentName", "이름");
+                    grid.Columns.Add("dormitoryRoomName", "호실");
+                    grid.AddTextActionColumns(true, false);
+                    if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn c1) c1.Text = "입실";
+                    grid.ActionClicked += OnRowActionWaiting;
+                    grid.CellFormatting += OnCellFormatting;
+                    _waitingGrid = grid; _waitingPg = pg;
+                    pg.PageChanged += (_, p2) =>
+                        _waitingPage = RenderGrid(_FilterWaiting(), _waitingPg, p2, _waitingGrid,
+                            r => _waitingGrid.Rows.Add(r.studentName, r.dormitoryRoomName));
+                    break;
+
+                case "inout":
+                    grid.Columns.Add("studentName", "이름");
+                    grid.Columns.Add("dormitoryRoomName", "호실");
+                    grid.Columns.Add("checkIn", "입실일");
+                    grid.Columns.Add("checkOut", "퇴실일");
+                    grid.AddTextActionColumns(true, false);
+                    if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn c2) c2.Text = "퇴실";
+                    grid.ActionClicked += OnRowActionDormOut;
+                    grid.CellFormatting += OnCellFormatting;
+                    _inOutGrid = grid; _inOutPg = pg;
+                    pg.PageChanged += (_, p2) =>
+                        _inOutPage = RenderGrid(_FilterInOut(), _inOutPg, p2, _inOutGrid,
+                            r => _inOutGrid.Rows.Add(r.studentName, r.dormitoryRoomName, r.checkIn, r.checkOut));
+                    break;
+            }
+
+            grid.Dock = DockStyle.Fill;
+            var panel = new Panel { Dock = DockStyle.Fill };
+            panel.Controls.Add(pg);
+            panel.Controls.Add(grid);
+            return panel;
+        }
+
+
+        // ──────── 데이터 로드 ──────────────────────────────────
+        private async Task LoadAll(bool showOverlay = true)
+        {
+            if(IsDisposed || !IsHandleCreated)
+            {
+                return;
+            }
+            if(_isLoading)
+            {
+                return;
+            }
             _isLoading = true;
-            ClearBodyPanel();
-
-            // BuildGridPanel()에서 Panel의 자식으로 추가되는 컨트롤은
-            // ClearBodyPanel()이 Panel을 Dispose할 때 자식도 함께 Dispose된다.
-            // 따라서 매 호출마다 새로 생성해야 한다.
-            _pagination1 = new Pagination();
-            _pagination2 = new Pagination();
-            _pagination3 = new Pagination();
-
-            _assignGrid = CreateAssignGrid();      
-            _waitingGrid = CreateWaitingGrid(); 
-            _dormInOutGrid = CreateDormInOutGrid();
-
-            // 위에서 Grid를 새로 생성했으므로 Action도 새 Grid를 참조하도록 재정의
-            _assignRow = a => _assignGrid.Rows.Add(a.studentName, a.eduId, a.phone, a.dormitoryRoomName, a.assignStatus);
-            _waitingRow = d => _waitingGrid.Rows.Add(d.studentName, d.dormitoryRoomName);
-            _dormInOutRow = d => _dormInOutGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.checkIn, d.checkOut);
-
-            // 위치 배정
-            // 여백 직접 정의
-            int pad = 20;                                        
-            int W = bodyPanel.ClientSize.Width - (pad * 2);     
-            int gap = 20;
-            int assignH = 550;
-            // 상단 여백 + 배정그리드 높이 + gap
-            int bottomY = pad + assignH + gap;
-            // 왼쪽의 30%만
-            int waitingW = (int)(W * 0.30);                     
-            int inOutW = W - waitingW - gap;
-            int bottomH = 400;
 
             var overlay = showOverlay ? LoadingOverlay.Create(bodyPanel, "데이터 로딩중...") : null;
+
             try
             {
-                _adminDormitoryController.OnRetry = (attempt, max) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
-                // ================== 배정 현황 ======================
-                var res1 = await _adminDormitoryController.GetDormAssign();
-                if (IsDisposed || !IsHandleCreated) return; // await 복귀 시점에 View가 소멸됐을 수 있음
-                if (res1?.Status != 200) return;
-                if (res1?.Status != 200) return;
-                _assignData = res1.Data;
-                var panel1 = BuildGridPanel("생활관 배정현황",
-                   pad, pad, W, assignH,                   
-                    _assignGrid, _pagination1,
-                    a => _assignPageItems = RenderGrid(_assignData, _pagination1, a, _assignGrid, _assignRow));
-                _assignPageItems = RenderGrid(_assignData, _pagination1, 1, _assignGrid, _assignRow);
+                _adminDormitoryController.OnRetry = (a, m) => overlay?.UpdateMessage($"서버 연결 중...\n재시도 {a}/{m}");
 
-                // ================== 대기 현황 ======================
-                var res2 = await _adminDormitoryController.GetDormWaiting();
-                if (IsDisposed || !IsHandleCreated) return; // await 복귀 시점에 View가 소멸됐을 수 있음
-                _waitingData = res2.Data;
-                var panel2 = BuildGridPanel("생활관 대기 현황",
-                    pad, bottomY, waitingW, bottomH,      
-                    _waitingGrid, _pagination2,
-                    d => _waitingPageItems = RenderGrid(_waitingData, _pagination2, d, _waitingGrid, _waitingRow));
-                _waitingPageItems = RenderGrid(_waitingData, _pagination2, 1, _waitingGrid, _waitingRow);
+                var t1 = _adminDormitoryController.GetDormAssign();
+                var t2 = _adminDormitoryController.GetDormWaiting();
+                var t3 = _adminDormitoryController.GetDormInOut();
+                var t4 = _adminDormitoryController.GetDormRoomAssignStatus(null);
+                var t5 = _eduInfoController.GetEduInfos();
 
-                // ================== 입/퇴실 현황 ======================
-                var res3 = await _adminDormitoryController.GetDormInOut();
-                if (IsDisposed || !IsHandleCreated) return; // await 복귀 시점에 View가 소멸됐을 수 있음
-                _dormInOutData = res3.Data;
-                var panel3 = BuildGridPanel("생활관 입/퇴실 현황",
-                   pad + waitingW + gap, bottomY, inOutW, bottomH,  
-                    _dormInOutGrid, _pagination3,
-                    d => _dormInOutPageItems = RenderGrid(_dormInOutData, _pagination3, d, _dormInOutGrid, _dormInOutRow));
-                _dormInOutPageItems = RenderGrid(_dormInOutData, _pagination3, 1, _dormInOutGrid, _dormInOutRow);
+                await Task.WhenAll(t1, t2, t3, t4, t5);
+
+                if (IsDisposed || !IsHandleCreated) return;
+
+                if (t1.Result?.Status == 200) _assignData = t1.Result.Data;
+                if (t2.Result?.Status == 200) _waitingData = t2.Result.Data;
+                if (t3.Result?.Status == 200) _inOutData = t3.Result.Data;
+                if (t4.Result?.Status == 200) _rooms = t4.Result.Data;
+                if (t5.Result?.Status == 200)
+                    _eduMap = t5.Result.Data.ToDictionary(e => e.eduId, e => e.eduName);
+
+                RenderRoomList();
+                RefreshActiveTab();
             }
             catch (ApiException ex)
             {
-                if (IsDisposed) return;
-                MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!IsDisposed) MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                if (IsDisposed) return;
-                MessageBox.Show($"요청 중 오류가 발생했습니다. \n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!IsDisposed) MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 _adminDormitoryController.OnRetry = null;
                 overlay?.Close();
                 overlay?.Dispose();
-                _isLoading = false; // 로딩 완료, 다음 호출 허용
+                _isLoading = false;
             }
         }
-        
 
-        // Delegate 활용하여 리펙토링(Action)
-        // grid 생성 후 RenderGrid에서 데이터 넣기
-        private Panel BuildGridPanel(string title, int x, int y, int w, int h, 
-                                    AppDataGrid grid, Pagination pagination, Action<int> pageChange)
+        // ──────── 호실 목록 렌더 ──────────────────────────────────
+        private void RenderRoomList()
         {
-            var panel = CreateGridPanel(title, x, y, w, h);
-            grid.Dock = DockStyle.Fill;
-            pagination.Dock = DockStyle.Bottom;
-            pagination.PageChanged += (_, page) => pageChange(page);
-            pagination.Height = 38;
-            panel.Controls.Add(pagination);
-            panel.Controls.Add(grid);
-            bodyPanel.Controls.Add(panel);
-            return panel;
+            string kw = _searchField?.Text.Trim() ?? "";
+            var list = string.IsNullOrEmpty(kw)
+                ? _rooms
+                : _rooms.Where(r => r.dormitoryRoomName?.Contains(kw, StringComparison.OrdinalIgnoreCase) == true).ToList();
+
+            _roomListPanel.SuspendLayout();
+            foreach (Control c in _roomListPanel.Controls) c.Dispose();
+            _roomListPanel.Controls.Clear();
+
+            _roomListPanel.Controls.Add(MakeRoomItem("전체 학생", -1, -1, _selectedDormId == null, () => SelectRoom(null)));
+
+            foreach (var room in list)
+            {
+                string id = room.dormitoryId;
+                _roomListPanel.Controls.Add(MakeRoomItem(
+                    room.dormitoryRoomName, room.currentCount, room.maxCount,
+                    _selectedDormId == room.dormitoryId, () => SelectRoom(id)));
+            }
+
+            RelayoutRoomItems();
+            _roomListPanel.ResumeLayout();
         }
 
-        private List<T> RenderGrid<T>(List<T> data, Pagination pagination, int page, AppDataGrid grid, Action<T> addRow)
+        private void RelayoutRoomItems()
         {
-            pagination.TotalCount = data.Count;
-            var size = pagination.PageSize;
-            var totalPages = Math.Max(1, (int)Math.Ceiling(data.Count / (double)size));
-            page = Math.Clamp(page, 1, totalPages);
-            pagination.PageIndex = page;
+            int y = 0;
+            int w = _roomListPanel.ClientSize.Width;
+            foreach (Control c in _roomListPanel.Controls)
+            {
+                c.SetBounds(0, y, w, c.Height);
+                y += c.Height;
+            }
+            _roomListPanel.AutoScrollMinSize = new Size(0, y);
+        }
 
-            var pageItems = data.Skip((page - 1) * size).Take(size).ToList();
+        private Panel MakeRoomItem(string name, int cur, int max, bool selected, Action onSelect)
+        {
+            bool hasBar = max > 0;
+            var item = new Panel
+            {
+                Height = hasBar ? 80 : 52,
+                BackColor = selected ? ThemeColors.InfoBg : ThemeColors.Surface,
+                Cursor = Cursors.Hand
+            };
+            item.Paint += (_, e2) =>
+            {
+                using var pen = new Pen(ThemeColors.Border, 1);
+                e2.Graphics.DrawLine(pen, 0, item.Height - 1, item.Width, item.Height - 1);
+                if (selected)
+                {
+                    using var accent = new SolidBrush(ThemeColors.Primary);
+                    e2.Graphics.FillRectangle(accent, 0, 0, 4, item.Height);
+                }
+            };
 
+            var lblName = new Label
+            {
+                Text = name,
+                Font = selected ? new Font(ThemeFonts.Body, FontStyle.Bold) : ThemeFonts.Body,
+                ForeColor = selected ? ThemeColors.Primary : ThemeColors.Text,
+                AutoSize = false,
+                Height = 24,
+                Location = new Point(16, hasBar ? 8 : 14),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
+                AutoEllipsis = true
+            };
+            item.Controls.Add(lblName);
+            item.Resize += (_, _) => lblName.Width = item.Width - 32;
+
+            if (hasBar)
+            {
+                float ratio = max > 0 ? Math.Min(1f, (float)cur / max) : 0f;
+                Color barColor = ratio >= 1f ? ThemeColors.Danger : ratio >= 0.8f ? ThemeColors.Warn : ThemeColors.Ok;
+
+                var lblCnt = new Label
+                {
+                    Text = $"{cur} / {max}명",
+                    Font = ThemeFonts.BodySm,
+                    ForeColor = ratio >= 1f ? ThemeColors.Danger : ThemeColors.TextMuted,
+                    AutoSize = true,
+                    Location = new Point(16, 34)
+                };
+
+                var bar = new Panel
+                {
+                    Location = new Point(16, 62),
+                    Height = 5,
+                    BackColor = ThemeColors.Border,
+                    Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
+                };
+                bar.Width = Math.Max(1, item.Width - 32);
+                bar.Paint += (_, e2) =>
+                {
+                    int filled = (int)(bar.Width * ratio);
+                    if (filled > 0)
+                    {
+                        using var b = new SolidBrush(barColor);
+                        e2.Graphics.FillRectangle(b, 0, 0, filled, bar.Height);
+                    }
+                };
+                item.Resize += (_, _) => { bar.Width = Math.Max(1, item.Width - 32); bar.Invalidate(); };
+
+                item.Controls.Add(lblCnt);
+                item.Controls.Add(bar);
+            }
+
+            item.Click += (_, _) => onSelect();
+            foreach (Control c in item.Controls)
+            {
+                c.Click += (_, _) => onSelect();
+                c.Cursor = Cursors.Hand;
+            }
+            return item;
+        }
+
+        // ──────── 호실 선택 ──────────────────────────────────
+        private void SelectRoom(string? dormId)
+        {
+            _selectedDormId = dormId;
+
+            RenderRoomList();
+            RefreshActiveTab();
+        }
+
+        private void RefreshActiveTab()
+        {
+            if(_assignGrid == null)
+            {
+                return;
+            }
+            switch(_activeTabKey)
+            {
+                case "assign":
+                    _assignPage = RenderGrid(_FilterAssign(), _assignPg, 1, _assignGrid,
+                        r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
+                    break;
+                case "waiting":
+                    _waitingPage = RenderGrid(_FilterWaiting(), _waitingPg, 1, _waitingGrid,
+                        r => _waitingGrid.Rows.Add(r.studentName, r.dormitoryRoomName));
+                    break;
+                case "inout":
+                    _inOutPage = RenderGrid(_FilterInOut(), _inOutPg, 1, _inOutGrid,
+                        r => _inOutGrid.Rows.Add(r.studentName, r.dormitoryRoomName, r.checkIn, r.checkOut));
+                    break;
+            }
+        }
+
+        private List<DormAssignDto> _FilterAssign() =>
+            _selectedDormId == null ? _assignData
+            : _assignData.Where(r => r.dormitoryId == _selectedDormId).ToList();
+
+        private List<DormInOutDto> _FilterWaiting() =>
+            _selectedDormId == null ? _waitingData
+            : _waitingData.Where(r => r.dormitoryId == _selectedDormId).ToList();
+
+        private List<DormInOutDto> _FilterInOut() =>
+            _selectedDormId == null ? _inOutData
+            : _inOutData.Where(r => r.dormitoryId == _selectedDormId).ToList();
+
+        // ──────── 공통 그리드 렌더 ──────────────────────────────────
+        private static List<T> RenderGrid<T>(List<T> data, Pagination pg, int page, AppDataGrid grid, Action<T> addRow)
+        {
+            pg.TotalCount = data.Count;
+            int size = pg.PageSize;
+            int total = Math.Max(1, (int)Math.Ceiling(data.Count / (double)size));
+            page = Math.Clamp(page, 1, total);
+            pg.PageIndex = page;
+
+            var items = data.Skip((page - 1) * size).Take(size).ToList();
             grid.SuspendLayout();
             grid.Rows.Clear();
-            foreach (var item in pageItems)
-                addRow(item);
+            foreach (var item in items) addRow(item);
             grid.ResumeLayout();
-
-            return pageItems;
+            return items;
         }
 
-        private AppDataGrid CreateAssignGrid()
-        {
-            var grid = new AppDataGrid();
-            grid.Columns.Add("studentName", "이름");
-            grid.Columns.Add("eduId", "교육Id");
-            grid.Columns.Add("phone", "연락처");
-            grid.Columns.Add("dormitoryRoomName", "호실");
-            grid.Columns.Add("assignStatus", "배정상태");
-            grid.AddTextActionColumns(true, false);
-            // 생성된 칼럼의 텍스트만 변경
-            if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn editCol)
-            {
-                editCol.Text = "배정";
-            }
-            grid.ActionClicked += OnRowActionAssign;
-            grid.CellFormatting += OnCellFormatting;
-            return grid;
-        }
-
-        private AppDataGrid CreateWaitingGrid()
-        {
-            var grid = new AppDataGrid();
-            grid.Columns.Add("studentName", "이름");
-            grid.Columns.Add("dormitoryRoomName", "호실");
-            grid.AddTextActionColumns(true, false);
-            // 생성된 칼럼의 텍스트만 변경
-            if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn editCol)
-            {
-                editCol.Text = "입실";
-            }
-            grid.ActionClicked += OnRowActionWaiting;
-            grid.CellFormatting += OnCellFormatting;
-            return grid;
-        }
-
-        private AppDataGrid CreateDormInOutGrid()
-        {
-            var grid = new AppDataGrid();
-            grid.Columns.Add("studentName", "이름");
-            grid.Columns.Add("dormitoryRoomName", "호실");
-            grid.Columns.Add("checkIn", "입실");
-            grid.Columns.Add("checkOut", "퇴실");
-            grid.AddTextActionColumns(true, false);
-            grid.ActionClicked += OnRowActionDormOut;
-            grid.CellFormatting += OnCellFormatting;
-
-            return grid;
-        }
-        
-        // 생활관 배정 현황 RowAction
+        // ──────── Row 액션 핸들러 ──────────────────────────────────
         private async void OnRowActionAssign(object? sender, TableActionEventArgs e)
         {
-            Action<DormAssignDto> addAssignRow = a => _assignGrid.Rows.Add(a.studentName, a.eduId, a.phone, a.dormitoryRoomName, a.assignStatus);
-            if (e.RowIndex < 0 || e.RowIndex >= _assignPageItems.Count) return;
-            var target = _assignPageItems[e.RowIndex];
+            if (e.RowIndex < 0 || e.RowIndex >= _assignPage.Count || e.Action != TableAction.Edit) return;
+            var target = _assignPage[e.RowIndex];
 
-            if (e.Action == TableAction.Edit)
+            var edited = DormAssignModal.Show(this.FindForm(), target);
+            if (edited == null) return;
+
+            await RunWithOverlay("수정 중...", async () =>
             {
-                var edited = DormAssignModal.Show(this.FindForm(), target);
-                if (edited == null) return;
-                var overlay = LoadingOverlay.Create(bodyPanel, "수정 중...");
-                _adminDormitoryController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
-                try
+                var res = await _adminDormitoryController.UpdateDormId(target.studentId, edited);
+                if (res?.Status == 200)
                 {
-                    // TODO: API 수정 — await new AdminStudentController().UpdateStudent(target.studentId, edited);
-                    var res = await _adminDormitoryController.UpdateDormId(target.studentId, edited);
-                    if (res?.Status == 200)
-                    {
-                        var idx = _assignData.IndexOf(target);
-                        if (idx >= 0) _assignData[idx] = edited;
-                        LoadDormView(showOverlay: false);
-                    }
-                    else
-                    {
-                        MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-
+                    var idx = _assignData.IndexOf(target);
+                    if (idx >= 0) _assignData[idx] = edited;
+                    _ = LoadAll(showOverlay: false);
                 }
-                catch (ApiException ex)
-                {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    _adminDormitoryController.OnRetry = null;
-                    overlay.Close();
-                    overlay.Dispose();
-                }
-            }
+                else MessageBox.Show(res?.Message ?? "수정에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            });
         }
 
-        // 생활관 대기 현황 RowAction
         private async void OnRowActionWaiting(object? sender, TableActionEventArgs e)
         {
-            Action<DormInOutDto> waitingRow = d => _waitingGrid.Rows.Add(d.studentName, d.dormitoryRoomName);
-            if (e.RowIndex < 0 || e.RowIndex >= _waitingPageItems.Count) return;
-            var target = _waitingPageItems[e.RowIndex];
+            if (e.RowIndex < 0 || e.RowIndex >= _waitingPage.Count || e.Action != TableAction.Edit) return;
+            var target = _waitingPage[e.RowIndex];
 
-            if (e.Action == TableAction.Edit)
+            if (!ConfirmModal.Show(this.FindForm(), "입실 확인",
+                    $"{target.studentName} 학생을 입실 처리하시겠습니까?", "입실", ButtonVariant.Primary))
+                return;
+
+            await RunWithOverlay("처리 중...", async () =>
             {
-                if (!ConfirmModal.Show(this.FindForm(), "입실 확인", $"{target.studentName} 학생을 입실 처리하시겠습니까?", "입실", ButtonVariant.Primary))
-                    return;
-
-                var overlay = LoadingOverlay.Create(bodyPanel, "처리 중...");
-                _adminDormitoryController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
-                try
-                {
-                    var dormitoryDto = new DormitoryDto
-                    {
-                        dormitoryId = target.dormitoryId
-                    };
-                    var res = await _adminDormitoryController.UpdateDormCurrentCnt(target.studentId, dormitoryDto);
-                    if (res?.Status == 200)
-                    {
-                        // 삭제되면 입실 Grid에서 숨기기(DB 삭제x)
-                        _waitingData.Remove(target);
-                        LoadDormView(showOverlay: false);
-                    }
-                    else
-                    {
-                        MessageBox.Show(res?.Message ?? "처리에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                catch (ApiException ex)
-                {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    _adminDormitoryController.OnRetry = null;
-                    overlay.Close();
-                    overlay.Dispose();
-                }
-            }
+                var res = await _adminDormitoryController.UpdateDormCurrentCnt(target.studentId,
+                              new DormitoryDto { dormitoryId = target.dormitoryId });
+                if (res?.Status == 200) _ = LoadAll(showOverlay: false);
+                else MessageBox.Show(res?.Message ?? "처리에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            });
         }
-        // 생활관 입실 현황 RowAction
+
         private async void OnRowActionDormOut(object? sender, TableActionEventArgs e)
         {
-            Action<DormInOutDto> dormInRow = d => _dormInOutGrid.Rows.Add(d.studentName, d.dormitoryRoomName, d.dorm);
-            if (e.RowIndex < 0 || e.RowIndex >= _dormInOutPageItems.Count) return;
-            var target = _dormInOutPageItems[e.RowIndex];
+            if (e.RowIndex < 0 || e.RowIndex >= _inOutPage.Count || e.Action != TableAction.Edit) return;
+            var target = _inOutPage[e.RowIndex];
 
-            if (e.Action == TableAction.Edit)
+            if (!ConfirmModal.Show(this.FindForm(), "퇴실 확인",
+                    $"{target.studentName} 학생을 퇴실 처리하시겠습니까?", "퇴실", ButtonVariant.Danger))
+                return;
+
+            await RunWithOverlay("처리 중...", async () =>
             {
-                if (!ConfirmModal.Show(this.FindForm(), "퇴실 확인", $"{target.studentName} 학생을 퇴실 처리하시겠습니까?", "퇴실", ButtonVariant.Danger))
-                    return;
-
-                var overlay = LoadingOverlay.Create(bodyPanel, "처리 중...");
-                _adminDormitoryController.OnRetry = (attempt, max) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {attempt}/{max}");
-                try
-                {
-                    var dormitoryDto = new DormitoryDto
-                    {
-                        dormitoryId = target.dormitoryId
-                    };
-                    var res = await _adminDormitoryController.UpdateDormCurrentCntDown(target.studentId, dormitoryDto);
-                    if (res?.Status == 200)
-                    { 
-                        LoadDormView(showOverlay: false);
-                    }
-                    else
-                    {
-                        MessageBox.Show(res?.Message ?? "처리에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                catch (ApiException ex)
-                {
-                    MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    _adminDormitoryController.OnRetry = null;
-                    overlay.Close();
-                    overlay.Dispose();
-                }
-            }
-        }   
-
-       private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.RowIndex < 0) return;
-            if (sender is not AppDataGrid grid) return;
-            if (grid.Columns[e.ColumnIndex].Name == "dormitoryRoomName" || grid.Columns[e.ColumnIndex].Name == "phone")
-            {
-                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            }
-        }
-
-        private Panel CreateGridPanel(string title, int x, int y, int width, int height)
-        {
-            var panel = new Panel
-            {
-                Location = new Point(x, y),
-                Size = new Size(width, height),
-                BackColor = Color.White,
-                Padding = new Padding(10, 35, 10, 0)
-            };
-
-            panel.Paint += (s, e) =>
-            {
-                using var pen = new Pen(Color.FromArgb(226, 232, 240), 1);
-                e.Graphics.DrawRectangle(pen, 0, 0, panel.Width - 1, panel.Height - 1);
-            };
-
-            panel.Controls.Add(new Label
-            {
-                Text = title,
-                Font = new Font("맑은 고딕", 9F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(15, 23, 42),
-                Location = new Point(12, 10),
-                AutoSize = true
+                var res = await _adminDormitoryController.UpdateDormCurrentCntDown(target.studentId,
+                              new DormitoryDto { dormitoryId = target.dormitoryId });
+                if (res?.Status == 200) _ = LoadAll(showOverlay: false);
+                else MessageBox.Show(res?.Message ?? "처리에 실패했습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
             });
-
-            return panel;
         }
-        private void ClearBodyPanel()
+
+        // ──────── 공통 오버레이 래퍼 ──────────────────────────────────
+        private async Task RunWithOverlay(string msg, Func<Task> action)
         {
-            var controls = bodyPanel.Controls.OfType<Control>().ToList();
-            bodyPanel.Controls.Clear();
-            foreach (var c in controls)
-                c.Dispose();
+            var overlay = LoadingOverlay.Create(bodyPanel, msg);
+            _adminDormitoryController.OnRetry = (a, m) => overlay.UpdateMessage($"서버 연결 중...\n재시도 {a}/{m}");
+            try
+            {
+                await action();
+            }
+            catch (ApiException ex) { if (!IsDisposed) MessageBox.Show(ex.Message, "서버 오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) { if (!IsDisposed) MessageBox.Show($"요청 중 오류가 발생했습니다.\n{ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally
+            {
+                _adminDormitoryController.OnRetry = null;
+                overlay.Close();
+                overlay.Dispose();
+            }
+        }
+
+        // ──────── 셀 포멧 ──────────────────────────────────
+        private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || sender is not AppDataGrid grid) return;
+            var col = grid.Columns[e.ColumnIndex].Name;
+            if (col is "dormitoryRoomName" or "phone")
+                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            if (col == "dormitoryRoomName" && e.Value is string room && !string.IsNullOrEmpty(room))
+            {
+                e.Value = room + "호";
+                e.FormattingApplied = true;
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
 {
     public partial class TabStrip : UserControl
     {
+        private readonly Dictionary<Button, string> _buttonsKeys = new();
         private readonly Dictionary<string, Panel> _panels = new();
         private string? _activeKey;
         private bool _runtimeTabs;
@@ -34,9 +35,11 @@ namespace EDU_HUB_AI.Config.Component.Layout
             _panels[key] = wrapper;
             panelContent.Controls.Add(wrapper);
 
-            var tabBtn = ButtonStyles.Create(title, ButtonVariant.Ghost, small: true);
-            tabBtn.Margin = new Padding(0, 0, 4, 0);
-            tabBtn.Tag = key;
+            var tabBtn = ButtonStyles.Create(title, ButtonVariant.Ghost, small: false);
+            tabBtn.AutoSize = true;
+            tabBtn.MinimumSize = new Size(100, 32);
+            tabBtn.Margin = new Padding(0, 0, 8, 0);
+            _buttonsKeys[tabBtn] = key;
             tabBtn.Click += (_, _) => SelectTab(key);
             flowTabBar.Controls.Add(tabBtn);
 
@@ -52,10 +55,11 @@ namespace EDU_HUB_AI.Config.Component.Layout
             foreach (Control c in flowTabBar.Controls)
             {
                 if (c is not Button btn) continue;
-                if (btn.Tag is string tabKey)
+                if (!_buttonsKeys.TryGetValue(btn, out var tabKey))
                 {
-                    ButtonStyles.Apply(btn, tabKey == key ? ButtonVariant.Primary : ButtonVariant.Ghost, small: true);
+                    continue;
                 }
+                ButtonStyles.Apply(btn, tabKey == key ? ButtonVariant.Primary : ButtonVariant.Ghost, small: false);
             }
 
             foreach (var (k, panel) in _panels)
