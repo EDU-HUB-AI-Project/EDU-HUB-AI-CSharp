@@ -422,14 +422,16 @@ namespace EDU_HUB_AI.View
                     try
                     {
                         string filePath = openFileDialog.FileName;
-                        DataTable dt = excelImport.ExcelImporter(filePath);
+                        DataTable dt = excelImport.ExcelImporter<AttendDto>(filePath);
                         List<AttendDto> list = new List<AttendDto>();
                         foreach (DataRow row in dt.Rows)
                         {
-                            string studentId = row[0]?.ToString();
-                            string attendDate = row[1]?.ToString();
-                            string status = row[2]?.ToString();
-                            string message = row[3]?.ToString();
+                            // dto 필드명으로 각 행의 데이터 가져오기
+                            // ExcelImporter에서 헤더명을 dto의 필드명으로 매핑을 함
+                            string studentId = row["studentId"]?.ToString();
+                            string attendDate = row["attendDate"]?.ToString();
+                            string status = row["status"]?.ToString();
+                            string message = row["message"]?.ToString();
                             if(string.IsNullOrEmpty(studentId))
                             {
                                 throw new Exception($"{dt.Rows.IndexOf(row) + 1}행 : 이름이 비어있습니다.");

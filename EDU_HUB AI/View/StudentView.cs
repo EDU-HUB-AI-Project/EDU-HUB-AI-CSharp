@@ -368,7 +368,7 @@ namespace EDU_HUB_AI.View
 
         private static List<StudentDto> ImportStudentsFromExcel(string filePath)
         {
-            var dt = new ExcelImport().ExcelImporter(filePath);
+            var dt = new ExcelImport().ExcelImporter<StudentDto>(filePath);
             var errors = new List<string>();
             var result = new List<StudentDto>();
 
