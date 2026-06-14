@@ -1,25 +1,16 @@
-﻿using EDU_HUB_AI.Config.Component.Basic;
-using EDU_HUB_AI.Config.Component.Data;
-using EDU_HUB_AI.Config.Component.Layout;
+﻿using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
-using Microsoft.VisualBasic;
-using NPOI.HSSF.Util;
-using Org.BouncyCastle.Asn1.Cmp;
 
 namespace EDU_HUB_AI.View
 {
     partial class DormitoryView
     {
-       
         private System.ComponentModel.IContainer components = null;
 
-      
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
             base.Dispose(disposing);
         }
 
@@ -34,18 +25,15 @@ namespace EDU_HUB_AI.View
             bodyPanel.Dock = DockStyle.Fill;
             bodyPanel.BackColor = ThemeColors.Background;
             bodyPanel.Padding = new Padding(0);
-            bodyPanel.AutoScroll = true;
 
-            // ================ gird ======================
-                     
             // pageHeader1
             pageHeader1.Dock = DockStyle.Top;
-            pageHeader1.Size = new Size(1479, 100);
+            pageHeader1.Size = new Size(1479, 60);
             pageHeader1.BackColor = ThemeColors.HeaderBg;
             pageHeader1.Title = "생활관 배정 현황";
 
             // DormitoryView
-            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(bodyPanel);
             Controls.Add(pageHeader1);

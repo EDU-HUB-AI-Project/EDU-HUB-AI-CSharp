@@ -32,8 +32,8 @@ namespace EDU_HUB_AI.Config.Component.Layout
             flowTabBar.Dock = DockStyle.Top;
             flowTabBar.Location = new Point(0, 0);
             flowTabBar.Name = "flowTabBar";
-            flowTabBar.Padding = new Padding(0, 0, 0, 8);
-            flowTabBar.Size = new Size(480, 40);
+            flowTabBar.Padding = new Padding(8, 10, 8, 10);
+            flowTabBar.Size = new Size(480, 52);
             flowTabBar.TabIndex = 0;
             flowTabBar.WrapContents = false;
             // 

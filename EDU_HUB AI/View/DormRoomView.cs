@@ -157,10 +157,22 @@ namespace EDU_HUB_AI.View
 
         private void OnCellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-
-            if (grid.Columns[e.ColumnIndex].Name == "dormitoryRoomName")
+            if (e.RowIndex < 0 || sender is not AppDataGrid grid) return;
+            var col = grid.Columns[e.ColumnIndex].Name;
+            if (col is "dormitoryRoomName" or "phone")
+                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            if (col == "dormitoryRoomName" && e.Value is string room && !string.IsNullOrEmpty(room))
             {
-                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                e.Value = room + "호";
+                e.FormattingApplied = true;
+            }
+            if (col is "checkIn" or "checkOut" && e.Value is string dt && !string.IsNullOrEmpty(dt))
+            {
+                if (DateTime.TryParse(dt, out var parsed))
+                {
+                    e.Value = parsed.ToString("yyyy-MM-dd HH:mm");
+                    e.FormattingApplied = true;
+                }
             }
         }
 
