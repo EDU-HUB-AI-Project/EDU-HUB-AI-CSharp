@@ -16,12 +16,23 @@ namespace EDU_HUB_AI.View
         private List<FacilityInfoDto> _pageItems = new();
         private readonly AdminFacilityInfoController _controller = new();
 
+        private string _sortColumn = "type";
+        private bool _sortAscending = true;
+
         public FacilityLocationView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplyTypeFilter();
+                RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -59,6 +70,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
+            grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
             grid.Focus();
         }
@@ -246,6 +258,21 @@ namespace EDU_HUB_AI.View
             _filtered = string.IsNullOrEmpty(type)
                 ? _all.ToList()
                 : _all.Where(f => string.Equals(f.facilityType, type, StringComparison.OrdinalIgnoreCase)).ToList();
+            ApplySort();
+        }
+
+        private void ApplySort()
+        {
+            if (string.IsNullOrEmpty(_sortColumn)) return;
+            Func<FacilityInfoDto, object?> key = _sortColumn switch
+            {
+                "type" => f => f.facilityType,
+                "name" => f => f.name,
+                "location" => f => f.location,
+                "detail" => f => DetailLabel(f),
+                _ => f => null
+            };
+            _filtered = _sortAscending ? _filtered.OrderBy(key).ToList() : _filtered.OrderByDescending(key).ToList();
         }
 
         private static string DetailLabel(FacilityInfoDto f)

@@ -27,16 +27,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             ModalTitle = source == null ? "출석부 등록" : "출석부 수정";
             ConfirmText = "저장";
 
-            //_txtStudentId = new TextField
-            //{
-            //    FieldLabel = source == null ? "학생 ID" : "학생",
-            //    Text = source == null ? "" : (source.studentName ?? source.studentId ?? ""),
-            //    Placeholder = source == null ? "STU_xxxxx" : "",
-            //    ReadOnly = source != null,
-            //    Dock = DockStyle.Fill,
-            //    Margin = new Padding(0, 0, 0, 14)
-            //};
-
             _cmbStudent = new ComboField
             {
                 FieldLabel = "학생",
@@ -90,7 +80,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
             for (int i = 0; i < 5; i++)
                 stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            //stack.Controls.Add(_txtStudentId, 0, 0);
             stack.Controls.Add(_cmbStudent, 0, 0);
             stack.Controls.Add(_cmbEduId, 0, 1);
             stack.Controls.Add(_dtpAttendDate, 0, 2);

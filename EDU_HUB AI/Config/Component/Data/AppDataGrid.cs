@@ -47,6 +47,11 @@ namespace EDU_HUB_AI.Config.Component.Data
 
         public event EventHandler<TableActionEventArgs>? ActionClicked;
         public event EventHandler<PageNavigation>? PageNavigationRequested;
+        public event EventHandler<(string Column, bool Ascending)>? SortChanged;
+
+        private string? _sortColumn;
+        private bool _sortAscending = true;
+
         // 공통 날짜 형식
         private static readonly string[] DateFormats =
         {
@@ -162,6 +167,15 @@ namespace EDU_HUB_AI.Config.Component.Data
             }
         }
 
+        protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
+        {
+            base.OnColumnAdded(e);
+            var name = e.Column.Name;
+            e.Column.SortMode = (name == EditColumnName || name == DeleteColumnName || name.StartsWith(CustomLinkPrefix))
+                              ? DataGridViewColumnSortMode.NotSortable
+                              : DataGridViewColumnSortMode.Programmatic;
+        }
+
         public void AddCustomLinkColumn(string key, string headerText, string linkText)
         {
             Columns.Add(new DataGridViewLinkColumn
@@ -241,6 +255,44 @@ namespace EDU_HUB_AI.Config.Component.Data
                 emptyRect,
                 ThemeColors.TextMuted, 
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+        }
+
+        protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
+        {
+            base.OnColumnHeaderMouseClick(e);
+            var col = Columns[e.ColumnIndex];
+
+            if(col.SortMode == DataGridViewColumnSortMode.NotSortable)
+            {
+                return;
+            }
+            if(_sortColumn == col.Name)
+            {
+                _sortAscending = !_sortAscending;
+            }
+            else
+            {
+                _sortColumn = col.Name;
+                _sortAscending = true;
+            }
+
+            foreach(DataGridViewColumn c in Columns)
+            {
+                c.HeaderCell.SortGlyphDirection = SortOrder.None;
+            }
+            col.HeaderCell.SortGlyphDirection = _sortAscending ? SortOrder.Ascending : SortOrder.Descending;
+
+            SortChanged?.Invoke(this, (_sortColumn, _sortAscending));
+        }
+
+        public void SetInitialSort(string columnName, bool ascending = true)
+        {
+            _sortColumn = columnName;
+            _sortAscending = ascending;
+            if(Columns.Contains(columnName))
+            {
+                Columns[columnName].HeaderCell.SortGlyphDirection = ascending ? SortOrder.Ascending : SortOrder.Descending;
+            }
         }
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)

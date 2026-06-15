@@ -4,6 +4,7 @@ using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
+using System.Text.RegularExpressions;
 
 namespace EDU_HUB_AI.Config.Component.Domain
 {
@@ -148,6 +149,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
             {
                 _txtName.HasError = true;
                 MessageBox.Show("이름을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (!Regex.IsMatch(name, @"^[가-힣]{2,}$"))
+            {
+                _txtName.HasError = true;
+                MessageBox.Show("이름은 한글만 입력 가능하며, 최소 2자 이상이어야 합니다.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             _txtName.HasError = false;

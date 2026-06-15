@@ -14,7 +14,7 @@ namespace EDU_HUB_AI.Config.Component.Data
         {
             InitializeComponent();
             DoubleBuffered = true;
-            //EnableDoubleBuffer(flowPages);
+            EnableDoubleBuffer(flowPages);
             ApplyTheme();
             if (DesignTimeHelper.IsDesignMode(this))
                 ShowDesignPreview();
@@ -70,8 +70,10 @@ namespace EDU_HUB_AI.Config.Component.Data
             flowPages.SuspendLayout();
             lblInfo.Text = $"총 {_totalCount}건 · {_pageIndex} / {TotalPages} 페이지";
             BuildPageButtons();
-            flowPages.ResumeLayout();
-            ResumeLayout();
+            flowPages.ResumeLayout(false);
+            
+            
+            ResumeLayout(false);
             LayoutControls();
         }
 
@@ -232,5 +234,18 @@ namespace EDU_HUB_AI.Config.Component.Data
         public void GoToPrev() => GoToPage(_pageIndex - 1);
         public void GoToNext() => GoToPage(_pageIndex + 1);
         public void GoToLast() => GoToPage(TotalPages);
+
+        // ── 더블버퍼 ──────────────
+        private static void EnableDoubleBuffer(Control control)
+        {
+            typeof(Control).InvokeMember(
+                "DoubleBuffered",
+                System.Reflection.BindingFlags.SetProperty |
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic,
+                null, control, new object[] { true }
+                );
+        }
+
     }
 }

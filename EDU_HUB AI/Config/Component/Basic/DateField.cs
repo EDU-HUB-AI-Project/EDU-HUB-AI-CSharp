@@ -1,15 +1,6 @@
 ﻿using EDU_HUB_AI.Config.Theme;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
 namespace EDU_HUB_AI.Config.Component.Basic
 {
     [ToolboxItem(true)]
@@ -75,12 +66,19 @@ namespace EDU_HUB_AI.Config.Component.Basic
 
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            stack.RowStyles.Add(new RowStyle(SizeType.Absolute, InputHeight));
+            stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             stack.Controls.Add(_label, 0, 0);
             stack.Controls.Add(_shell, 0, 1);
 
             Controls.Add(stack);
             Size = new Size(200, 54);
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            _shell.Height = _dtp.Height;
+            UpdateHeight();
         }
 
         // ── 속성 ───────────────────────────
@@ -173,10 +171,11 @@ namespace EDU_HUB_AI.Config.Component.Basic
 
         private void PaintBorder(PaintEventArgs e)
         {
+            if (_focused) return;
             var bounds = new Rectangle(0, 0, _shell.Width - 1, _shell.Height - 1);
             using var fill = new SolidBrush(ThemeColors.Surface);
             e.Graphics.FillRectangle(fill, bounds);
-            using var pen = new Pen(_focused ? ThemeColors.Primary : ThemeColors.Border);
+            using var pen = new Pen(ThemeColors.Border);
             e.Graphics.DrawRectangle(pen, bounds);
         }
 

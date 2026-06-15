@@ -16,12 +16,25 @@ namespace EDU_HUB_AI.View
         private List<DormitoryDto> _pageItems = new();
         private List<DormitoryDto> _fiteredList = new();
         private readonly AdminDormitoryController _adminDormitoryController = new();
+
+        private string _sortColumn = "dormitoryRoomName";
+        private bool _sortAscending = true;
+
         public DormRoomView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplySort();
+                RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
             pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
@@ -34,6 +47,7 @@ namespace EDU_HUB_AI.View
             base.OnLoad(e);
             FixDockOrder();
             await LoadCmb();
+            grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
         }
 
@@ -58,6 +72,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                ApplySort();
                 RenderPage(page);
             }
             catch (ApiException ex)
@@ -174,6 +189,18 @@ namespace EDU_HUB_AI.View
                     e.FormattingApplied = true;
                 }
             }
+
+            if(col == "currentCount" && e.RowIndex < _pageItems.Count)
+            {
+                var item = _pageItems[e.RowIndex];
+                if(item.maxCount > 0 && item.currentCount >= item.maxCount)
+                {
+                    e.CellStyle.BackColor = ThemeColors.DangerBg;
+                    e.CellStyle.ForeColor = ThemeColors.DangerText;
+                    e.CellStyle.SelectionBackColor = ThemeColors.DangerBg;
+                    e.CellStyle.SelectionForeColor = ThemeColors.DangerText;
+                }
+            }
         }
 
         private async Task LoadCmb()
@@ -181,30 +208,44 @@ namespace EDU_HUB_AI.View
             var response = await _adminDormitoryController.GetDormRoomAssignStatus();
             if (response?.Status == 200)
             {
-                // 출석 전체조회 응답 데이터를 활용하여 콤보박스 목록을 구성
-                // 별도 API 호출 없이 LINQ로 중복 제거 후 추출
-                // 학생 콤보박스
-                var room = response.Data
-                    .Select(x => new { x.dormitoryId, x.dormitoryRoomName})
-                    .DistinctBy(x => x.dormitoryId)
-                    .ToList();
-                room.Insert(0, new { dormitoryId = "", dormitoryRoomName = "전체" });
-                cmbDormRoom.DataSource = room;
-                cmbDormRoom.DisplayMember = "dormitoryRoomName";
-                cmbDormRoom.ValueMember = "dormitoryId";
+                var floors = response.Data
+                                .Where(x => !string.IsNullOrEmpty(x.dormitoryRoomName))
+                                .Select(x => x.dormitoryRoomName[0].ToString())
+                                .Distinct()
+                                .OrderBy(f => f)
+                                .Select(f => new { Floor = f, Label = f + "층" })
+                                .ToList();
+
+                floors.Insert(0, new { Floor = "", Label = "전체" });
+
+                cmbDormRoom.DataSource = floors;
+                cmbDormRoom.DisplayMember = "Label";
+                cmbDormRoom.ValueMember = "Floor";
             }
         }
 
         private void ApplySearchFilter()
         {
-            var result = _all.AsEnumerable();
-
-            var dormitoryId = cmbDormRoom.SelectedValue?.ToString();
-            if (!string.IsNullOrEmpty(dormitoryId))
-            {
-                result = result.Where(d => d.dormitoryId == dormitoryId);
-            }
+            var floor = cmbDormRoom.SelectedValue?.ToString();
+            var result = string.IsNullOrEmpty(floor)
+                ? _all.AsEnumerable()
+                : _all.Where(d => !string.IsNullOrEmpty(d.dormitoryRoomName) && d.dormitoryRoomName.StartsWith(floor));
             _fiteredList = result.ToList();
+            ApplySort();
+        }
+
+        private void ApplySort()
+        {
+            if (string.IsNullOrEmpty(_sortColumn)) return;
+            Func<DormitoryDto, object?> key = _sortColumn switch
+            {
+                "dormitoryRoomName" => d => d.dormitoryRoomName,
+                "currentCount" => d => (object?)d.currentCount,
+                "maxCount" => d => (object?)d.maxCount,
+                _ => d => null
+            };
+            _all = _sortAscending ? _all.OrderBy(key).ToList() : _all.OrderByDescending(key).ToList();
+            _fiteredList = _sortAscending ? _fiteredList.OrderBy(key).ToList() : _fiteredList.OrderByDescending(key).ToList();
         }
     }
 }
