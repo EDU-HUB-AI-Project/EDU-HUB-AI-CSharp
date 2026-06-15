@@ -61,7 +61,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 AutoScroll = false,
-                Padding = new Padding(0, 8, 0, 20),
+                Padding = new Padding(0, 16, 0, 16),
                 BackColor = ThemeColors.Sidebar
             };
 
@@ -72,8 +72,8 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 (MenuKey.Trainees, "교육생 정보", "users"),
                 (MenuKey.Attendance, "출석 현황", "clipboard-check"),
                 (MenuKey.Dormitory, "생활관 배정", "bed-double"),
-                (MenuKey.DormRoom, "생활관 관리", "dormitory-room"),
-                (MenuKey.EduInfo, "교육과정 관리", "edu-info"),
+                (MenuKey.DormRoom, "생활관 관리", "Dormitory-room"),
+                (MenuKey.EduInfo, "교육과정 관리", "eduInfo"),
                 (MenuKey.Subject, "과목 관리", "subject")
             ]);
             AddGroup(stack, "콘텐츠",
@@ -95,24 +95,22 @@ namespace EDU_HUB_AI.Config.Component.Layout
 
         private Control CreateBrand()
         {
-            const int leftPad = 20;
-            const int logoHeight = 36;
             var panel = new Panel
             {
                 Width = NavWidth,
-                Height = 56,
-                Margin = new Padding(0, 4, 0, 12),
+                Height = 52,   // 이미지 크기
+                Margin = new Padding(0, 0, 0, 16),
                 BackColor = ThemeColors.Sidebar
             };
-            var logo = Properties.Resources.logoNav;
-            panel.Paint += (_, e) =>
+            var pic = new PictureBox
             {
-                if (logo == null) return;
-                float scale = (float)logoHeight / logo.Height;
-                int w = (int)(logo.Width * scale);
-                int y = (panel.Height - logoHeight) / 2;
-                e.Graphics.DrawImage(logo, leftPad, y, w, logoHeight);
+                Dock = DockStyle.Fill,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BackColor = ThemeColors.Sidebar,
+                Image = Properties.Resources.logoNav,
+                Padding = new Padding(0, 4, 0, 4)
             };
+            panel.Controls.Add(pic);
             return panel;
         }
 
@@ -125,10 +123,9 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 ForeColor = ThemeColors.SidebarGroupText,
                 AutoSize = false,
                 Width = NavWidth,
-                Height = 32,
-                Margin = new Padding(0, 8, 0, 2),
-                Padding = new Padding(20, 0, 0, 0),
-                TextAlign = ContentAlignment.MiddleLeft
+                Height = 44,
+                Padding = new Padding(16, 22, 0, 0),
+                TextAlign = ContentAlignment.TopLeft
             });
 
             foreach (var (key, text, icon) in items)
@@ -146,9 +143,9 @@ namespace EDU_HUB_AI.Config.Component.Layout
             var panel = new Panel
             {
                 Width = NavWidth,
-                Height = 44,
+                Height = 52,
                 Cursor = Cursors.Hand,
-                Margin = new Padding(0, 2, 0, 2),
+                Margin = new Padding(0, 1, 0, 1),
                 BackColor = ThemeColors.Sidebar,
             };
 
@@ -186,18 +183,18 @@ namespace EDU_HUB_AI.Config.Component.Layout
             if(active)
             {
                 using var barBrush = new SolidBrush(ThemeColors.Primary);
-                FillRoundedRect(g, barBrush, new Rectangle(0, 10, 3, panel.Height - 20), 2);
+                FillRoundedRect(g, barBrush, new Rectangle(0, 12, 3, panel.Height - 24), 2);
             }
 
             // 아이콘
             var iconColor = active ? Color.White
               : hover ? ThemeColors.SidebarTextHover   
               : ThemeColors.SidebarText;
-            var icon = IconHelper.Get(_iconNames[key], 18, iconColor);
+            var icon = IconHelper.Get(_iconNames[key], 20, iconColor);
 
             if(icon != null)
             {
-                g.DrawImage(icon, 20, (panel.Height - 18) / 2, 18, 18);
+                g.DrawImage(icon, 16, (panel.Height - 20) / 2, 20, 20);
             }
 
             // 텍스트
@@ -211,7 +208,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
 
             using var textBrush = new SolidBrush(textColor);
             g.DrawString(text, font, textBrush,
-                new RectangleF(48, 0, panel.Width - 92, panel.Height),
+                new RectangleF(46, 0, panel.Width - 96, panel.Height),
                 new StringFormat { LineAlignment = StringAlignment.Center, Trimming = StringTrimming.EllipsisCharacter });
 
             // 단축키 힌트
@@ -220,7 +217,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 using var hintFont = ThemeFonts.NavGroup;
                 using var hintBrush = new SolidBrush(ThemeColors.SidebarGroupText);
                 g.DrawString(hint, hintFont, hintBrush
-                    , new RectangleF(panel.Width - 44, 0, 32, panel.Height)
+                    , new RectangleF(panel.Width - 46, 0, 38, panel.Height)
                     , new StringFormat
                     {
                         LineAlignment = StringAlignment.Center,
