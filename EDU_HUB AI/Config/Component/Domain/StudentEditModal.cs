@@ -105,6 +105,15 @@ namespace EDU_HUB_AI.Config.Component.Domain
             stack.Controls.Add(_cmbEdu, 0, 2);
             stack.Controls.Add(_togDorm, 0, 3);
 
+            _txtName.Required = true;
+            _txtName.TextChanged += (_, _) => _txtName.HasError = false;
+            _txtPhone.Required = true;
+            _txtPhone.TextChanged += (_, _) => _txtPhone.HasError = false;
+            _txtBirth.Required = true;
+            _txtBirth.TextChanged += (_, _) => _txtBirth.HasError = false;
+            _cmbEdu.Required = true;
+
+
             Body.Controls.Add(stack);
             SetCardWidth(500);
         }
@@ -167,7 +176,13 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _txtBirth.HasError = false;
 
             var validPrefixes = new[] {"010", "011" };
-            if(!string.IsNullOrEmpty(phone) && (!phone.All(char.IsDigit) || phone.Length != 11 || !validPrefixes.Any(p => phone.StartsWith(p))))
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                _txtPhone.HasError = true;
+                MessageBox.Show("연락처를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (!phone.All(char.IsDigit) || phone.Length != 11 || !validPrefixes.Any(p => phone.StartsWith(p)))
             {
                 _txtPhone.HasError = true;
                 MessageBox.Show("유효한 연락처를 입력해주세요.\n예) 010-1234-5678", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -175,7 +190,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             }
             _txtPhone.HasError = false;
 
-            if(string.IsNullOrEmpty(eduId))
+            if (string.IsNullOrEmpty(eduId))
             {
                 MessageBox.Show("교육과정을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;

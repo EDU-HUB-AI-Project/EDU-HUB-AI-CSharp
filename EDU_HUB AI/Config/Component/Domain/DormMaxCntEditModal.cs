@@ -1,19 +1,7 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
-using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
-using EDU_HUB_AI.View;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace EDU_HUB_AI.Config.Component.Domain
 {
@@ -22,8 +10,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
         private readonly DormitoryDto? _source;
         private readonly TextField _txtDormitoryID;
         private readonly TextField _txtRoomMaxCnt;
-        private readonly TextField _txtModifyMax;
-        private readonly AdminDormitoryController _adminDormitoryController = new();
 
         public DormitoryDto? Result { get; private set; }
         public DormMaxCntEditModal(DormitoryDto? source)
@@ -43,9 +29,13 @@ namespace EDU_HUB_AI.Config.Component.Domain
             };
 
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            _txtDormitoryID = AddField(stack, "생활관 id", source?.dormitoryId, "", 0);
-            _txtDormitoryID.ReadOnly = true;
+            var roomName = source?.dormitoryRoomName != null ? source.dormitoryRoomName + "호" : "미지정";
+            _txtDormitoryID = AddField(stack, "호실명", roomName, "", 0);
+            _txtDormitoryID.Enabled = false;
             _txtRoomMaxCnt = AddField(stack, "최대 인원", source?.maxCount.ToString() ?? "미정", "", 1);
+            _txtRoomMaxCnt.Required = true;
+            _txtRoomMaxCnt.TextChanged += (_, _) => _txtRoomMaxCnt.HasError = false;
+
             Body.Controls.Add(stack);
         }
 
@@ -62,20 +52,25 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
+            _txtRoomMaxCnt.HasError = false;
+
             var maxCnt = _txtRoomMaxCnt.Text.Trim();
 
             if (maxCnt == null || maxCnt == "")
             {
+                _txtRoomMaxCnt.HasError = true;
                 MessageBox.Show("변경하려는 최대 인원을 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if(!int.TryParse(maxCnt, out int maxCount))
             {
+                _txtRoomMaxCnt.HasError = true;
                 MessageBox.Show("숫자만 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if(Convert.ToInt32(maxCnt) < _source?.currentCount)
             {
+                _txtRoomMaxCnt.HasError = true;
                 MessageBox.Show("현재 배정인원보다 작은 인원은 입력할 수 없습니다", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }

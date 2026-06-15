@@ -14,11 +14,13 @@ namespace EDU_HUB_AI.Config.Component.Basic
         private const int LabelGap = 6;
 
         private readonly Label _label;
+        private readonly Label _requiredMark;
         private readonly Panel _inputShell;
         private readonly TextBox _input;
 
         private bool _focused;
         private bool _hasError;
+        private bool _required;
 
         public TextField()
         {
@@ -35,6 +37,29 @@ namespace EDU_HUB_AI.Config.Component.Basic
                 BackColor = ThemeColors.Surface,
                 Margin = new Padding(0)
             };
+
+            _requiredMark = new Label
+            {
+                Text = "*",
+                Font = ThemeFonts.FieldLabel,
+                ForeColor = ThemeColors.Danger,
+                BackColor = ThemeColors.Surface,
+                AutoSize = true,
+                Margin = new Padding(2, 0, 0, 0),
+                Visible = false
+            };
+
+            var labelRow = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            labelRow.Controls.Add(_label);
+            labelRow.Controls.Add(_requiredMark);
 
             _inputShell = new Panel
             {
@@ -74,7 +99,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             stack.RowStyles.Add(new RowStyle(SizeType.Absolute, InputHeight));
-            stack.Controls.Add(_label, 0, 0);
+            stack.Controls.Add(labelRow, 0, 0);
             stack.Controls.Add(_inputShell, 0, 1);
 
             Controls.Add(stack);
@@ -91,6 +116,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
             {
                 _label.Text = value ?? "";
                 _label.Visible = _label.Text.Length > 0;
+                _requiredMark.Visible = _required && _label.Text.Length > 0;
                 UpdateHeight();
             }
         }
@@ -121,6 +147,18 @@ namespace EDU_HUB_AI.Config.Component.Basic
                 if (_hasError == value) return;
                 _hasError = value;
                 _inputShell.Invalidate();
+            }
+        }
+
+        [Category("EDU-HUB")]
+        [DefaultValue(false)]
+        public bool Required
+        {
+            get => _required;
+            set
+            {
+                _required = value;
+                _requiredMark.Visible = _required && _label.Text.Length > 0;
             }
         }
 

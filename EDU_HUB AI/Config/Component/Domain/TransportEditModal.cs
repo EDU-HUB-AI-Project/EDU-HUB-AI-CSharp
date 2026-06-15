@@ -52,6 +52,13 @@ namespace EDU_HUB_AI.Config.Component.Domain
             SelectType(source?.type ?? presetType);
             _cmbType.Enabled = !isEdit && string.IsNullOrWhiteSpace(presetType);
 
+            _txtDepartLocation.Required = true;
+            _txtDepartLocation.TextChanged += (_, _) => _txtDepartLocation.HasError = false;
+            _txtDestination.Required = true;
+            _txtDestination.TextChanged += (_, _) => _txtDestination.HasError = false;
+            _txtDepartTime.Required = true;
+            _txtDepartTime.TextChanged += (_, _) => _txtDepartTime.HasError = false;
+
             Body.Controls.Add(stack);
             UpdateArrivePanel();
         }
@@ -77,16 +84,19 @@ namespace EDU_HUB_AI.Config.Component.Domain
             }
             if (string.IsNullOrWhiteSpace(departLocation))
             {
+                _txtDepartLocation.HasError = true;
                 MessageBox.Show("출발 위치를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (string.IsNullOrWhiteSpace(destination))
             {
+                _txtDestination.HasError = true;
                 MessageBox.Show("목적지를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (string.IsNullOrWhiteSpace(departTime))
             {
+                _txtDepartTime.HasError = true;
                 MessageBox.Show("출발 시간을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }

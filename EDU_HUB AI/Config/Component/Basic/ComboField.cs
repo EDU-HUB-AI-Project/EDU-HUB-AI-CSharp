@@ -11,11 +11,13 @@ namespace EDU_HUB_AI.Config.Component.Basic
         private const int LabelGap = 6;
 
         private readonly Label _label;
+        private readonly Label _requiredMark;
         private readonly Panel _shell;
         private readonly ComboBox _combo;
 
         private bool _focused;
         private bool _hasError;
+        private bool _required;
         public ComboField()
         {
             InitializeComponent();
@@ -24,10 +26,32 @@ namespace EDU_HUB_AI.Config.Component.Basic
             Padding = new Padding(0);
 
             _label = BuildLabel();
+
+            _requiredMark = new Label
+            {
+                Text = " *",
+                Font = ThemeFonts.FieldLabel,
+                ForeColor = ThemeColors.Danger,
+                AutoSize = true,
+                Margin = new Padding(0),
+                Visible = false
+            };
+            var labelRow = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+            labelRow.Controls.Add(_label);
+            labelRow.Controls.Add(_requiredMark);
+
             _combo = BuildCombo();
             _shell = BuildShell(_combo);
 
-            Controls.Add(BuildStack(_label, _shell));
+            Controls.Add(BuildStack(labelRow, _shell));
             Size = new Size(165, 54);
         }
 
@@ -42,6 +66,17 @@ namespace EDU_HUB_AI.Config.Component.Basic
                 _label.Text = value ?? "";
                 _label.Visible = !string.IsNullOrEmpty(_label.Text);
                 UpdateHeight();
+            }
+        }
+
+        [Category("EDU-HUB"), DefaultValue(false)]
+        public bool Required
+        {
+            get => _required;
+            set
+            {
+                _required = value;
+                _requiredMark.Visible = _required && _label.Text.Length > 0;
             }
         }
 
@@ -119,7 +154,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
             return shell;
         }
 
-        private static TableLayoutPanel BuildStack(Label label, Panel shell)
+        private static TableLayoutPanel BuildStack(FlowLayoutPanel labelRow, Panel shell)
         {
             var stack = new TableLayoutPanel
             {
@@ -133,7 +168,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             stack.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             stack.RowStyles.Add(new RowStyle(SizeType.Absolute, InputHeight));
-            stack.Controls.Add(label, 0, 0);
+            stack.Controls.Add(labelRow, 0, 0);
             stack.Controls.Add(shell, 0, 1);
             return stack;
         }
