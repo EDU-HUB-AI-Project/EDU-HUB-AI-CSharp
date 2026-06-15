@@ -25,12 +25,23 @@ namespace EDU_HUB_AI.View
         private static readonly string[] PhonePrefixes = { "010", "011" };
         private bool _suppressFilter = false;
 
+        private string _sortColumn = "name";
+        private bool _sortAscending = true;
+
         public StudentView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplyFilter(); RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -78,6 +89,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
+            grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
             grid.Focus();
         }
@@ -461,6 +473,26 @@ namespace EDU_HUB_AI.View
                 result = result.Where(s => s.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+            ApplySort();
+        }
+
+        private void ApplySort()
+        {
+            if(string.IsNullOrEmpty(_sortColumn))
+            {
+                return;
+            }
+            Func<StudentDto, object?> key = _sortColumn switch
+            {
+                "name" => s => s.studentName,
+                "birth" => s => s.birthDate,
+                "phone" => s => s.phoneNumber,
+                "edu" => s => s.eduId,
+                "batch" => s => s.eduId,
+                "dorm" => s => s.dormYn,
+                _ => s => null
+            };
+            _filtered = _sortAscending ? _filtered.OrderBy(key).ToList() : _filtered.OrderByDescending(key).ToList();
         }
 
         // ── 이벤트 영역 ─────────────────────────────────

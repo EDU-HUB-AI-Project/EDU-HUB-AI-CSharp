@@ -22,8 +22,10 @@ namespace EDU_HUB_AI.View
         private List<ClassroomDto> _classrooms = new();
         private readonly AdminClassroomController _adminClassroomController = new AdminClassroomController();
 
-
         private bool _suppressFilter = false;
+
+        private string _sortColumn = "";
+        private bool _sortAscending = false;
 
         public SubjectView()
         {
@@ -31,6 +33,15 @@ namespace EDU_HUB_AI.View
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplyFilter();
+                RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -360,7 +371,39 @@ namespace EDU_HUB_AI.View
                 result = result.Where(s => s.subjectName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+            ApplySort();
         }
+
+        private void ApplySort()
+        {
+            if (string.IsNullOrEmpty(_sortColumn))
+            {
+                _filtered = _filtered
+                    .OrderBy(s => StatusOrder(EndYnLabel(s)))
+                    .ThenByDescending(s => s.startDate)
+                    .ToList();
+                return;
+            }
+            Func<SubjectDto, object?> key = _sortColumn switch
+            {
+                "subjectName" => s => s.subjectName,
+                "edu" => s => s.eduId,
+                "classroom" => s => s.classroomId,
+                "startDate" => s => s.startDate,
+                "endDate" => s => s.endDate,
+                "endYn" => s => EndYnLabel(s),
+                _ => s => null
+            };
+            _filtered = _sortAscending ? _filtered.OrderBy(key).ToList() : _filtered.OrderByDescending(key).ToList();
+        }
+
+        private static int StatusOrder(string status) => status switch
+        {
+            "진행중" => 0,
+            "예정" => 1,
+            "종료" => 2,
+            _ => 3
+        };
 
         // ===== ISearchFocusable =====
         public void FocusSearch() => txtSearch.Focus();

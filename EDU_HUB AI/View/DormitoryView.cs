@@ -43,6 +43,12 @@ namespace EDU_HUB_AI.View
         private Panel _roomListPanel = null!;
 
         private readonly AdminDormitoryController _adminDormitoryController = new();
+
+        // ── 정렬 ──────────────────────────────
+        private string _assignSortCol = "studentName"; private bool _assignSortAsc = true;
+        private string _waitingSortCol = "studentName"; private bool _waitingSortAsc = true;
+        private string _inOutSortCol = "studentName"; private bool _inOutSortAsc = true;
+
         public DormitoryView()
         {
             InitializeComponent();
@@ -166,12 +172,18 @@ namespace EDU_HUB_AI.View
                     grid.Columns.Add("assignStatus", "배정상태");
                     grid.AddTextActionColumns(true, false);
                     if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn c0) c0.Text = "배정";
+                    grid.SetInitialSort("studentName");
+                    grid.SortChanged += (_, s) =>
+                    {
+                        _assignSortCol = s.Column;
+                        _assignSortAsc = s.Ascending;
+                        RefreshActiveTab();
+                    };
                     grid.ActionClicked += OnRowActionAssign;
                     grid.CellFormatting += OnCellFormatting;
                     _assignGrid = grid; _assignPg = pg;
-                    pg.PageChanged += (_, p2) =>
-                        _assignPage = RenderGrid(_FilterAssign(), _assignPg, p2, _assignGrid,
-                            r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
+                    pg.PageChanged += (_, p2) => _assignPage = RenderGrid(SortAssign(_FilterAssign()), _assignPg, p2, _assignGrid,
+                        r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
                     break;
 
                 case "waiting":
@@ -179,12 +191,18 @@ namespace EDU_HUB_AI.View
                     grid.Columns.Add("dormitoryRoomName", "호실");
                     grid.AddTextActionColumns(true, false);
                     if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn c1) c1.Text = "입실";
+                    grid.SetInitialSort("studentName");
+                    grid.SortChanged += (_, s) =>
+                    {
+                        _waitingSortCol = s.Column;
+                        _waitingSortAsc = s.Ascending;
+                        RefreshActiveTab();
+                    };
                     grid.ActionClicked += OnRowActionWaiting;
                     grid.CellFormatting += OnCellFormatting;
                     _waitingGrid = grid; _waitingPg = pg;
-                    pg.PageChanged += (_, p2) =>
-                        _waitingPage = RenderGrid(_FilterWaiting(), _waitingPg, p2, _waitingGrid,
-                            r => _waitingGrid.Rows.Add(r.studentName, r.dormitoryRoomName));
+                    pg.PageChanged += (_, p2) => _waitingPage = RenderGrid(SortInOut(_FilterWaiting(), _waitingSortCol, _waitingSortAsc), _waitingPg, p2, _waitingGrid,
+                        r => _waitingGrid.Rows.Add(r.studentName, r.dormitoryRoomName));
                     break;
 
                 case "inout":
@@ -194,12 +212,18 @@ namespace EDU_HUB_AI.View
                     grid.Columns.Add("checkOut", "퇴실일");
                     grid.AddTextActionColumns(true, false);
                     if (grid.Columns[AppDataGrid.EditColumnName] is DataGridViewLinkColumn c2) c2.Text = "퇴실";
+                    grid.SetInitialSort("studentName");
+                    grid.SortChanged += (_, s) =>
+                    {
+                        _inOutSortCol = s.Column;
+                        _inOutSortAsc = s.Ascending;
+                        RefreshActiveTab();
+                    };
                     grid.ActionClicked += OnRowActionDormOut;
                     grid.CellFormatting += OnCellFormatting;
                     _inOutGrid = grid; _inOutPg = pg;
-                    pg.PageChanged += (_, p2) =>
-                        _inOutPage = RenderGrid(_FilterInOut(), _inOutPg, p2, _inOutGrid,
-                            r => _inOutGrid.Rows.Add(r.studentName, r.dormitoryRoomName, r.checkIn, r.checkOut));
+                    pg.PageChanged += (_, p2) => _inOutPage = RenderGrid(SortInOut(_FilterInOut(), _inOutSortCol, _inOutSortAsc), _inOutPg, p2, _inOutGrid,
+                        r => _inOutGrid.Rows.Add(r.studentName, r.dormitoryRoomName, r.checkIn, r.checkOut));
                     break;
             }
 
@@ -396,22 +420,19 @@ namespace EDU_HUB_AI.View
 
         private void RefreshActiveTab()
         {
-            if(_assignGrid == null)
-            {
-                return;
-            }
-            switch(_activeTabKey)
+            if (_assignGrid == null) return;
+            switch (_activeTabKey)
             {
                 case "assign":
-                    _assignPage = RenderGrid(_FilterAssign(), _assignPg, 1, _assignGrid,
+                    _assignPage = RenderGrid(SortAssign(_FilterAssign()), _assignPg, 1, _assignGrid,
                         r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
                     break;
                 case "waiting":
-                    _waitingPage = RenderGrid(_FilterWaiting(), _waitingPg, 1, _waitingGrid,
+                    _waitingPage = RenderGrid(SortInOut(_FilterWaiting(), _waitingSortCol, _waitingSortAsc), _waitingPg, 1, _waitingGrid,
                         r => _waitingGrid.Rows.Add(r.studentName, r.dormitoryRoomName));
                     break;
                 case "inout":
-                    _inOutPage = RenderGrid(_FilterInOut(), _inOutPg, 1, _inOutGrid,
+                    _inOutPage = RenderGrid(SortInOut(_FilterInOut(), _inOutSortCol, _inOutSortAsc), _inOutPg, 1, _inOutGrid,
                         r => _inOutGrid.Rows.Add(r.studentName, r.dormitoryRoomName, r.checkIn, r.checkOut));
                     break;
             }
@@ -535,6 +556,34 @@ namespace EDU_HUB_AI.View
                 e.Value = room + "호";
                 e.FormattingApplied = true;
             }
+        }
+
+        // ──────── 정렬 ──────────────────────────────────
+        private List<DormAssignDto> SortAssign(List<DormAssignDto> data)
+        {
+            Func<DormAssignDto, object?> key = _assignSortCol switch
+            {
+                "studentName" => d => d.studentName,
+                "eduId" => d => d.eduId,
+                "phone" => d => d.phone,
+                "dormitoryRoomName" => d => d.dormitoryRoomName,
+                "assignStatus" => d => d.assignStatus,
+                _ => d => d.studentName
+            };
+            return _assignSortAsc ? data.OrderBy(key).ToList() : data.OrderByDescending(key).ToList();
+        }
+
+        private static List<DormInOutDto> SortInOut(List<DormInOutDto> data, string col, bool asc)
+        {
+            Func<DormInOutDto, object?> key = col switch
+            {
+                "studentName" => d => d.studentName,
+                "dormitoryRoomName" => d => d.dormitoryRoomName,
+                "checkIn" => d => d.checkIn,
+                "checkOut" => d => d.checkOut,
+                _ => d => d.studentName
+            };
+            return asc ? data.OrderBy(key).ToList() : data.OrderByDescending(key).ToList();
         }
     }
 }

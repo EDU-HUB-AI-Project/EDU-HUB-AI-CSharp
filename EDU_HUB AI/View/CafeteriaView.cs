@@ -1,5 +1,4 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
-using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -20,6 +19,9 @@ namespace EDU_HUB_AI.View
         private DateField _datePickerEnd;
         private Panel _filterCard;
         private Panel _gapPanel;
+
+        private string _sortColumn = "mealDate";
+        private bool _sortAscending = false;
 
         public CafeteriaView()
         {
@@ -64,7 +66,7 @@ namespace EDU_HUB_AI.View
                 Format = DateTimePickerFormat.Custom,
                 CustomFormat = "yyyy-MM-dd",
                 Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1),
-                Size = new Size(150, 60),
+                Size = new Size(200, 23),
                 Margin = new Padding(0, 0, 8, 0),
                 Dock = DockStyle.Fill,
                 ShowCheckBox = true
@@ -85,7 +87,7 @@ namespace EDU_HUB_AI.View
                 CustomFormat = "yyyy-MM-dd",
                 Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month,
                     DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)),
-                Size = new Size(150, 60),
+                Size = new Size(200, 23),
                 Margin = new Padding(0, 0, 8, 0),
                 Dock = DockStyle.Fill,
                 ShowCheckBox = true
@@ -146,6 +148,15 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.Add(_gapPanel);
 
             SetupGrid();
+
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplySort();
+                RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -166,6 +177,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
+            grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender();
             grid.Focus();
         }
@@ -245,6 +257,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                ApplySort();
                 RenderPage(1);
             }
             finally
@@ -479,6 +492,13 @@ namespace EDU_HUB_AI.View
                 case Keys.Control | Keys.End: pagination1.GoToLast(); return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+        private void ApplySort()
+        {
+            if (string.IsNullOrEmpty(_sortColumn)) return;
+            _all = _sortAscending
+                ? _all.OrderBy(d => d.ContainsKey(_sortColumn) ? d[_sortColumn]?.ToString() : "").ToList()
+                : _all.OrderByDescending(d => d.ContainsKey(_sortColumn) ? d[_sortColumn]?.ToString() : "").ToList();
         }
     }
 }

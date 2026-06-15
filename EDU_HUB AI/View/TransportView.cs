@@ -17,12 +17,23 @@ namespace EDU_HUB_AI.View
         private List<TransportDto> _pageItems = [];
         private readonly AdminTransportController _controller = new();
 
+        private string? _sortColumn = null;
+        private bool _sortAscending = true;
+
         public TransportView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplyFilter();
+                RenderPage(1);
+            };
+
             SetupFilterSource();
 
             bodyPanel.BackColor = ThemeColors.Background;
@@ -61,6 +72,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
+            grid.SetInitialSort("departTime", true);
             await LoadAndRender();
             grid.Focus();
         }
@@ -134,10 +146,29 @@ namespace EDU_HUB_AI.View
         private void ApplyFilter()
         {
             var type = cmbType.SelectedValue?.ToString();
-            _filtered = string.IsNullOrEmpty(type)
-                ? _all.OrderBy(t => t.type).ThenBy(t => t.departTime).ToList()
-                : _all.Where(t => string.Equals(t.type, type, StringComparison.OrdinalIgnoreCase))
-                      .OrderBy(t => t.departTime).ToList();
+            var result = string.IsNullOrEmpty(type)
+                ? _all.AsEnumerable()
+                : _all.Where(t => string.Equals(t.type, type, StringComparison.OrdinalIgnoreCase));
+
+            if (_sortColumn != null)
+            {
+                Func<TransportDto, object?> key = _sortColumn switch
+                {
+                    "typeLabel" => t => t.type,
+                    "departLocation" => t => t.departLocation,
+                    "destination" => t => t.destination,
+                    "departTime" => t => t.departTime,
+                    "arriveTime" => t => t.arriveTime,
+                    _ => t => null
+                };
+                _filtered = _sortAscending ? result.OrderBy(key).ToList() : result.OrderByDescending(key).ToList();
+            }
+            else
+            {
+                _filtered = string.IsNullOrEmpty(type)
+                    ? result.OrderBy(t => t.type).ThenBy(t => t.departTime).ToList()
+                    : result.OrderBy(t => t.departTime).ToList();
+            }
         }
 
         private void RenderPage(int page)

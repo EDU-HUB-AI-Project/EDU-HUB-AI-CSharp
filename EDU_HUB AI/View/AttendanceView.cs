@@ -25,12 +25,24 @@ namespace EDU_HUB_AI.View
 
         private string? _pendingFilter;
 
+        private string _sortColumn = "attendDate";
+        private bool _sortAscending = false;
+
         public AttendanceView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplySearchFilter();
+                RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -97,6 +109,7 @@ namespace EDU_HUB_AI.View
             LoadCmbStatus();
             await LoadCmb();
             ApplyPendingFilter();
+            grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
             grid.Focus();
         }
@@ -537,6 +550,26 @@ namespace EDU_HUB_AI.View
                 result = result.Where(a => a.studentName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+            ApplySort();
+        }
+
+        private void ApplySort()
+        {
+            if(string.IsNullOrEmpty(_sortColumn))
+            {
+                return;
+            }
+            Func<AttendDto, object?> key = _sortColumn switch
+            {
+                "studentName" => a => a.studentName,
+                "phone" => a => a.phone,
+                "eduName" => a => a.eduName,
+                "attendDate" => a => a.attendDate,
+                "status" => a => a.status,
+                "message" => a => a.message,
+                _ => a => null
+            };
+            _filtered = _sortAscending ? _filtered.OrderBy(key).ToList() : _filtered.OrderByDescending(key).ToList();
         }
 
         // ============ ISearchFocusable ============

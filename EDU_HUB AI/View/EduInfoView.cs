@@ -18,6 +18,9 @@ namespace EDU_HUB_AI.View
 
         private List<EduInfoDto> _filtered = new();
 
+        private string _sortColumn = "";
+        private bool _sortAscending = false;
+
         public EduInfoView()
         {
             InitializeComponent();
@@ -25,6 +28,15 @@ namespace EDU_HUB_AI.View
 
             SetupFilterSource();
             SetupGrid();
+
+            grid.SortChanged += (_, s) => 
+            {
+                _sortColumn = s.Column; 
+                _sortAscending = s.Ascending; 
+                ApplyFilter(); 
+                RenderPage(1); 
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -333,7 +345,39 @@ namespace EDU_HUB_AI.View
                 result = result.Where(e => e.eduName?.Contains(search, StringComparison.OrdinalIgnoreCase) == true);
 
             _filtered = result.ToList();
+            ApplySort();
         }
+
+        private void ApplySort()
+        {
+            if (string.IsNullOrEmpty(_sortColumn))
+            {
+                _filtered = _filtered
+                    .OrderBy(e => StatusOrder(StatusLabel(e)))
+                    .ThenByDescending(e => e.startDate)
+                    .ToList();
+                return;
+            }
+            Func<EduInfoDto, object?> key = _sortColumn switch
+            {
+                "eduName" => e => e.eduName,
+                "startDate" => e => e.startDate,
+                "endDate" => e => e.endDate,
+                "batchNumber" => e => e.batchNumber,
+                "capacity" => e => e.capacity,
+                "status" => e => StatusLabel(e),
+                _ => e => null
+            };
+            _filtered = _sortAscending ? _filtered.OrderBy(key).ToList() : _filtered.OrderByDescending(key).ToList();
+        }
+
+        private static int StatusOrder(string status) => status switch
+        {
+            "진행중" => 0,
+            "예정" => 1,
+            "종료" => 2,
+            _ => 3
+        };
 
         public void SetFilter(string filter)
         {

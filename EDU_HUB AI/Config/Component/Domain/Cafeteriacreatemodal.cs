@@ -14,7 +14,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
         private const int LabelGap = 25;
 
         // 날짜 피커
-        private DateTimePicker _datePicker;
+        private DateField _datePicker;
 
         // 식사별 TextBox / 휴무 CheckBox
         private readonly List<TextBox> _mealInputs = new();
@@ -62,65 +62,18 @@ namespace EDU_HUB_AI.Config.Component.Domain
         // ─────────────────────────────────────────────────────────────────
         // 날짜 선택 필드
         // ─────────────────────────────────────────────────────────────────
-        private Panel CreateDateField()
+        private DateField CreateDateField()
         {
-            var container = new Panel
+            _datePicker = new DateField
             {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                BackColor = ThemeColors.Surface,
-                Padding = new Padding(0),
-                Margin = new Padding(0, 0, 0, 14)
-            };
-
-            var label = new Label
-            {
-                Text = "날짜",
-                AutoSize = true,
-                Font = ThemeFonts.FieldLabel,
-                ForeColor = ThemeColors.TextMuted,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0, 0, 0, LabelGap),
-                Dock = DockStyle.Top
-            };
-
-            var shell = new Panel
-            {
-                Height = InputHeight,
-                BackColor = ThemeColors.Surface,
-                Padding = new Padding(12, 7, 12, 7),
-                Margin = new Padding(0),
-                Dock = DockStyle.Top
-            };
-
-            _datePicker = new DateTimePicker
-            {
+                FieldLabel = "날짜",
                 Format = DateTimePickerFormat.Custom,
                 CustomFormat = "yyyy-MM-dd",
                 Value = DateTime.Today,
-                Font = ThemeFonts.Body,
-                Dock = DockStyle.Fill,
-                CalendarFont = ThemeFonts.Body
+                Dock = DockStyle.Top,
+                Margin = new Padding(0, 0, 0, 14)
             };
-
-            bool focused = false;
-            shell.Paint += (_, e) =>
-            {
-                var bounds = new Rectangle(0, 0, shell.Width - 1, shell.Height - 1);
-                using var fill = new SolidBrush(ThemeColors.Surface);
-                e.Graphics.FillRectangle(fill, bounds);
-                var borderColor = focused ? ThemeColors.Primary : ThemeColors.Border;
-                using var pen = new Pen(borderColor);
-                e.Graphics.DrawRectangle(pen, bounds);
-            };
-            _datePicker.Enter += (_, _) => { focused = true; shell.Invalidate(); };
-            _datePicker.Leave += (_, _) => { focused = false; shell.Invalidate(); };
-
-            shell.Controls.Add(_datePicker);
-            container.Controls.Add(shell);
-            container.Controls.Add(label);
-
-            return container;
+            return _datePicker;
         }
 
         // ─────────────────────────────────────────────────────────────────

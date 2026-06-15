@@ -73,7 +73,7 @@ namespace EDU_HUB_AI.View
             grid.TabIndex = 1;
 
             // =============== cmbDormRoom ===============
-            cmbDormRoom.FieldLabel = "호실 선택";
+            cmbDormRoom.FieldLabel = "층";
             cmbDormRoom.Size = new Size(100, 54);
             cmbDormRoom.Margin = new Padding(0, 0, 8, 0);
             cmbDormRoom.TabIndex = 0;

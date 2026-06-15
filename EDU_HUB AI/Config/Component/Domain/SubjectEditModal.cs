@@ -186,6 +186,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 MessageBox.Show("과목명을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            if (!System.Text.RegularExpressions.Regex.IsMatch(subjectName, @"^[가-힣a-zA-Z0-9\s]+$") || subjectName.Length < 2)
+            {
+                _txtSubjectName.HasError = true;
+                MessageBox.Show("과목명은 한글·영문·숫자만 입력 가능하며, 최소 2자 이상이어야 합니다.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             _txtSubjectName.HasError = false;
 
             if (string.IsNullOrEmpty(eduId))
@@ -196,6 +202,11 @@ namespace EDU_HUB_AI.Config.Component.Domain
             if (string.IsNullOrEmpty(classroomId))
             {
                 MessageBox.Show("강의실을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.Compare(endDate, startDate) < 0)
+            {
+                MessageBox.Show("종료일은 시작일보다 앞설 수 없습니다.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 

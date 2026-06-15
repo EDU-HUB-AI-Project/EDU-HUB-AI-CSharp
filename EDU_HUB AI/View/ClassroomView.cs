@@ -17,12 +17,24 @@ namespace EDU_HUB_AI.View
 
         private List<ClassroomDto> _filtered = new();
 
+        private string _sortColumn = "floor";
+        private bool _sortAscending = true;
+
         public ClassroomView()
         {
             InitializeComponent();
             BackColor = ThemeColors.Background;
 
             SetupGrid();
+
+            grid.SortChanged += (_, s) =>
+            {
+                _sortColumn = s.Column;
+                _sortAscending = s.Ascending;
+                ApplyFilter();
+                RenderPage(1);
+            };
+
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
 
@@ -59,6 +71,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
+            grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
             grid.Focus();
         }
@@ -198,6 +211,21 @@ namespace EDU_HUB_AI.View
                 result = result.Where(c => c.floor == floor);
 
             _filtered = result.ToList();
+            ApplySort();
+        }
+
+        private void ApplySort()
+        {
+            if (string.IsNullOrEmpty(_sortColumn)) return;
+            Func<ClassroomDto, object?> key = _sortColumn switch
+            {
+                "classroomName" => c => c.classroomName,
+                "floor" => c => (object?)c.floor,
+                "imageId" => c => c.imageId,
+                "imagePath" => c => c.imagePath,
+                _ => c => null
+            };
+            _filtered = _sortAscending ? _filtered.OrderBy(key).ToList() : _filtered.OrderByDescending(key).ToList();
         }
 
         private void OnFloorChanged(object? sender, EventArgs e)
