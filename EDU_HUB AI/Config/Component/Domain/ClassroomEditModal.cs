@@ -35,6 +35,10 @@ namespace EDU_HUB_AI.Config.Component.Domain
             AddReadOnlyField(stack, "층", source?.floor.ToString(), 1);
             AddReadOnlyField(stack, "SVG ID", source?.imageId, 2);
             AddReadOnlyField(stack, "이미지 경로", source?.imagePath, 3);
+
+            _txtClassroomName.Required = true;
+            _txtClassroomName.TextChanged += (_, _) => _txtClassroomName.HasError = false;
+
             Body.Controls.Add(stack);
             SetCardWidth(440);
         }
@@ -57,6 +61,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
             if(string.IsNullOrWhiteSpace(classroomName))
             {
+                _txtClassroomName.HasError = true;
                 MessageBox.Show("강의실명을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }

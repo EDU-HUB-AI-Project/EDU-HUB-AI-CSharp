@@ -3,15 +3,7 @@ using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
 using EDU_HUB_AI.Model;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace EDU_HUB_AI.Config.Component.Domain
 {
@@ -21,13 +13,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
         private readonly TextField _txtDormRoomName;
         private readonly ComboBox _cmbDormitory;
         private readonly AdminDormitoryController _adminDormitoryController = new();
-        private bool _isCancelAssign = false;
 
         public DormAssignDto? Result { get; private set; }
         public DormAssignModal(DormAssignDto? source)
         {
             _source = source;
-            ModalTitle = source?.dormitoryId == null ? "생활관 배정" : "생활관 변경 및 취소";
+            ModalTitle = source?.dormitoryId == null ? "생활관 배정" : "생활관 변경";
             ConfirmText = "저장";
 
             var stack = new TableLayoutPanel
@@ -42,31 +33,10 @@ namespace EDU_HUB_AI.Config.Component.Domain
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             _txtDormRoomName = AddField(stack, "현재호실", source?.dormitoryRoomName ?? "미배정", "", 0);
-            _txtDormRoomName.ReadOnly = true;
-            _cmbDormitory = AddComboField(stack, "호실 선택", 1);
+            _txtDormRoomName.Enabled = false;
+            _cmbDormitory = AddComboField(stack, "호실 선택", 1, required: true);
 
             Body.Controls.Add(stack);
-            if (source?.dormitoryId != null)
-            {
-                var btnCancel = new AppButton
-                {
-                    Text = "배정 취소",
-                    Dock = DockStyle.Top
-                };
-                btnCancel.Click += (_, _) =>
-                {
-                    if (!ConfirmModal.Show(Owner, "배정 취소", "배정을 취소하시겠습니까?", "취소", ButtonVariant.Danger))
-                        return;
-                    {
-                        _isCancelAssign = true;  // 배정 취소시 여기서 처리
-                        Result = CopyOf(source);
-                        Result.dormitoryId = null;
-                        DialogResult = DialogResult.OK;
-                        Close();
-                    }
-                };
-                Body.Controls.Add(btnCancel);
-            }
         }
 
         protected override async void OnLoad(EventArgs e)
@@ -99,8 +69,6 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override void OnConfirm()
         {
-            if (_isCancelAssign) return; // 배정 취소는 앞에서 이미 처리됨을 알림
-
             bool isEdit = _source?.dormitoryId != null;
             if (!ConfirmModal.Show(Owner,
                 isEdit ? "변경 확인" : "배정 확인",
@@ -129,7 +97,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             parent.Controls.Add(field, 0, row);
             return field;
         }
-        private ComboBox AddComboField(TableLayoutPanel parent, string label, int row)
+        private ComboBox AddComboField(TableLayoutPanel parent, string label, int row, bool required = false)
         {
             parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
@@ -141,14 +109,36 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Margin = new Padding(0, 0, 0, 14)
             };
 
-            var lbl = new Label
+            var lblPanel = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                Margin = new Padding(0),
+                Padding = new Padding(0),
+                Dock = DockStyle.Top
+            };
+            lblPanel.Controls.Add(new Label
             {
                 Text = label,
                 Font = ThemeFonts.BodySm,
                 ForeColor = ThemeColors.TextMuted,
                 AutoSize = true,
-                Dock = DockStyle.Top
-            };
+                Margin = new Padding(0)
+            });
+
+            if(required)
+            {
+                lblPanel.Controls.Add(new Label
+                {
+                    Text = " *",
+                    Font = ThemeFonts.BodySm,
+                    ForeColor = ThemeColors.Danger,
+                    AutoSize = true,
+                    Margin = new Padding(0)
+                });
+            }
 
             var cmb = new ComboBox
             {
@@ -159,7 +149,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             };
 
             panel.Controls.Add(cmb);
-            panel.Controls.Add(lbl);
+            panel.Controls.Add(lblPanel);
             parent.Controls.Add(panel, 0, row);
             return cmb;
         }

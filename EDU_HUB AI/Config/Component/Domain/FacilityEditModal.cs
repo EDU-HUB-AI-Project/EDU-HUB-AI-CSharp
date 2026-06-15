@@ -3,6 +3,7 @@ using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Model;
 using EDU_HUB_AI.Util;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace EDU_HUB_AI.Config.Component.Domain
 {
@@ -50,15 +51,21 @@ namespace EDU_HUB_AI.Config.Component.Domain
             stack.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             var row = 0;
-            _cmbType = AddComboField(stack, "구분", row++);
+            _cmbType = AddComboField(stack, "구분", row++, required: true);
             _txtName = AddField(stack, "시설명", source?.name, "시설 이름", row++);
+            _txtName.Required = true;
+            _txtName.TextChanged += (_, _) => _txtName.HasError = false;
             _txtLocation = AddField(stack, "위치", source?.location, "건물·동·방향", row++);
+            _txtLocation.Required = true;
+            _txtLocation.TextChanged += (_, _) => _txtLocation.HasError = false;
             _txtDescription = AddField(stack, "안내", source?.description, "이용 안내", row++);
 
             _panelInner = AddSectionPanel(stack, row++);
             _panelImage = BuildImagePanel();
             _panelInner.Controls.Add(_panelImage);
             _txtFloor = AddField(_panelInner, "층수", source?.floor?.ToString(), "예) 2", 0);
+            _txtFloor.Required = true;
+            _txtFloor.TextChanged += (_, _) => _txtFloor.HasError = false;
 
             _panelOuter = AddSectionPanel(stack, row++);
             _mapPicker = new FacilityMapPicker();
@@ -83,6 +90,16 @@ namespace EDU_HUB_AI.Config.Component.Domain
             Body.Controls.Add(stack);
             UpdateImageUi();
             UpdateTypePanels();
+        }
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            var targetH = _panelInner.Height;
+            _mapPicker.Height = targetH;
+            _panelOuter.AutoSize = false;
+            _panelOuter.Height = targetH;
+            FitCardSize();
         }
 
         private void SelectType(string? value)
@@ -112,6 +129,10 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
         protected override async void OnConfirm()
         {
+            _txtName.HasError = false;
+            _txtLocation.HasError = false;
+            _txtFloor.HasError = false;
+
             var type = GetSelectedFacilityType();
             var name = _txtName.Text.Trim();
             var location = _txtLocation.Text.Trim();
@@ -124,11 +145,13 @@ namespace EDU_HUB_AI.Config.Component.Domain
             }
             if (string.IsNullOrWhiteSpace(name))
             {
+                _txtName.HasError = true;
                 MessageBox.Show("시설명을 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
             if (string.IsNullOrWhiteSpace(location))
             {
+                _txtLocation.HasError = true;
                 MessageBox.Show("위치를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -146,6 +169,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
                 if (!int.TryParse(_txtFloor.Text.Trim(), out var f) || f < 0)
                 {
+                    _txtFloor.HasError = true;
                     MessageBox.Show("유효한 층수를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
@@ -241,6 +265,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 {
                     _picPreview.Image = null;
                 }
+                _picPreview.Invalidate();
                 return;
             }
 
@@ -249,7 +274,8 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _picPreview.Image?.Dispose();
             _picPreview.Image = string.IsNullOrWhiteSpace(_currentImagePath)
                 ? null
-                : FacilityImageStore.TryLoadThumbnail(_currentImagePath, 80);
+                : FacilityImageStore.TryLoadThumbnail(_currentImagePath, 400);
+            _picPreview.Invalidate();
         }
 
         private void OnFacilityTypeSwitched()
@@ -288,115 +314,66 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _panelInner.Visible = inner;
             _panelOuter.Visible = !inner;
             _panelImage.Visible = inner;
-            SetCardWidth(inner ? 420 : 540);
+            SetCardWidth(540);
             FitCardSize();
         }
 
         private Panel BuildImagePanel()
         {
-            const int previewSize = 88;
-            const int inputHeight = 32;
+            const int totalH = 280;
+            const int footerH = 22;
 
             var panel = new Panel
             {
                 Dock = DockStyle.Top,
-                AutoSize = true,
+                Height = totalH,
                 BackColor = ThemeColors.Surface,
                 Margin = new Padding(0, 0, 0, 14)
             };
 
-            var layout = new TableLayoutPanel
+            _txtImagePath = new TextBox
             {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                ColumnCount = 2,
-                RowCount = 2,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0)
-            };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, previewSize + 8));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, previewSize));
-
-            var lbl = new Label
-            {
-                Text = "시설 이미지",
+                Dock = DockStyle.Bottom,
+                Height = footerH,
+                ReadOnly = true,
+                BorderStyle = BorderStyle.None,
                 Font = ThemeFonts.BodySm,
+                BackColor = ThemeColors.Surface,
                 ForeColor = ThemeColors.TextMuted,
-                AutoSize = true,
-                Margin = new Padding(0, 0, 0, 6)
+                PlaceholderText = "이미지를 클릭해 파일을 선택하세요"
             };
-            layout.Controls.Add(lbl, 0, 0);
-            layout.SetColumnSpan(lbl, 2);
 
             _picPreview = new PictureBox
             {
-                Size = new Size(previewSize, previewSize),
+                Dock = DockStyle.Fill,
                 SizeMode = PictureBoxSizeMode.Zoom,
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.White,
-                Margin = new Padding(0, 0, 8, 0),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left
+                Cursor = Cursors.Hand
             };
 
-            var pathArea = new TableLayoutPanel
+            _picPreview.Paint += (_, e) =>
             {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 3,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0)
-            };
-            pathArea.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            pathArea.RowStyles.Add(new RowStyle(SizeType.Absolute, inputHeight));
-            pathArea.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+                if (_picPreview.Image != null)
+                {
+                    return;
+                }
+                using var pen = new Pen(ThemeColors.Border);
+                e.Graphics.DrawRectangle(pen, 0, 0, _picPreview.Width - 1, _picPreview.Height - 1);
 
-            var pathRow = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 1,
-                BackColor = ThemeColors.Surface,
-                Margin = new Padding(0)
-            };
-            pathRow.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            pathRow.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, inputHeight));
-
-            _txtImagePath = new TextBox
-            {
-                Height = inputHeight,
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                BorderStyle = BorderStyle.FixedSingle,
-                Font = ThemeFonts.Body,
-                BackColor = Color.White,
-                Margin = new Padding(0, 0, 4, 0),
-                PlaceholderText = "이미지 파일을 선택하세요"
+                TextRenderer.DrawText(e.Graphics, "이미지를 클릭해 선택하세요", ThemeFonts.Body, _picPreview.ClientRectangle, ThemeColors.TextMuted,
+                                       TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             };
 
             _btnBrowse = new Button
             {
-                Text = "...",
-                Size = new Size(inputHeight, inputHeight),
-                MinimumSize = new Size(inputHeight, inputHeight),
-                MaximumSize = new Size(inputHeight, inputHeight),
-                Dock = DockStyle.Fill,
-                Font = ThemeFonts.Body,
-                FlatStyle = FlatStyle.System,
-                Cursor = Cursors.Hand,
-                Margin = new Padding(0),
-                TabStop = true
+                Visible = false,
+                Size = new Size(1, 1)
             };
 
-            pathRow.Controls.Add(_txtImagePath, 0, 0);
-            pathRow.Controls.Add(_btnBrowse, 1, 0);
-            pathArea.Controls.Add(pathRow, 0, 1);
-
-            layout.Controls.Add(_picPreview, 0, 1);
-            layout.Controls.Add(pathArea, 1, 1);
-
-            panel.Controls.Add(layout);
+            panel.Controls.Add(_picPreview);
+            panel.Controls.Add(_txtImagePath);
+            panel.Controls.Add(_btnBrowse);
             return panel;
         }
 
@@ -430,7 +407,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             return field;
         }
 
-        private static ComboBox AddComboField(TableLayoutPanel parent, string label, int row)
+        private static ComboBox AddComboField(TableLayoutPanel parent, string label, int row, bool required = false)
         {
             parent.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
@@ -442,14 +419,35 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 Margin = new Padding(0, 0, 0, 14)
             };
 
-            var lbl = new Label
+            var lblPanel = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                WrapContents = false,
+                FlowDirection = FlowDirection.LeftToRight,
+                BackColor = ThemeColors.Surface,
+                Margin = new Padding(0),
+                Padding = new Padding(0),
+                Dock = DockStyle.Top
+            };
+            lblPanel.Controls.Add(new Label
             {
                 Text = label,
                 Font = ThemeFonts.BodySm,
                 ForeColor = ThemeColors.TextMuted,
                 AutoSize = true,
-                Dock = DockStyle.Top
-            };
+                Margin = new Padding(0)
+            });
+            if(required)
+            {
+                lblPanel.Controls.Add(new Label
+                {
+                    Text = " *",
+                    Font = ThemeFonts.BodySm,
+                    ForeColor = ThemeColors.Danger,
+                    AutoSize = true,
+                    Margin = new Padding(0)
+                });
+            }
 
             var cmb = new ComboBox
             {
@@ -460,7 +458,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             };
 
             panel.Controls.Add(cmb);
-            panel.Controls.Add(lbl);
+            panel.Controls.Add(lblPanel);
             parent.Controls.Add(panel, 0, row);
             return cmb;
         }
