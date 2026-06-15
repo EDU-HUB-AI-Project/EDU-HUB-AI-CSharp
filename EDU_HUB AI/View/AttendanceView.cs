@@ -1,4 +1,5 @@
-﻿using EDU_HUB_AI.Config.Component.Common;
+﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -28,6 +29,7 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "attendDate";
         private bool _sortAscending = false;
 
+        private readonly KpiSummaryBar _kpiBar = new();
         public AttendanceView()
         {
             InitializeComponent();
@@ -45,6 +47,22 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                    ("오늘 출석", ThemeColors.Ok),
+                    ("오늘 지각", ThemeColors.Warn),
+                    ("오늘 결석", ThemeColors.Danger),
+                    ("오늘 조퇴", ThemeColors.Sync),
+                    ("오늘 출석률", ThemeColors.Primary)
+                );
+            _kpiBar.CardClicked += (_, index) =>
+            {
+                string?[] map = { "출석", "지각", "결석", "조퇴", null };
+                var status = index < map.Length ? map[index] : null;
+                if (status != null) cmbStatus.SelectedItem = status;
+                else cmbStatus.SelectedIndex = 0;
+            };
 
             tableCard.Paint += (_, e) =>
             {
@@ -119,7 +137,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -136,6 +155,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 ApplySearchFilter();
                 RenderPage(page);
             }
@@ -153,6 +173,24 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            var todayList = _all.Where(a => a.attendDate == today).ToList();
+            var total = todayList.Count;
+            var attend = todayList.Count(a => a.status == "출석");
+            var rate = total > 0 ? (int)Math.Round(attend * 100.0 / total) : 0;
+
+            _kpiBar.SetValues(
+                attend.ToString(),
+                todayList.Count(a => a.status == "지각").ToString(),
+                todayList.Count(a => a.status == "결석").ToString(),
+                todayList.Count(a => a.status == "조퇴").ToString(),
+                $"{rate}%"
+            );
+            _kpiBar.SetSubtitle(4, $"{DateTime.Today:M/d} 기준");
         }
 
         // ===== 그리드 =====

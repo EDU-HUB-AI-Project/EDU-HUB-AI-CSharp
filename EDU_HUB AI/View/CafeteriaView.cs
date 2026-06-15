@@ -23,6 +23,8 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "mealDate";
         private bool _sortAscending = false;
 
+        private readonly KpiSummaryBar _kpiBar = new();
+
         public CafeteriaView()
         {
             InitializeComponent();
@@ -147,6 +149,14 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.Add(_filterCard);
             bodyPanel.Controls.Add(_gapPanel);
 
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("조회 기간 일수", ThemeColors.Primary),
+                ("조식", ThemeColors.Ok),
+                ("중식", ThemeColors.Warn),
+                ("석식", ThemeColors.Danger)
+            );
+
             SetupGrid();
 
             grid.SortChanged += (_, s) =>
@@ -188,6 +198,7 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(pagination1, 1);
             bodyPanel.Controls.SetChildIndex(_gapPanel, 2);
             bodyPanel.Controls.SetChildIndex(_filterCard, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 4);
         }
 
         private async Task<List<Dictionary<string, object>>> LoadData()
@@ -257,6 +268,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 ApplySort();
                 RenderPage(1);
             }
@@ -266,6 +278,16 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            _kpiBar.SetValues(
+                _all.Count.ToString(),
+                _allDetail.Count(m => m.mealType == "BREAKFAST").ToString(),  
+                _allDetail.Count(m => m.mealType == "LUNCH").ToString(),      
+                _allDetail.Count(m => m.mealType == "DINNER").ToString()      
+            );
         }
 
         private void SetupGrid()

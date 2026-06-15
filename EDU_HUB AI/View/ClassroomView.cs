@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
@@ -20,6 +21,7 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "floor";
         private bool _sortAscending = true;
 
+        private readonly KpiSummaryBar _kpiBar = new();
         public ClassroomView()
         {
             InitializeComponent();
@@ -37,6 +39,15 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("전체 강의실", ThemeColors.Primary),
+                ("1층", ThemeColors.Ok),
+                ("2층", ThemeColors.Warn),
+                ("3층", ThemeColors.Danger),
+                ("4층", ThemeColors.Sync)
+            );
 
             tableCard.Paint += (_, e) =>
             {
@@ -81,7 +92,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -100,6 +112,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 InitFloorCombo();
                 ApplyFilter();
                 RenderPage(page);
@@ -110,6 +123,17 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            _kpiBar.SetValues(
+                _all.Count.ToString(),
+                _all.Count(c => c.floor == 1).ToString(),
+                _all.Count(c => c.floor == 2).ToString(),
+                _all.Count(c => c.floor == 3).ToString(),
+                _all.Count(c => c.floor == 4).ToString()  // ← 추가
+            );
         }
 
         private void InitFloorCombo()

@@ -1,4 +1,5 @@
-﻿using EDU_HUB_AI.Config.Component.Data;
+﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
@@ -20,6 +21,9 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "dormitoryRoomName";
         private bool _sortAscending = true;
 
+        private readonly KpiSummaryBar _kpiBar = new();
+        private List<string> _kpiFloors = [];
+
         public DormRoomView()
         {
             InitializeComponent();
@@ -37,6 +41,14 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.CardClicked += (_, index) =>
+            {
+                var floor = index == 0 ? "" : (index - 1 < _kpiFloors.Count ? _kpiFloors[index - 1] : "");
+                cmbDormRoom.SelectedValue = floor;
+            };
+
             pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
             pagination1.PageChanged += (_, page) => RenderPage(page);
             cmbDormRoom.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
@@ -56,7 +68,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         private async Task<List<DormitoryDto>> LoadData()
@@ -72,6 +85,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 ApplySort();
                 RenderPage(page);
             }
@@ -89,6 +103,33 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            var floorGroups = _all
+                .Where(r => !string.IsNullOrEmpty(r.dormitoryRoomName))
+                .GroupBy(r => r.dormitoryRoomName[0].ToString())
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            _kpiFloors = floorGroups.Select(g => g.Key).ToList();
+
+            var cardDefs = new List<(string, Color)> { ("전체 입실", ThemeColors.Primary) };
+            foreach (var g in floorGroups)
+                cardDefs.Add(($"{g.Key}층 입실", ThemeColors.Ok));
+
+            _kpiBar.SetCards(cardDefs.ToArray());
+
+            var values = new List<string> { _all.Sum(r => r.currentCount).ToString() };
+            foreach (var g in floorGroups)
+                values.Add(g.Sum(r => r.currentCount).ToString());
+
+            _kpiBar.SetValues(values.ToArray());
+
+            _kpiBar.SetSubtitle(0, $"최대 {_all.Sum(r => r.maxCount)}명");
+            for (int i = 0; i < floorGroups.Count; i++)
+                _kpiBar.SetSubtitle(i + 1, $"최대 {floorGroups[i].Sum(r => r.maxCount)}명");
         }
 
         private void SetupGrid()
