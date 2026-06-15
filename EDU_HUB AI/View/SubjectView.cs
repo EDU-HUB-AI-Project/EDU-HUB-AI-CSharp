@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
@@ -27,6 +28,7 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "";
         private bool _sortAscending = false;
 
+        private readonly KpiSummaryBar _kpiBar = new();
         public SubjectView()
         {
             InitializeComponent();
@@ -44,6 +46,20 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("전체 과목", ThemeColors.Primary),
+                ("진행 중", ThemeColors.Ok),
+                ("종료", ThemeColors.Sync),
+                ("이번 주 종료 예정", ThemeColors.Warn)
+            );
+            _kpiBar.CardClicked += (_, index) =>
+            {
+                string[] map = { "", "ACTIVE", "ENDED", "" };
+                if (index < map.Length)
+                    cmbStatus.SelectedValue = map[index];
+            };
 
             tableCard.Paint += (_, e) =>
             {
@@ -89,7 +105,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -108,7 +125,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
-
+                UpdateKpi();
                 try
                 {
                     var eduRes = await _adminEduInfoController.GetEduInfos();
@@ -146,6 +163,24 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            var today = DateTime.Today;
+            var weekStart = today.AddDays(-(int)today.DayOfWeek + 1);
+            var weekEnd = weekStart.AddDays(6);
+
+            bool EndsThisWeek(string? d) =>
+                DateTime.TryParseExact(d, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var dt) &&
+                dt >= weekStart && dt <= weekEnd;
+
+            _kpiBar.SetValues(
+                _all.Count.ToString(),
+                _all.Count(s => s.endYn != "Y").ToString(),
+                _all.Count(s => s.endYn == "Y").ToString(),
+                _all.Count(s => EndsThisWeek(s.endDate)).ToString()  // ← startDate 제거, endDate만
+            );
         }
 
         // ===== 그리드 =====

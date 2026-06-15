@@ -1,3 +1,4 @@
+using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
@@ -21,6 +22,7 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "";
         private bool _sortAscending = false;
 
+        private readonly KpiSummaryBar _kpiBar = new();
         public EduInfoView()
         {
             InitializeComponent();
@@ -39,6 +41,20 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("전체 과정", ThemeColors.Primary),
+                ("진행중", ThemeColors.Ok),
+                ("예정", ThemeColors.Warn),
+                ("종료", ThemeColors.Sync)
+            );
+            _kpiBar.CardClicked += (_, index) =>
+            {
+                string[] map = { "", "ACTIVE", "UPCOMING", "ENDED" };
+                if (index < map.Length)
+                    cmbStatus.SelectedValue = map[index];
+            };
 
             tableCard.Paint += (_, e) =>
             {
@@ -83,7 +99,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -102,6 +119,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 ApplyFilter();
                 RenderPage(page);
             }
@@ -111,6 +129,16 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            _kpiBar.SetValues(
+                _all.Count.ToString(),
+                _all.Count(e => StatusLabel(e) == "진행중").ToString(),
+                _all.Count(e => StatusLabel(e) == "예정").ToString(),
+                _all.Count(e => StatusLabel(e) == "종료").ToString()
+            );
         }
 
         // ===== 그리드 =====

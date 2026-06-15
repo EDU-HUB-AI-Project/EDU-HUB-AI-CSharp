@@ -49,6 +49,9 @@ namespace EDU_HUB_AI.View
         private string _waitingSortCol = "studentName"; private bool _waitingSortAsc = true;
         private string _inOutSortCol = "studentName"; private bool _inOutSortAsc = true;
 
+        // ── KPI ──────────────────────────────
+        private readonly KpiSummaryBar _kpiBar = new();
+
         public DormitoryView()
         {
             InitializeComponent();
@@ -78,6 +81,7 @@ namespace EDU_HUB_AI.View
             BuildLeftPanel(split.Panel1);
             BuildRightPanel(split.Panel2);
             bodyPanel.Controls.Add(split);
+            bodyPanel.Controls.Add(_kpiBar);
             split.SplitterDistance = 280;
         }
 
@@ -271,6 +275,7 @@ namespace EDU_HUB_AI.View
                 if (t5.Result?.Status == 200)
                     _eduMap = t5.Result.Data.ToDictionary(e => e.eduId, e => e.eduName);
 
+                UpdateKpi();
                 RenderRoomList();
                 RefreshActiveTab();
             }
@@ -289,6 +294,29 @@ namespace EDU_HUB_AI.View
                 overlay?.Dispose();
                 _isLoading = false;
             }
+        }
+
+        private void UpdateKpi()
+        {
+            var total = _rooms.Count;
+            var assigned = _assignData.Count;
+            var empty = Math.Max(0, total - assigned);
+            var rate = total > 0 ? (int)Math.Round((double)empty / total * 100) : 0;
+
+            _kpiBar.SetCards(
+                ("전체 호실", ThemeColors.Primary),
+                ("배정 완료", ThemeColors.Ok),
+                ("공실", ThemeColors.Warn),
+                ("공실률", ThemeColors.Danger),
+                ("입실 대기", ThemeColors.InfoText)
+            );
+            _kpiBar.SetValues(
+                total.ToString(),
+                assigned.ToString(),
+                empty.ToString(),
+                $"{rate}%",
+                _waitingData.Count.ToString()
+            );
         }
 
         // ──────── 호실 목록 렌더 ──────────────────────────────────

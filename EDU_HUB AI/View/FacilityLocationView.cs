@@ -1,4 +1,5 @@
-﻿using EDU_HUB_AI.Config.Component.Data;
+﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
@@ -19,6 +20,7 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "type";
         private bool _sortAscending = true;
 
+        private readonly KpiSummaryBar _kpiBar = new();
         public FacilityLocationView()
         {
             InitializeComponent();
@@ -35,6 +37,23 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("전체 시설", ThemeColors.Primary),
+                ("내부 시설", ThemeColors.Ok),
+                ("외부 시설", ThemeColors.Warn),
+                ("이미지 미등록", ThemeColors.Danger)
+            );
+            _kpiBar.CardClicked += (_, index) =>
+            {
+                switch (index)
+                {
+                    case 0: cmbTypeFilter.SelectedValue = ""; break;
+                    case 1: cmbTypeFilter.SelectedValue = "INNER"; break;
+                    case 2: cmbTypeFilter.SelectedValue = "OUTER"; break;
+                }
+            };
 
             tableCard.Paint += (_, e) =>
             {
@@ -80,7 +99,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         private async Task<List<FacilityInfoDto>> LoadData()
@@ -97,6 +117,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 ApplyTypeFilter();
                 RenderPage(page);
             }
@@ -106,6 +127,16 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            _kpiBar.SetValues(
+                _all.Count.ToString(),
+                _all.Count(f => f.facilityType == "INNER").ToString(),
+                _all.Count(f => f.facilityType == "OUTER").ToString(),
+                _all.Count(f => string.IsNullOrEmpty(f.imagePath) && f.facilityType != "OUTER").ToString()  // ← OUTER 제외
+            );
         }
 
         private void SetupGrid()

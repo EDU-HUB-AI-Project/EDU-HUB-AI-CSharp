@@ -28,6 +28,8 @@ namespace EDU_HUB_AI.View
         private string _sortColumn = "name";
         private bool _sortAscending = true;
 
+        private readonly KpiSummaryBar _kpiBar = new();
+
         public StudentView()
         {
             InitializeComponent();
@@ -44,6 +46,14 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("전체 교육생", ThemeColors.Primary),
+                ("이수 중", ThemeColors.Ok),
+                ("기숙사 입소 중", ThemeColors.Warn),
+                ("이번 달 수료 예정", ThemeColors.Danger)
+                );
 
             tableCard.Paint += (_, e) =>
             {
@@ -99,7 +109,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         // ===== 데이터 연동 지점 =====
@@ -117,7 +128,6 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
-
                 try
                 {
                     var eduRes = await _adminEduInfoController.GetEduInfos();
@@ -127,6 +137,8 @@ namespace EDU_HUB_AI.View
                 {
                     _eduInfos = new List<EduInfoDto>();
                 }
+
+                UpdateKpi();
 
                 var prevEduId = cmbEdu.SelectedValue?.ToString();
                 var prevBatch = cmbBatch.SelectedValue is int b ? b : 0;
@@ -151,6 +163,28 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            var today = DateTime.Today;
+            var activeIds = _eduInfos
+                            .Where(e => DateTime.TryParseExact(e.startDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var s)
+                                    && DateTime.TryParseExact(e.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var en)
+                                    && s <= today && en >= today)
+                            .Select(e => e.eduId).ToHashSet();
+            var endingIds = _eduInfos
+                            .Where(e => DateTime.TryParseExact(e.endDate, "yyMMdd", null, System.Globalization.DateTimeStyles.None, out var en)
+                                    && en.Year == today.Year
+                                    && en.Month == today.Month)
+                            .Select(e => e.eduId).ToHashSet();
+
+            _kpiBar.SetValues(
+                _all.Count.ToString(),
+                _all.Count(s => activeIds.Contains(s.eduId)).ToString(),
+                _all.Count(s => s.dormYn == "Y").ToString(),
+                _all.Count(s => endingIds.Contains(s.eduId)).ToString()
+                );
         }
 
         // ===== 그리드 =====

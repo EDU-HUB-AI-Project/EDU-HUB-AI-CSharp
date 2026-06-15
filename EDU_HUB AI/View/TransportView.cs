@@ -1,4 +1,4 @@
-using EDU_HUB_AI.Config.Component.Common;
+using EDU_HUB_AI.Config.Component.Basic;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -20,6 +20,8 @@ namespace EDU_HUB_AI.View
         private string? _sortColumn = null;
         private bool _sortAscending = true;
 
+        private readonly KpiSummaryBar _kpiBar = new(); 
+
         public TransportView()
         {
             InitializeComponent();
@@ -38,6 +40,21 @@ namespace EDU_HUB_AI.View
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
+
+            bodyPanel.Controls.Add(_kpiBar);
+            _kpiBar.SetCards(
+                ("KTX", ThemeColors.Primary),
+                ("SRT", ThemeColors.Primary),
+                ("고속·시외버스", ThemeColors.Ok),
+                ("공항", ThemeColors.Warn),
+                ("셔틀버스", ThemeColors.Sync)
+            );
+            _kpiBar.CardClicked += (_, index) =>
+            {
+                string[] map = { "KTX", "SRT", "EXBUS", "AIRPORT", "SHUTTLE" };
+                if (index < map.Length)
+                    cmbType.SelectedValue = map[index];
+            };
 
             tableCard.Paint += (_, e) =>
             {
@@ -82,7 +99,8 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(tableCard, 0);
             bodyPanel.Controls.SetChildIndex(gapPanel, 1);
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
-            bodyPanel.Controls.SetChildIndex(pagination1, 3);
+            bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
+            bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
         private void SetupFilterSource()
@@ -130,6 +148,7 @@ namespace EDU_HUB_AI.View
             try
             {
                 _all = await LoadData();
+                UpdateKpi();
                 ApplyFilter();
                 RenderPage(1);
             }
@@ -139,6 +158,17 @@ namespace EDU_HUB_AI.View
                 overlay?.Close();
                 overlay?.Dispose();
             }
+        }
+
+        private void UpdateKpi()
+        {
+            _kpiBar.SetValues(
+                _all.Count(t => t.type == "KTX").ToString(),
+                _all.Count(t => t.type == "SRT").ToString(),
+                _all.Count(t => t.type == "EXBUS").ToString(),
+                _all.Count(t => t.type == "AIRPORT").ToString(),
+                _all.Count(t => t.type == "SHUTTLE").ToString()
+            );
         }
 
         // ===== 필터 / 렌더 =====
