@@ -23,6 +23,8 @@ namespace EDU_HUB_AI.View
 
         private readonly KpiSummaryBar _kpiBar = new();
         private List<string> _kpiFloors = [];
+        private string _selectedFloor = "";
+        private bool _suppressFloorFilter;
 
         public DormRoomView()
         {
@@ -46,19 +48,17 @@ namespace EDU_HUB_AI.View
             _kpiBar.CardClicked += (_, index) =>
             {
                 var floor = index == 0 ? "" : (index - 1 < _kpiFloors.Count ? _kpiFloors[index - 1] : "");
-                cmbDormRoom.SelectedValue = floor;
+                SelectFloor(floor);
             };
 
             pageHeader1.SyncClicked += (_, _) => LoadAndRender(1);
             pagination1.PageChanged += (_, page) => RenderPage(page);
-            cmbDormRoom.SelectedIndexChanged += (_, _) => { ApplySearchFilter(); RenderPage(1); };
         }
 
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             FixDockOrder();
-            await LoadCmb();
             grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
         }
@@ -86,7 +86,7 @@ namespace EDU_HUB_AI.View
             {
                 _all = await LoadData();
                 UpdateKpi();
-                ApplySort();
+                ApplySearchFilter();
                 RenderPage(page);
             }
             catch (ApiException ex)
@@ -137,6 +137,9 @@ namespace EDU_HUB_AI.View
             _kpiBar.SetSubtitle(0, $"최대 {_all.Sum(r => r.maxCount)}명");
             for (int i = 0; i < floorGroups.Count; i++)
                 _kpiBar.SetSubtitle(i + 1, $"최대 {floorGroups[i].Sum(r => r.maxCount)}명");
+
+            _kpiFloors = floorGroups.Select(g => g.Key).ToList();
+            BuildFloorRadios();
         }
 
         private void SetupGrid()
@@ -156,7 +159,7 @@ namespace EDU_HUB_AI.View
 
         private void RenderPage(int page)
         {
-            bool hasFilter = cmbDormRoom.SelectedIndex > 0;
+            bool hasFilter = !string.IsNullOrEmpty(_selectedFloor);
             var source = hasFilter ? _fiteredList : _all;
             pagination1.TotalCount = source.Count;
             var size = pagination1.PageSize;
@@ -251,30 +254,79 @@ namespace EDU_HUB_AI.View
             }
         }
 
-        private async Task LoadCmb()
+        private void BuildFloorRadios()
         {
-            var response = await _adminDormitoryController.GetDormRoomAssignStatus();
-            if (response?.Status == 200)
+            if (pnlFloorRadios == null) return;
+
+            pnlFloorRadios.SuspendLayout();
+            pnlFloorRadios.Controls.Clear();
+
+            _suppressFloorFilter = true;
+            try
             {
-                var floors = response.Data
-                                .Where(x => !string.IsNullOrEmpty(x.dormitoryRoomName))
-                                .Select(x => x.dormitoryRoomName[0].ToString())
-                                .Distinct()
-                                .OrderBy(f => f)
-                                .Select(f => new { Floor = f, Label = f + "층" })
-                                .ToList();
-
-                floors.Insert(0, new { Floor = "", Label = "전체" });
-
-                cmbDormRoom.DataSource = floors;
-                cmbDormRoom.DisplayMember = "Label";
-                cmbDormRoom.ValueMember = "Floor";
+                AddFloorRadio("", "전체");
+                foreach (var f in _kpiFloors)
+                    AddFloorRadio(f, $"{f}층");
             }
+            finally
+            {
+                _suppressFloorFilter = false;
+                pnlFloorRadios.ResumeLayout();
+            }
+        }
+
+        private void AddFloorRadio(string floorValue, string label)
+        {
+            var rb = new RadioButton
+            {
+                Text = label,
+                Font = ThemeFonts.Body,
+                ForeColor = ThemeColors.Text,
+                BackColor = ThemeColors.Surface,
+                AutoSize = true,
+                Margin = new Padding(0, 0, 20, 0),
+                Tag = floorValue,
+                Checked = string.Equals(_selectedFloor, floorValue, StringComparison.OrdinalIgnoreCase)
+            };
+
+            rb.CheckedChanged += OnFloorRadioCheckedChanged;
+            pnlFloorRadios.Controls.Add(rb);
+        }
+
+        private void OnFloorRadioCheckedChanged(object? sender, EventArgs e)
+        {
+            if (_suppressFloorFilter) return;
+            if (sender is not RadioButton rb) return;
+            if (!rb.Checked) return;
+
+            SelectFloor(rb.Tag as string ?? "");
+        }
+
+        private void SelectFloor(string floor)
+        {
+            _selectedFloor = floor ?? "";
+
+            _suppressFloorFilter = true;
+            try
+            {
+                foreach (var rb in pnlFloorRadios.Controls.OfType<RadioButton>())
+                {
+                    var val = rb.Tag as string ?? "";
+                    rb.Checked = string.Equals(_selectedFloor, val, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            finally
+            {
+                _suppressFloorFilter = false;
+            }
+
+            ApplySearchFilter();
+            RenderPage(1);
         }
 
         private void ApplySearchFilter()
         {
-            var floor = cmbDormRoom.SelectedValue?.ToString();
+            var floor = _selectedFloor;
             var result = string.IsNullOrEmpty(floor)
                 ? _all.AsEnumerable()
                 : _all.Where(d => !string.IsNullOrEmpty(d.dormitoryRoomName) && d.dormitoryRoomName.StartsWith(floor));

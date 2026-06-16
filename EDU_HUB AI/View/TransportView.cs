@@ -21,6 +21,8 @@ namespace EDU_HUB_AI.View
         private bool _sortAscending = true;
 
         private readonly KpiSummaryBar _kpiBar = new(); 
+        private string _selectedType = "";
+        private bool _suppressTypeFilter;
 
         public TransportView()
         {
@@ -36,7 +38,9 @@ namespace EDU_HUB_AI.View
                 RenderPage(1);
             };
 
-            SetupFilterSource();
+            SetupTypeFilter();
+
+            actionPanel.Resize += (_, _) => AlignCreateButton();
 
             bodyPanel.BackColor = ThemeColors.Background;
             pagination1.BackColor = ThemeColors.Background;
@@ -53,7 +57,7 @@ namespace EDU_HUB_AI.View
             {
                 string[] map = { "KTX", "SRT", "EXBUS", "AIRPORT", "SHUTTLE" };
                 if (index < map.Length)
-                    cmbType.SelectedValue = map[index];
+                    SelectTypeFilter(map[index]);
             };
 
             tableCard.Paint += (_, e) =>
@@ -81,14 +85,13 @@ namespace EDU_HUB_AI.View
                     case PageNavigation.Last: pagination1.GoToLast(); break;
                 }
             };
-
-            cmbType.SelectedIndexChanged += (_, _) => { ApplyFilter(); RenderPage(1); };
         }
 
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             FixDockOrder();
+            AlignCreateButton();
             grid.SetInitialSort("departTime", true);
             await LoadAndRender();
             grid.Focus();
@@ -103,15 +106,73 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(pagination1, 4);
         }
 
-        private void SetupFilterSource()
+        private void SetupTypeFilter()
         {
-            var items = new[] { new { Value = "", Label = "전체" } }
-                .Concat(TransportTypes.All.Select(t => new { Value = t, Label = TransportTypes.GetLabel(t) }))
-                .ToList();
+            _suppressTypeFilter = true;
+            try
+            {
+                rbTypeAll.CheckedChanged += (_, _) => OnTypeRadioChanged();
+                rbTypeKtx.CheckedChanged += (_, _) => OnTypeRadioChanged();
+                rbTypeSrt.CheckedChanged += (_, _) => OnTypeRadioChanged();
+                rbTypeExbus.CheckedChanged += (_, _) => OnTypeRadioChanged();
+                rbTypeAirport.CheckedChanged += (_, _) => OnTypeRadioChanged();
+                rbTypeShuttle.CheckedChanged += (_, _) => OnTypeRadioChanged();
 
-            cmbType.DataSource = items;
-            cmbType.DisplayMember = "Label";
-            cmbType.ValueMember = "Value";
+                SelectTypeFilter("");
+            }
+            finally
+            {
+                _suppressTypeFilter = false;
+            }
+        }
+
+        private void OnTypeRadioChanged()
+        {
+            if (_suppressTypeFilter) return;
+            if (!IsHandleCreated) return;
+
+            _selectedType =
+                rbTypeKtx.Checked ? "KTX" :
+                rbTypeSrt.Checked ? "SRT" :
+                rbTypeExbus.Checked ? "EXBUS" :
+                rbTypeAirport.Checked ? "AIRPORT" :
+                rbTypeShuttle.Checked ? "SHUTTLE" :
+                "";
+
+            ApplyFilter();
+            RenderPage(1);
+        }
+
+        private void SelectTypeFilter(string type)
+        {
+            _suppressTypeFilter = true;
+            try
+            {
+                _selectedType = type ?? "";
+
+                rbTypeAll.Checked = string.IsNullOrEmpty(_selectedType);
+                rbTypeKtx.Checked = string.Equals(_selectedType, "KTX", StringComparison.OrdinalIgnoreCase);
+                rbTypeSrt.Checked = string.Equals(_selectedType, "SRT", StringComparison.OrdinalIgnoreCase);
+                rbTypeExbus.Checked = string.Equals(_selectedType, "EXBUS", StringComparison.OrdinalIgnoreCase);
+                rbTypeAirport.Checked = string.Equals(_selectedType, "AIRPORT", StringComparison.OrdinalIgnoreCase);
+                rbTypeShuttle.Checked = string.Equals(_selectedType, "SHUTTLE", StringComparison.OrdinalIgnoreCase);
+            }
+            finally
+            {
+                _suppressTypeFilter = false;
+            }
+
+            ApplyFilter();
+            RenderPage(1);
+        }
+
+        private void AlignCreateButton()
+        {
+            btnCreate.PerformLayout();
+            pnlButtonHost.Width = btnCreate.Width + pnlButtonHost.Padding.Horizontal;
+            btnCreate.Location = new Point(
+                pnlButtonHost.ClientSize.Width - btnCreate.Width,
+                (pnlButtonHost.ClientSize.Height - btnCreate.Height) / 2);
         }
 
         private void SetupGrid()
@@ -175,7 +236,7 @@ namespace EDU_HUB_AI.View
 
         private void ApplyFilter()
         {
-            var type = cmbType.SelectedValue?.ToString();
+            var type = _selectedType;
             var result = string.IsNullOrEmpty(type)
                 ? _all.AsEnumerable()
                 : _all.Where(t => string.Equals(t.type, type, StringComparison.OrdinalIgnoreCase));
@@ -316,9 +377,6 @@ namespace EDU_HUB_AI.View
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (ActiveControl is ComboBox)
-                return base.ProcessCmdKey(ref msg, keyData);
-
             switch (keyData)
             {
                 case Keys.Control | Keys.Right: pagination1.GoToNext(); return true;
