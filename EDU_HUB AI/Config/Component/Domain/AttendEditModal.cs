@@ -1,4 +1,5 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Layout;
 using EDU_HUB_AI.Config.Theme;
 using EDU_HUB_AI.Controller;
@@ -141,7 +142,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             .Select(s => new 
                 {
                     StudentId = s.studentId,
-                    DisplayName = $"{s.studentName}({s.phoneNumber})"
+                    DisplayName = $"{s.studentName}({PhoneHelper.Format(s.phoneNumber)})"
                 })
                 .ToList();
 

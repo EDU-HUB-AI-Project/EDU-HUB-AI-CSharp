@@ -125,6 +125,11 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
             Body.Controls.Add(stack);
             SetCardWidth(500);
+
+            _txtSubjectName.Required = true;
+            _txtSubjectName.TextChanged += (_, _) => _txtSubjectName.HasError = false;
+            _cmbEdu.Required = true;
+            _cmbClassroom.Required = true;
         }
 
         protected override async void OnLoad(EventArgs e)

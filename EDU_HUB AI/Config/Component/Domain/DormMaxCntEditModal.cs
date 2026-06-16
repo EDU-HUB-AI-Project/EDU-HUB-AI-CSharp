@@ -56,7 +56,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
             var maxCnt = _txtRoomMaxCnt.Text.Trim();
 
-            if (maxCnt == null || maxCnt == "")
+            if (string.IsNullOrWhiteSpace(maxCnt))
             {
                 _txtRoomMaxCnt.HasError = true;
                 MessageBox.Show("변경하려는 최대 인원을 입력해주세요", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);

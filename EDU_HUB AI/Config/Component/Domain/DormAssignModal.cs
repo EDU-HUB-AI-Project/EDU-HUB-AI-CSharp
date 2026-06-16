@@ -78,7 +78,13 @@ namespace EDU_HUB_AI.Config.Component.Domain
                 return;
 
             Result = _source != null ? CopyOf(_source) : new DormAssignDto();
-            Result.dormitoryId= _cmbDormitory.SelectedValue.ToString();
+            var dormId = _cmbDormitory.SelectedValue?.ToString();
+            if (string.IsNullOrWhiteSpace(dormId))
+            {
+                MessageBox.Show("호실을 선택해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            Result.dormitoryId = dormId;
             base.OnConfirm();
         }
 

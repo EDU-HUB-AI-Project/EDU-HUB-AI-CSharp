@@ -69,7 +69,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
             AddGroup(stack, "메인", [(MenuKey.Dashboard, "대시보드", "layout-dashboard")]);
             AddGroup(stack, "교육생 관리",
             [
-                (MenuKey.Trainees, "교육생 정보", "users"),
+                (MenuKey.Trainees, "교육생 관리", "users"),
                 (MenuKey.Attendance, "출석 현황", "clipboard-check"),
                 (MenuKey.Dormitory, "생활관 배정", "bed-double"),
                 (MenuKey.DormRoom, "생활관 관리", "dormitory-room"),
@@ -79,9 +79,9 @@ namespace EDU_HUB_AI.Config.Component.Layout
             AddGroup(stack, "콘텐츠",
             [
                 (MenuKey.Classroom, "강의실 관리", "classroom"),
-                (MenuKey.Facilities, "시설 위치", "facilities"),
-                (MenuKey.Cafeteria, "식당 메뉴", "utensils"),
-                (MenuKey.Transport, "교통 정보", "bus")
+                (MenuKey.Facilities, "시설 관리", "facilities"),
+                (MenuKey.Cafeteria, "구내식당 메뉴", "utensils"),
+                (MenuKey.Transport, "교통정보 관리", "bus")
             ]);
 
             typeof(FlowLayoutPanel)

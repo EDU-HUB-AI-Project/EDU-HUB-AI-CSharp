@@ -1,4 +1,5 @@
 ﻿using EDU_HUB_AI.Config.Component.Basic;
+using EDU_HUB_AI.Config.Component.Common;
 using EDU_HUB_AI.Config.Component.Data;
 using EDU_HUB_AI.Config.Component.Domain;
 using EDU_HUB_AI.Config.Component.Layout;
@@ -187,7 +188,7 @@ namespace EDU_HUB_AI.View
                     grid.CellFormatting += OnCellFormatting;
                     _assignGrid = grid; _assignPg = pg;
                     pg.PageChanged += (_, p2) => _assignPage = RenderGrid(SortAssign(_FilterAssign()), _assignPg, p2, _assignGrid,
-                        r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
+                        r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), PhoneHelper.Format(r.phone), r.dormitoryRoomName, r.assignStatus));
                     break;
 
                 case "waiting":
@@ -453,7 +454,7 @@ namespace EDU_HUB_AI.View
             {
                 case "assign":
                     _assignPage = RenderGrid(SortAssign(_FilterAssign()), _assignPg, 1, _assignGrid,
-                        r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), r.phone, r.dormitoryRoomName, r.assignStatus));
+                        r => _assignGrid.Rows.Add(r.studentName, _eduMap.GetValueOrDefault(r.eduId, r.eduId), PhoneHelper.Format(r.phone), r.dormitoryRoomName, r.assignStatus));
                     break;
                 case "waiting":
                     _waitingPage = RenderGrid(SortInOut(_FilterWaiting(), _waitingSortCol, _waitingSortAsc), _waitingPg, 1, _waitingGrid,

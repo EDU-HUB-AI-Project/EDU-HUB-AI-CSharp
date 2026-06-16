@@ -102,11 +102,12 @@ namespace EDU_HUB_AI.Config.Component.Data
                 }
 
                 var isActive = page == _pageIndex;
+                var textSize = TextRenderer.MeasureText(page.ToString(), ThemeFonts.ButtonSm);
                 var btn = new Button
                 {
                     Text = page.ToString(),
                     AutoSize = false,
-                    Width = 32,
+                    Width = Math.Max(32, textSize.Width + 12),
                     Height = 32,
                     FlatStyle = FlatStyle.Flat,
                     Font = ThemeFonts.ButtonSm,

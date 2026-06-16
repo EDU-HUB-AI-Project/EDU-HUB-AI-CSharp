@@ -23,6 +23,7 @@ namespace EDU_HUB_AI.Config.Theme
         public static Color Border => Color.FromArgb(226, 232, 240);
         public static Color InputFocusRing => Color.FromArgb(64, 37, 99, 235);
         public static Color TableBorder => Color.FromArgb(226, 232, 240);
+        public static Color TableBorderSelected => Color.FromArgb(147, 181, 247);
         public static Color Ok => Color.FromArgb(16, 185, 129);
         public static Color OkBg => Color.FromArgb(209, 250, 229);
         public static Color OkText => Color.FromArgb(4, 120, 87);

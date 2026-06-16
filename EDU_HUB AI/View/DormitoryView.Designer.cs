@@ -30,7 +30,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.Dock = DockStyle.Top;
             pageHeader1.Size = new Size(1479, 60);
             pageHeader1.BackColor = ThemeColors.HeaderBg;
-            pageHeader1.Title = "생활관 배정 현황";
+            pageHeader1.Title = "생활관 배정";
 
             // DormitoryView
             AutoScaleDimensions = new SizeF(7F, 15F);
