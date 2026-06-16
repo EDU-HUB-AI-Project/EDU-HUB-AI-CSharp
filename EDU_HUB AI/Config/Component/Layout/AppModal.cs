@@ -53,7 +53,7 @@ namespace EDU_HUB_AI.Config.Component.Layout
                 else if (e.KeyCode == Keys.Enter && !e.Shift)
                 {
                     var focused = ActiveControl;
-                    if(focused is TextBox { Multiline: true } || focused is Button || focused is ComboBox)
+                    if(focused is TextBox { Multiline: true } || focused is Button || focused is ComboBox || focused is ComboField)
                     {
                         return;
                     }
