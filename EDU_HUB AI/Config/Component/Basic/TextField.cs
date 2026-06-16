@@ -22,6 +22,8 @@ namespace EDU_HUB_AI.Config.Component.Basic
         private bool _hasError;
         private bool _required;
 
+        private Color _inputBackColor = ThemeColors.Surface;
+
         public TextField()
         {
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
@@ -82,7 +84,16 @@ namespace EDU_HUB_AI.Config.Component.Basic
                 BackColor = ThemeColors.Surface,
                 Dock = DockStyle.Fill
             };
-            _input.Enter += (_, _) => SetFocused(true);
+            _input.Enter += (_, _) =>
+            {
+                if (_input.ReadOnly)
+                {
+                    _inputShell.Focus();
+                    return;
+                }
+                SetFocused(true);
+            };
+
             _input.Leave += (_, _) => SetFocused(false);
             _input.TextChanged += (_, _) => TextChanged?.Invoke(this, EventArgs.Empty);
 
@@ -151,6 +162,16 @@ namespace EDU_HUB_AI.Config.Component.Basic
         }
 
         [Category("EDU-HUB")]
+        public Color InputBackColor
+        {
+            get => _inputBackColor;
+            set
+            {
+                _inputBackColor = value;
+                _input.BackColor = value;
+                _inputShell.Invalidate(); // 다시 그리기
+            }
+        }
         [DefaultValue(false)]
         public bool Required
         {
@@ -170,7 +191,10 @@ namespace EDU_HUB_AI.Config.Component.Basic
             set
             {
                 _input.ReadOnly = value;
+                _input.TabStop = !value;
                 _inputShell.Cursor = value ? Cursors.Default : Cursors.IBeam;
+                // 여기도 커서를 막어야 함
+                _input.Cursor = value ? Cursors.Default : Cursors.IBeam;
             }
         }
 
@@ -206,7 +230,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
         private void PaintInputBorder(object? sender, PaintEventArgs e)
         {
             var bounds = new Rectangle(0, 0, _inputShell.Width - 1, _inputShell.Height - 1);
-            using var fill = new SolidBrush(ThemeColors.Surface);
+            using var fill = new SolidBrush(_inputBackColor);
             e.Graphics.FillRectangle(fill, bounds);
 
             var borderColor = _hasError ? ThemeColors.Danger

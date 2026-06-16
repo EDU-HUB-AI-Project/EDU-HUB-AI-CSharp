@@ -10,7 +10,7 @@ namespace EDU_HUB_AI.Model
     public class AttendDto
     {
         public string attendanceId { get; set; }
-        [ExcelColumn("학생ID")] // 엑셀 header와 매핑
+        [ExcelColumn("교육생ID")] // 엑셀 header와 매핑
         public string studentId { get; set; }
         public string studentName { get; set; }
         public string phone { get; set; } 
