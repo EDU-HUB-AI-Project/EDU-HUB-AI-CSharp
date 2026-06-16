@@ -32,7 +32,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.BackColor = ThemeColors.HeaderBg;
             pageHeader1.Dock = DockStyle.Top;
             pageHeader1.Size = new Size(1479, 100);
-            pageHeader1.Title = "관리자 대시보드";
+            pageHeader1.Title = "대시보드";
 
             // ── DashboardView ──────────────────────────────────
             AutoScaleDimensions = new SizeF(10F, 25F);

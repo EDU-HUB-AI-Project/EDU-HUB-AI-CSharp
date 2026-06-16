@@ -225,7 +225,7 @@ namespace EDU_HUB_AI.View
             grid.Rows.Clear();
             foreach (var a in _pageItems)
             {
-                var idx = grid.Rows.Add(a.studentName, a.phone, a.eduName, a.attendDate, a.status, a.message);
+                var idx = grid.Rows.Add(a.studentName, PhoneHelper.Format(a.phone), a.eduName, a.attendDate, a.status, a.message);
                 grid.Rows[idx].Tag = a;
             }
             grid.ResumeLayout();

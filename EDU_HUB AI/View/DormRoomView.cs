@@ -113,11 +113,18 @@ namespace EDU_HUB_AI.View
                 .OrderBy(g => g.Key)
                 .ToList();
 
-            _kpiFloors = floorGroups.Select(g => g.Key).ToList();
+            var floorPalette = new[]
+                {
+                    ThemeColors.Ok,
+                    ThemeColors.Warn,
+                    ThemeColors.InfoText,
+                    ThemeColors.Danger,
+                    ThemeColors.PrimaryHover
+                };
 
             var cardDefs = new List<(string, Color)> { ("전체 입실", ThemeColors.Primary) };
-            foreach (var g in floorGroups)
-                cardDefs.Add(($"{g.Key}층 입실", ThemeColors.Ok));
+            for (int i = 0; i < floorGroups.Count; i++)
+                cardDefs.Add(($"{floorGroups[i].Key}층 입실", floorPalette[i % floorPalette.Length]));
 
             _kpiBar.SetCards(cardDefs.ToArray());
 

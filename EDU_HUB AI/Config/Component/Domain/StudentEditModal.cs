@@ -49,7 +49,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
             _txtPhone = new TextField
             {
                 FieldLabel = "연락처",
-                Text = source?.phoneNumber ?? "",
+                Text = PhoneHelper.Format(source?.phoneNumber) ?? "",
                 Placeholder = "010-0000-0000",
                 Dock = DockStyle.Fill,
                 Margin = new Padding(0, 0, 0, 14)

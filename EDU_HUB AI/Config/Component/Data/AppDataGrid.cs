@@ -297,9 +297,18 @@ namespace EDU_HUB_AI.Config.Component.Data
 
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
-            if(e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 e.Paint(e.ClipBounds, e.PaintParts & ~DataGridViewPaintParts.Focus);
+
+                if (Rows[e.RowIndex].Selected)
+                {
+                    using var selectedBorderPen = new Pen(ThemeColors.TableBorderSelected);
+                    e.Graphics.DrawLine(selectedBorderPen,
+                        e.CellBounds.Right - 1, e.CellBounds.Top,
+                        e.CellBounds.Right - 1, e.CellBounds.Bottom);
+                }
+
                 e.Handled = true;
                 return;
             }
@@ -308,7 +317,6 @@ namespace EDU_HUB_AI.Config.Component.Data
             {
                 var col = Columns[e.ColumnIndex];
 
-                // 수정 칼럼 헤더 → 삭제 칼럼 헤더까지 합쳐서 그림
                 if (col.Name == EditColumnName && Columns.Contains(DeleteColumnName))
                 {
                     var deleteCol = Columns[DeleteColumnName];
@@ -340,7 +348,6 @@ namespace EDU_HUB_AI.Config.Component.Data
                         return;
                     }
                 }
-                // 삭제 칼럼 헤더는 위에서 이미 그렸으므로 아무것도 안 그림
                 else if (col.Name == DeleteColumnName && Columns.Contains(EditColumnName))
                 {
                     e.Handled = true;

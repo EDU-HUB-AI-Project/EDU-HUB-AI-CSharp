@@ -229,7 +229,7 @@ namespace EDU_HUB_AI.View
                 var edu = _eduInfos.FirstOrDefault(e => e.eduId == s.eduId);
                 var eduName = edu?.eduName ?? s.eduId;
                 var batchLabel = edu?.batchNumber is > 0 ? $"{edu.batchNumber}기" : "-";
-                var idx = grid.Rows.Add(s.studentName, s.birthDate, s.phoneNumber, eduName, batchLabel, DormLabel(s.dormYn));
+                var idx = grid.Rows.Add(s.studentName, s.birthDate, PhoneHelper.Format(s.phoneNumber), eduName, batchLabel, DormLabel(s.dormYn));
                 grid.Rows[idx].Tag = s;
             }
             grid.ResumeLayout();

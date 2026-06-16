@@ -102,7 +102,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.BackColor = ThemeColors.HeaderBg;
             pageHeader1.Dock = DockStyle.Top;
             pageHeader1.Size = new Size(1479, 100);
-            pageHeader1.Title = "생활관 호실관리";
+            pageHeader1.Title = "생활관 관리";
 
             // =============== DormRoomView ===============
             AutoScaleDimensions = new SizeF(10F, 25F);

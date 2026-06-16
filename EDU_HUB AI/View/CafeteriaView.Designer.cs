@@ -56,7 +56,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.Name = "pageHeader1";
             pageHeader1.Size = new Size(1479, 107);
             pageHeader1.TabIndex = 0;
-            pageHeader1.Title = "식단 관리";
+            pageHeader1.Title = "구내식당 메뉴";
             // CafeteriaView
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;

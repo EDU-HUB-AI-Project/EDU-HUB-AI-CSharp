@@ -115,6 +115,15 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
             Body.Controls.Add(stack);
             SetCardWidth(480);
+
+            _txtEduName.Required = true;
+            _txtEduName.TextChanged += (_, _) => _txtEduName.HasError = false;
+
+            _txtBatchNumber.Required = true;
+            _txtBatchNumber.TextChanged += (_, _) => _txtBatchNumber.HasError = false;
+
+            _txtCapacity.Required = true;
+            _txtCapacity.TextChanged += (_, _) => _txtCapacity.HasError = false;
         }
 
         protected override void OnShown(EventArgs e)

@@ -114,7 +114,7 @@ namespace EDU_HUB_AI.View
             pageHeader1.BackColor = ThemeColors.HeaderBg;
             pageHeader1.Dock = DockStyle.Top;
             pageHeader1.Size = new Size(1479, 100);
-            pageHeader1.Title = "시설 위치 관리";
+            pageHeader1.Title = "시설 관리";
 
             // ── FacilityLocationView ───────────────────────────
             AutoScaleDimensions = new SizeF(10F, 25F);
