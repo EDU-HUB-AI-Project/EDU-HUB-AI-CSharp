@@ -86,6 +86,12 @@ namespace EDU_HUB_AI.Config.Component.Domain
             stack.Controls.Add(_cmbStatus, 0, 3);
             stack.Controls.Add(_txtMessage, 0, 4);
 
+            _cmbStudent.Required = true;
+            _cmbEduId.Required = true;
+            _dtpAttendDate.Required = true;
+            _cmbStatus.Required = true;
+            _txtMessage.TextChanged += (_, _) => _txtMessage.HasError = false;
+
             Body.Controls.Add(stack);
             SetCardWidth(500);
         }
@@ -203,6 +209,7 @@ namespace EDU_HUB_AI.Config.Component.Domain
 
             if (status != "출석" && string.IsNullOrWhiteSpace(msg))
             {
+                _txtMessage.HasError = true;
                 MessageBox.Show("해당하는 사유를 입력해주세요.", "입력 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -227,11 +234,15 @@ namespace EDU_HUB_AI.Config.Component.Domain
         private void OnStatusChanged(object? sender, EventArgs e)
         {
             bool isPresent = _cmbStatus.SelectedItem?.ToString() == "출석";
-            _txtMessage.Enabled = !isPresent;
+            _txtMessage.ReadOnly = isPresent;
 
             if (isPresent)
             {
                 _txtMessage.Text = "";   // 출석으로 바꾸면 기존 사유도 비워줌
+                _txtMessage.InputBackColor = ThemeColors.Background;
+            } else
+            {
+                _txtMessage.InputBackColor = ThemeColors.Surface;
             }
         }
 

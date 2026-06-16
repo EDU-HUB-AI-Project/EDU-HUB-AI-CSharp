@@ -143,13 +143,27 @@ namespace EDU_HUB_AI.View
         {
             grid.RowTemplate.Height = 56;
             grid.Columns.Add("type", "구분");
+            grid.Columns["type"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            grid.Columns["type"].Width = 80;
+
             grid.Columns.Add("name", "시설명");
+            grid.Columns["name"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            grid.Columns["name"].Width = 160;
+
             grid.Columns.Add("location", "위치");
+            grid.Columns["location"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            grid.Columns["location"].Width = 120;
+
             grid.Columns.Add("detail", "층수 / 좌표");
+            grid.Columns["detail"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            grid.Columns["detail"].Width = 130;
+
             grid.Columns.Add("image", "이미지");
             grid.Columns["image"].MinimumWidth = 160;
-            grid.Columns["image"].FillWeight = 140;
+            grid.Columns["image"].FillWeight = 250;
             grid.Columns.Add("description", "안내");
+            grid.Columns["description"].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            grid.Columns["description"].Width = 350;
             grid.AddTextActionColumns();
             grid.CellPainting += OnImageCellPainting;
             grid.ActionClicked += OnRowAction;
@@ -312,7 +326,7 @@ namespace EDU_HUB_AI.View
                 return f.floor.HasValue ? $"{f.floor}층" : "-";
 
             if (string.Equals(f.facilityType, "OUTER", StringComparison.OrdinalIgnoreCase))
-                return f.mapX.HasValue && f.mapY.HasValue ? $"{f.mapX:F6}, {f.mapY:F6}" : "-";
+                return f.mapX.HasValue && f.mapY.HasValue ? $"{f.mapX:F1}, {f.mapY:F1}" : "-";
 
             return "-";
         }

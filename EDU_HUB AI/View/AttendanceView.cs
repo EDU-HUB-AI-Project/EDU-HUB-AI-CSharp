@@ -190,7 +190,7 @@ namespace EDU_HUB_AI.View
                 todayList.Count(a => a.status == "조퇴").ToString(),
                 $"{rate}%"
             );
-            _kpiBar.SetSubtitle(4, $"{DateTime.Today:M/d} 기준");
+            _kpiBar.SetSubtitle(4, $"{DateTime.Today:yy/M/d} 기준");
         }
 
         // ===== 그리드 =====
@@ -480,26 +480,27 @@ namespace EDU_HUB_AI.View
                             // dto 필드명으로 각 행의 데이터 가져오기
                             // ExcelImporter에서 헤더명을 dto의 필드명으로 매핑을 함
                             string studentId = row["studentId"]?.ToString();
-                            string attendDate = row["attendDate"]?.ToString();
+                            string rawDate = row["attendDate"]?.ToString();
                             string status = row["status"]?.ToString();
                             string message = row["message"]?.ToString();
                             if(string.IsNullOrEmpty(studentId))
                             {
                                 throw new Exception($"{dt.Rows.IndexOf(row) + 1}행 : 이름이 비어있습니다.");
                             }
+                            var attendDate = string.IsNullOrWhiteSpace(rawDate) ? null : DateHelper.NormalizeBirthDate(rawDate);
                             if (string.IsNullOrEmpty(attendDate))
                             {
-                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: 출석일자가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row)}행: 출석일자 형식이 올바르지 않습니다. (예: 2000-01-01 / 000101)", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             if (string.IsNullOrEmpty(status))
                             {
-                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row)}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             if (status != "출석" && string.IsNullOrEmpty(message))
                             {
-                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row)}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             list.Add(new AttendDto
