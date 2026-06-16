@@ -21,10 +21,13 @@ namespace EDU_HUB_AI.View
             bodyPanel = new Panel();
             filterCard = new Panel();
             actionPanel = new Panel();
+            pnlButtonHost = new Panel();
             gapPanel = new Panel();
             tableCard = new Panel();
             grid = new AppDataGrid();
-            cmbTypeFilter = new ComboField();
+            rbTypeAll = new RadioButton();
+            rbTypeInner = new RadioButton();
+            rbTypeOuter = new RadioButton();
             btnCreate = new AppButton();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
@@ -49,32 +52,31 @@ namespace EDU_HUB_AI.View
             filterCard.Dock = DockStyle.Top;
             filterCard.BackColor = ThemeColors.Surface;
             filterCard.Padding = new Padding(16, 12, 16, 12);
-            filterCard.Height = 100;
+            filterCard.Height = 120;
 
-            // ── actionPanel ────────────────────────────────────
+            // ── actionPanel (TransportView / StudentView 동일 패턴) ──
             var pnlFilterFlow = new FlowLayoutPanel
             {
                 Dock = DockStyle.Left,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
                 AutoSize = true,
-                Padding = new Padding(0),
+                Padding = new Padding(0, 32, 0, 32),
                 Margin = new Padding(0)
             };
-            pnlFilterFlow.Controls.Add(cmbTypeFilter);
+            pnlFilterFlow.Controls.Add(rbTypeAll);
+            pnlFilterFlow.Controls.Add(rbTypeInner);
+            pnlFilterFlow.Controls.Add(rbTypeOuter);
 
-            var pnlButtonFlow = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Right,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                AutoSize = true,
-                Padding = new Padding(12, 8, 0, 8)
-            };
-            pnlButtonFlow.Controls.Add(btnCreate);
+            pnlButtonHost.Controls.Add(btnCreate);
+            pnlButtonHost.Dock = DockStyle.Right;
+            pnlButtonHost.Padding = new Padding(12, 0, 4, 0);
+            pnlButtonHost.Width = 140;
+            pnlButtonHost.BackColor = ThemeColors.Surface;
 
+            // Right를 먼저 추가해야 Dock 시 오른쪽 영역이 잘리지 않음
+            actionPanel.Controls.Add(pnlButtonHost);
             actionPanel.Controls.Add(pnlFilterFlow);
-            actionPanel.Controls.Add(pnlButtonFlow);
             actionPanel.Dock = DockStyle.Fill;
             actionPanel.Padding = new Padding(0);
 
@@ -93,15 +95,36 @@ namespace EDU_HUB_AI.View
             grid.Dock = DockStyle.Fill;
             grid.TabIndex = 0;
 
-            // ── cmbTypeFilter ──────────────────────────────────
-            cmbTypeFilter.FieldLabel = "구분";
-            cmbTypeFilter.Size = new Size(120, 62);
-            cmbTypeFilter.Margin = new Padding(0, 0, 8, 0);
+            // ── rbTypeAll ──────────────────────────────────────
+            rbTypeAll.Text = "전체";
+            rbTypeAll.Font = ThemeFonts.Body;
+            rbTypeAll.ForeColor = ThemeColors.Text;
+            rbTypeAll.BackColor = ThemeColors.Surface;
+            rbTypeAll.AutoSize = true;
+            rbTypeAll.Checked = true;
+            rbTypeAll.Margin = new Padding(0, 0, 20, 0);
+
+            // ── rbTypeInner ────────────────────────────────────
+            rbTypeInner.Text = "내부";
+            rbTypeInner.Font = ThemeFonts.Body;
+            rbTypeInner.ForeColor = ThemeColors.Text;
+            rbTypeInner.BackColor = ThemeColors.Surface;
+            rbTypeInner.AutoSize = true;
+            rbTypeInner.Margin = new Padding(0, 0, 20, 0);
+
+            // ── rbTypeOuter ────────────────────────────────────
+            rbTypeOuter.Text = "외부";
+            rbTypeOuter.Font = ThemeFonts.Body;
+            rbTypeOuter.ForeColor = ThemeColors.Text;
+            rbTypeOuter.BackColor = ThemeColors.Surface;
+            rbTypeOuter.AutoSize = true;
+            rbTypeOuter.Margin = new Padding(0);
 
             // ── btnCreate ──────────────────────────────────────
             btnCreate.Text = "시설 등록";
             btnCreate.Variant = ButtonVariant.Primary;
             btnCreate.IconName = "plus";
+            btnCreate.Anchor = AnchorStyles.None;
             btnCreate.Margin = new Padding(0);
 
             // ── pagination1 ────────────────────────────────────
@@ -134,12 +157,15 @@ namespace EDU_HUB_AI.View
         private Panel bodyPanel;
         private Panel filterCard;
         private Panel actionPanel;
+        private Panel pnlButtonHost;
         private Panel gapPanel;
         private Panel tableCard;
         private PageHeader pageHeader1;
         private AppDataGrid grid;
         private Pagination pagination1;
-        private ComboField cmbTypeFilter;
+        private RadioButton rbTypeAll;
+        private RadioButton rbTypeInner;
+        private RadioButton rbTypeOuter;
         private AppButton btnCreate;
     }
 }

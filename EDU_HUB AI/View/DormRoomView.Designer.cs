@@ -33,7 +33,7 @@ namespace EDU_HUB_AI.View
             filterCard = new Panel();
             gapPanel = new Panel();
             btnSearch = new AppButton();
-            cmbDormRoom = new ComboField();
+            pnlFloorRadios = new FlowLayoutPanel();
             pagination1 = new Pagination();
             pageHeader1 = new PageHeader();
             bodyPanel.SuspendLayout();
@@ -72,24 +72,18 @@ namespace EDU_HUB_AI.View
             grid.Dock = DockStyle.Fill;
             grid.TabIndex = 1;
 
-            // =============== cmbDormRoom ===============
-            cmbDormRoom.FieldLabel = "층";
-            cmbDormRoom.Size = new Size(100, 54);
-            cmbDormRoom.Margin = new Padding(0, 0, 8, 0);
-            cmbDormRoom.TabIndex = 0;
+            // =============== pnlFloorRadios ===============
+            pnlFloorRadios.Dock = DockStyle.Left;
+            pnlFloorRadios.FlowDirection = FlowDirection.LeftToRight;
+            pnlFloorRadios.WrapContents = false;
+            pnlFloorRadios.AutoSize = true;
+            // filterCard (120) 안에서 라디오 버튼을 세로 중앙에 두기 위함
+            pnlFloorRadios.Padding = new Padding(0, 32, 0, 32);
+            pnlFloorRadios.Margin = new Padding(0);
 
             // =============== actionPanel ===============
-            var pnlButtonFlow = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Left,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                AutoSize = true,
-                Padding = new Padding(12, 8, 0, 8)
-            };
-            pnlButtonFlow.Controls.Add(cmbDormRoom);
             actionPanel.Dock = DockStyle.Fill;
-            actionPanel.Controls.Add(pnlButtonFlow);
+            actionPanel.Controls.Add(pnlFloorRadios);
             actionPanel.Padding = new Padding(0);
 
             // =============== pagination1 =============== 
@@ -128,6 +122,6 @@ namespace EDU_HUB_AI.View
         private Panel tableCard;
         private Panel gapPanel;
         private AppButton btnSearch;
-        private ComboField cmbDormRoom;
+        private FlowLayoutPanel pnlFloorRadios;
     }
 }

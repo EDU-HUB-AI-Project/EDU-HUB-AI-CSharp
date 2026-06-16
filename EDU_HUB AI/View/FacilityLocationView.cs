@@ -19,6 +19,8 @@ namespace EDU_HUB_AI.View
 
         private string _sortColumn = "type";
         private bool _sortAscending = true;
+        private string _selectedType = "";
+        private bool _suppressTypeFilter;
 
         private readonly KpiSummaryBar _kpiBar = new();
         public FacilityLocationView()
@@ -49,9 +51,9 @@ namespace EDU_HUB_AI.View
             {
                 switch (index)
                 {
-                    case 0: cmbTypeFilter.SelectedValue = ""; break;
-                    case 1: cmbTypeFilter.SelectedValue = "INNER"; break;
-                    case 2: cmbTypeFilter.SelectedValue = "OUTER"; break;
+                    case 0: SelectTypeFilter(""); break;
+                    case 1: SelectTypeFilter("INNER"); break;
+                    case 2: SelectTypeFilter("OUTER"); break;
                 }
             };
 
@@ -68,10 +70,11 @@ namespace EDU_HUB_AI.View
 
             SetupTypeFilter();
 
+            actionPanel.Resize += (_, _) => AlignCreateButton();
+
             pageHeader1.SyncClicked += async (_, _) => await LoadAndRender(1);
             btnCreate.Click += OnCreate;
             pagination1.PageChanged += (_, page) => RenderPage(page);
-            cmbTypeFilter.SelectedIndexChanged += (_, _) => { ApplyTypeFilter(); RenderPage(1); };
 
             grid.PageNavigationRequested += (_, nav) =>
             {
@@ -89,6 +92,7 @@ namespace EDU_HUB_AI.View
         {
             base.OnLoad(e);
             FixDockOrder();
+            AlignCreateButton();
             grid.SetInitialSort(_sortColumn, _sortAscending);
             await LoadAndRender(1);
             grid.Focus();
@@ -101,6 +105,15 @@ namespace EDU_HUB_AI.View
             bodyPanel.Controls.SetChildIndex(filterCard, 2);
             bodyPanel.Controls.SetChildIndex(_kpiBar, 3);
             bodyPanel.Controls.SetChildIndex(pagination1, 4);
+        }
+
+        private void AlignCreateButton()
+        {
+            btnCreate.PerformLayout();
+            pnlButtonHost.Width = btnCreate.Width + pnlButtonHost.Padding.Horizontal;
+            btnCreate.Location = new Point(
+                pnlButtonHost.ClientSize.Width - btnCreate.Width,
+                (pnlButtonHost.ClientSize.Height - btnCreate.Height) / 2);
         }
 
         private async Task<List<FacilityInfoDto>> LoadData()
@@ -286,20 +299,44 @@ namespace EDU_HUB_AI.View
 
         private void SetupTypeFilter()
         {
-            cmbTypeFilter.DataSource = new[]
+            rbTypeAll.CheckedChanged += OnTypeRadioChanged;
+            rbTypeInner.CheckedChanged += OnTypeRadioChanged;
+            rbTypeOuter.CheckedChanged += OnTypeRadioChanged;
+        }
+
+        private void OnTypeRadioChanged(object? sender, EventArgs e)
+        {
+            if (_suppressTypeFilter || sender is not RadioButton rb || !rb.Checked)
+                return;
+
+            _selectedType = rb == rbTypeAll ? "" :
+                rb == rbTypeInner ? "INNER" : "OUTER";
+            ApplyTypeFilter();
+            RenderPage(1);
+        }
+
+        private void SelectTypeFilter(string type)
+        {
+            _suppressTypeFilter = true;
+            try
             {
-                new { Value = "", Label = "전체" },
-                new { Value = "INNER", Label = "내부" },
-                new { Value = "OUTER", Label = "외부" }
-            };
-            cmbTypeFilter.DisplayMember = "Label";
-            cmbTypeFilter.ValueMember = "Value";
-            cmbTypeFilter.SelectedIndex = 0;
+                _selectedType = type;
+                rbTypeAll.Checked = type == "";
+                rbTypeInner.Checked = type == "INNER";
+                rbTypeOuter.Checked = type == "OUTER";
+            }
+            finally
+            {
+                _suppressTypeFilter = false;
+            }
+
+            ApplyTypeFilter();
+            RenderPage(1);
         }
 
         private void ApplyTypeFilter()
         {
-            var type = cmbTypeFilter.SelectedValue?.ToString();
+            var type = _selectedType;
             _filtered = string.IsNullOrEmpty(type)
                 ? _all.ToList()
                 : _all.Where(f => string.Equals(f.facilityType, type, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -449,7 +486,7 @@ namespace EDU_HUB_AI.View
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (ActiveControl is TextBox or ComboBox)
+            if (ActiveControl is TextBox)
                 return base.ProcessCmdKey(ref msg, keyData);
 
             switch (keyData)
