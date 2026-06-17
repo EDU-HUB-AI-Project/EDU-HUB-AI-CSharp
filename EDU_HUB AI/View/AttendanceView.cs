@@ -365,7 +365,7 @@ namespace EDU_HUB_AI.View
             // dt에 row 추가 이때 dgv순서에 맞게 매핑
             foreach (var items in list)
             {
-                _dtAttend.Rows.Add(items.studentName, items.eduName, items.attendDate,
+                _dtAttend.Rows.Add(items.studentName, items.phone, items.eduName, items.attendDate,
                                     items.status, items.message);
             }
         }
@@ -490,17 +490,17 @@ namespace EDU_HUB_AI.View
                             var attendDate = string.IsNullOrWhiteSpace(rawDate) ? null : DateHelper.NormalizeBirthDate(rawDate);
                             if (string.IsNullOrEmpty(attendDate))
                             {
-                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row)}행: 출석일자 형식이 올바르지 않습니다. (예: 2000-01-01 / 000101)", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: 출석일자 형식이 올바르지 않습니다. (예: 2000-01-01 / 000101)", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             if (string.IsNullOrEmpty(status))
                             {
-                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row)}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: 출석상태가 비어있습니다.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             if (status != "출석" && string.IsNullOrEmpty(message))
                             {
-                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row)}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show(this.FindForm(), $"{dt.Rows.IndexOf(row) + 1}행: {status}의 경우 사유를 입력해주세요.", "입력오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
                             list.Add(new AttendDto
