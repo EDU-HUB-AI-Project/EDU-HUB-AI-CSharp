@@ -164,7 +164,7 @@ namespace EDU_HUB_AI.View
             var pg = new Pagination
             {
                 Dock = DockStyle.Bottom,
-                Height = 76
+                Height = 50
             };
 
             switch (tabKey)
