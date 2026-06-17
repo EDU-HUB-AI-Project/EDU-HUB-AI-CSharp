@@ -13,6 +13,17 @@ namespace EDU_HUB_AI.View
 {
     public partial class MainShellForm : Form
     {
+        internal class DoubleBufferedPanel : Panel
+        {
+            public DoubleBufferedPanel()
+            {
+                DoubleBuffered = true;
+                SetStyle(ControlStyles.AllPaintingInWmPaint |
+                     ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.UserPaint, true);
+            }
+        }
+
         private static readonly MenuKey[] _menuShortcuts =
             [
                 MenuKey.Dashboard,   // Ctrl+1
@@ -30,6 +41,7 @@ namespace EDU_HUB_AI.View
         public MainShellForm()
         {
             InitializeComponent();
+            DoubleBuffered = true;
             KeyPreview = true;
             KeyDown += OnShellKeyDown;
 
@@ -94,9 +106,12 @@ namespace EDU_HUB_AI.View
                 if (view is EduInfoView ev) ev.SetFilter(filter);
             }
 
+            contentPanel.SuspendLayout();
             contentPanel.Controls.Clear();
             view.Dock = DockStyle.Fill;
             contentPanel.Controls.Add(view);
+            contentPanel.ResumeLayout(true);
+
             navigation1.ActiveMenu = key;
         }
     }

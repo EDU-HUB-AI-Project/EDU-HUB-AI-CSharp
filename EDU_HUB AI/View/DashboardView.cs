@@ -95,7 +95,7 @@ namespace EDU_HUB_AI.View
                     ThemeColors.Warn, total > 0 ? (float)late / total : 0f,
                     new Point(2 * (cardW + gap), 0), cardW);
                 var cardEarlyLeave = MakeCard("조퇴 현황", $"{earlyLeave}명", GetRatio(earlyLeave),
-                    ThemeColors.Warn, total > 0 ? (float)earlyLeave / total : 0f,
+                    ThemeColors.DashBoardEarlyLeave, total > 0 ? (float)earlyLeave / total : 0f,
                     new Point(3 * (cardW + gap), 0), cardW);
 
                 cardAttend.Click += (_, _) => _navigateTo?.Invoke(MenuKey.Attendance, "출석");
@@ -117,22 +117,38 @@ namespace EDU_HUB_AI.View
                     Size = new Size(W - 60, 105),
                     Series = new ISeries[]
                     {
-                        new StackedRowSeries<double> { Name = "조퇴",
-                            Values = new double[] { earlyLeave },
-                            Fill = new SolidColorPaint(new SKColor(255, 193, 7)) },
-                        new StackedRowSeries<double> { Name = "지각",
-                            Values = new double[] { late },
-                            Fill = new SolidColorPaint(SKColors.DarkOrange) },
-                        new StackedRowSeries<double> { Name = "결석",
-                            Values = new double[] { absence },
-                            Fill = new SolidColorPaint(new SKColor(220, 53, 69)) },
-                        new StackedRowSeries<double> { Name = "출석",
+                        new StackedRowSeries<double>
+                        {
+                            Name = "출석",
                             Values = new double[] { attend },
-                            Fill = new SolidColorPaint(SKColors.Green) }
+                            Fill = new SolidColorPaint(new SKColor(16, 185, 129)),
+                            Stroke = null
+                        },
+                        new StackedRowSeries<double>
+                        {
+                            Name = "결석",
+                            Values = new double[] { absence },
+                            Fill = new SolidColorPaint(new SKColor(239, 68, 68)),
+                            Stroke = null
+                        },
+                        new StackedRowSeries<double>
+                        {
+                            Name = "지각",
+                            Values = new double[] { late },
+                            Fill = new SolidColorPaint(new SKColor(245, 158, 11)),
+                            Stroke = null
+                        },
+                        new StackedRowSeries<double>
+                        {
+                            Name = "조퇴",
+                            Values = new double[] { earlyLeave },
+                            Fill = new SolidColorPaint(new SKColor(255, 193, 7)),
+                            Stroke = null
+                        }
                     },
-                    LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom,
-                    XAxes = new[] { new Axis { IsVisible = false } },
-                    YAxes = new[] { new Axis { IsVisible = false } }
+                LegendPosition = LiveChartsCore.Measure.LegendPosition.Right,
+                    XAxes = new[] { new Axis { IsVisible = false, MinLimit = 0, MaxLimit = total } },
+                YAxes = new[] { new Axis { IsVisible = false } }
                 });
                 bodyPanel.Controls.Add(barPanel);
 

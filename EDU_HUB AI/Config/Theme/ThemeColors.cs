@@ -48,5 +48,7 @@ namespace EDU_HUB_AI.Config.Theme
         public static Color SidebarTextHover => Color.FromArgb(203, 213, 225);
         public static Color TableSelected => Color.FromArgb(179, 208, 252); 
         public static Color TableSelectedText => Color.FromArgb(15, 23, 42);
+
+        public static Color DashBoardEarlyLeave => Color.FromArgb(255, 193, 7);
     }
 }
