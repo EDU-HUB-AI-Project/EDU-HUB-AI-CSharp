@@ -9,6 +9,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.WinForms;
+using NPOI.SS.Formula.Functions;
 using SkiaSharp;
 
 namespace EDU_HUB_AI.View
@@ -115,34 +116,39 @@ namespace EDU_HUB_AI.View
                 {
                     Location = new Point(30, 50),
                     Size = new Size(W - 60, 105),
+                    TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Hidden,
                     Series = new ISeries[]
                     {
                         new StackedRowSeries<double>
                         {
-                            Name = "출석",
+                            Name = $"출석 ({attend}명)",
                             Values = new double[] { attend },
                             Fill = new SolidColorPaint(new SKColor(16, 185, 129)),
+                            IsHoverable = false,
                             Stroke = null
                         },
                         new StackedRowSeries<double>
                         {
-                            Name = "결석",
+                            Name = $"결석 ({absence}명)",
                             Values = new double[] { absence },
                             Fill = new SolidColorPaint(new SKColor(239, 68, 68)),
+                            IsHoverable = false,
                             Stroke = null
                         },
                         new StackedRowSeries<double>
                         {
-                            Name = "지각",
+                            Name = $"지각 ({late}명)",
                             Values = new double[] { late },
                             Fill = new SolidColorPaint(new SKColor(245, 158, 11)),
+                            IsHoverable = false,
                             Stroke = null
                         },
                         new StackedRowSeries<double>
                         {
-                            Name = "조퇴",
+                            Name = $"조퇴 ({earlyLeave}명)",
                             Values = new double[] { earlyLeave },
                             Fill = new SolidColorPaint(new SKColor(255, 193, 7)),
+                            IsHoverable = false,
                             Stroke = null
                         }
                     },
@@ -162,11 +168,20 @@ namespace EDU_HUB_AI.View
                 piePanel.Controls.Add(new PieChart
                 {
                     Dock = DockStyle.Fill,
-                    Series = res2.Data.Select(item => new PieSeries<double>
-                    {
-                        Name = item["ACTION"].GetString(),
-                        Values = new double[] { item["CNT"].GetInt32() }
-                    }).ToArray(),
+                    TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Hidden,
+                    Series = res2.Data
+                             .Where(item => item["ACTION"].GetString() != "교육생 안내")
+                            .Select(item => 
+                            {
+                                string action = item["ACTION"].GetString();
+                                int cnt = item["CNT"].GetInt32();
+                                return new PieSeries<double>
+                            {
+                                Name = $"{action} ({cnt}건)",
+                                Values = new double[] { cnt },
+                                IsHoverable = false
+                                };
+                }).ToArray(),
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Right
                 });
                 bodyPanel.Controls.Add(piePanel);
@@ -175,15 +190,18 @@ namespace EDU_HUB_AI.View
                 dormPanel.Controls.Add(new PieChart
                 {
                     Dock = DockStyle.Fill,
+                    TooltipPosition = LiveChartsCore.Measure.TooltipPosition.Hidden,
                     Series = new ISeries[]
                     {
-                        new PieSeries<double> { Name = "배정",
+                        new PieSeries<double> { Name = $"배정 ({assignCount}명)",
                             Values = new double[] { assignCount },
                             Fill = new SolidColorPaint(SKColors.SteelBlue),
+                            IsHoverable = false,
                             InnerRadius = 60 },
-                        new PieSeries<double> { Name = "미배정",
+                        new PieSeries<double> { Name = $"미배정 ({unassigned}명)",
                             Values = new double[] { unassigned },
                             Fill = new SolidColorPaint(new SKColor(226, 232, 240)),
+                            IsHoverable = false,
                             InnerRadius = 60 }
                     },
                     LegendPosition = LiveChartsCore.Measure.LegendPosition.Bottom
