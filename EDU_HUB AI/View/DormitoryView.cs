@@ -331,7 +331,7 @@ namespace EDU_HUB_AI.View
             _roomListPanel.SuspendLayout();
             foreach (Control c in _roomListPanel.Controls) c.Dispose();
             _roomListPanel.Controls.Clear();
-
+            _roomListPanel.AutoScrollPosition = new Point(0, 0);
             _roomListPanel.Controls.Add(MakeRoomItem("전체 학생", -1, -1, _selectedDormId == null, () => SelectRoom(null)));
 
             foreach (var room in list)
