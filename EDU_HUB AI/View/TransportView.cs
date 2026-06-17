@@ -224,11 +224,11 @@ namespace EDU_HUB_AI.View
         private void UpdateKpi()
         {
             _kpiBar.SetValues(
-                _all.Count(t => t.type == "KTX").ToString(),
-                _all.Count(t => t.type == "SRT").ToString(),
-                _all.Count(t => t.type == "EXBUS").ToString(),
-                _all.Count(t => t.type == "AIRPORT").ToString(),
-                _all.Count(t => t.type == "SHUTTLE").ToString()
+                $"{_all.Count(t => t.type == "KTX")}건",
+                $"{_all.Count(t => t.type == "SRT")}건",
+                $"{_all.Count(t => t.type == "EXBUS")}건",
+                $"{_all.Count(t => t.type == "AIRPORT")}건",
+                $"{_all.Count(t => t.type == "SHUTTLE")}건"
             );
         }
 

@@ -128,9 +128,9 @@ namespace EDU_HUB_AI.View
 
             _kpiBar.SetCards(cardDefs.ToArray());
 
-            var values = new List<string> { _all.Sum(r => r.currentCount).ToString() };
+            var values = new List<string> { $"{_all.Sum(r => r.currentCount)}명" };
             foreach (var g in floorGroups)
-                values.Add(g.Sum(r => r.currentCount).ToString());
+                values.Add($"{g.Sum(r => r.currentCount)}명");
 
             _kpiBar.SetValues(values.ToArray());
 

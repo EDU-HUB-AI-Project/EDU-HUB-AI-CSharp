@@ -184,10 +184,10 @@ namespace EDU_HUB_AI.View
             var rate = total > 0 ? (int)Math.Round(attend * 100.0 / total) : 0;
 
             _kpiBar.SetValues(
-                attend.ToString(),
-                todayList.Count(a => a.status == "지각").ToString(),
-                todayList.Count(a => a.status == "결석").ToString(),
-                todayList.Count(a => a.status == "조퇴").ToString(),
+                $"{attend}명",
+                $"{todayList.Count(a => a.status == "지각")}명",
+                $"{todayList.Count(a => a.status == "결석")}명",
+                $"{todayList.Count(a => a.status == "조퇴")}명",
                 $"{rate}%"
             );
             _kpiBar.SetSubtitle(4, $"{DateTime.Today:yy/M/d} 기준");

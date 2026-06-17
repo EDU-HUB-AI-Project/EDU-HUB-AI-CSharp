@@ -134,10 +134,10 @@ namespace EDU_HUB_AI.View
         private void UpdateKpi()
         {
             _kpiBar.SetValues(
-                _all.Count.ToString(),
-                _all.Count(e => StatusLabel(e) == "진행중").ToString(),
-                _all.Count(e => StatusLabel(e) == "예정").ToString(),
-                _all.Count(e => StatusLabel(e) == "종료").ToString()
+                $"{_all.Count}개",
+                $"{_all.Count(e => StatusLabel(e) == "진행중")}개",
+                $"{_all.Count(e => StatusLabel(e) == "예정")}개",
+                $"{_all.Count(e => StatusLabel(e) == "종료")}개"
             );
         }
 

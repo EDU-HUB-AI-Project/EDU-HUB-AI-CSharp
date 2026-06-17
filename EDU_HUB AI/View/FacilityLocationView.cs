@@ -145,10 +145,10 @@ namespace EDU_HUB_AI.View
         private void UpdateKpi()
         {
             _kpiBar.SetValues(
-                _all.Count.ToString(),
-                _all.Count(f => f.facilityType == "INNER").ToString(),
-                _all.Count(f => f.facilityType == "OUTER").ToString(),
-                _all.Count(f => string.IsNullOrEmpty(f.imagePath) && f.facilityType != "OUTER").ToString()  // ← OUTER 제외
+                $"{_all.Count}개",
+                $"{_all.Count(f => f.facilityType == "INNER")}개",
+                $"{_all.Count(f => f.facilityType == "OUTER")}개",
+                $"{_all.Count(f => string.IsNullOrEmpty(f.imagePath) && f.facilityType != "OUTER")}개"
             );
         }
 

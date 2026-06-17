@@ -60,8 +60,7 @@ namespace EDU_HUB_AI.Config.Component.Basic
                     Value = "-",
                     Accent = defs[i].accent,
                     Dock = DockStyle.Fill,
-                    Margin = new Padding(0, 0, i < defs.Length - 1 ? 8 : 0, 0),
-                    Cursor = Cursors.Hand
+                    Margin = new Padding(0, 0, i < defs.Length - 1 ? 8 : 0, 0)
                 };
                 WireClickRecursive(card, i);
 
