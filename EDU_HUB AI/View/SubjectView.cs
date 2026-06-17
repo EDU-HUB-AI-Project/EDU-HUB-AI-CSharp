@@ -176,10 +176,10 @@ namespace EDU_HUB_AI.View
                 dt >= weekStart && dt <= weekEnd;
 
             _kpiBar.SetValues(
-                _all.Count.ToString(),
-                _all.Count(s => s.endYn != "Y").ToString(),
-                _all.Count(s => s.endYn == "Y").ToString(),
-                _all.Count(s => EndsThisWeek(s.endDate)).ToString()  // ← startDate 제거, endDate만
+                $"{_all.Count}개",
+                $"{_all.Count(s => s.endYn != "Y")}개",
+                $"{_all.Count(s => s.endYn == "Y")}개",
+                $"{_all.Count(s => EndsThisWeek(s.endDate))}개"
             );
         }
 

@@ -180,11 +180,11 @@ namespace EDU_HUB_AI.View
                             .Select(e => e.eduId).ToHashSet();
 
             _kpiBar.SetValues(
-                _all.Count.ToString(),
-                _all.Count(s => activeIds.Contains(s.eduId)).ToString(),
-                _all.Count(s => s.dormYn == "Y").ToString(),
-                _all.Count(s => endingIds.Contains(s.eduId)).ToString()
-                );
+                $"{_all.Count}명",
+                $"{_all.Count(s => activeIds.Contains(s.eduId))}명",
+                $"{_all.Count(s => s.dormYn == "Y")}명",
+                $"{_all.Count(s => endingIds.Contains(s.eduId))}명"
+            );
         }
 
         // ===== 그리드 =====

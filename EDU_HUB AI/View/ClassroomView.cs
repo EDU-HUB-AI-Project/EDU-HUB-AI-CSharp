@@ -128,11 +128,11 @@ namespace EDU_HUB_AI.View
         private void UpdateKpi()
         {
             _kpiBar.SetValues(
-                _all.Count.ToString(),
-                _all.Count(c => c.floor == 1).ToString(),
-                _all.Count(c => c.floor == 2).ToString(),
-                _all.Count(c => c.floor == 3).ToString(),
-                _all.Count(c => c.floor == 4).ToString()  // ← 추가
+                $"{_all.Count}개",
+                $"{_all.Count(c => c.floor == 1)}개",
+                $"{_all.Count(c => c.floor == 2)}개",
+                $"{_all.Count(c => c.floor == 3)}개",
+                $"{_all.Count(c => c.floor == 4)}개"
             );
         }
 

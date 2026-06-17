@@ -312,11 +312,11 @@ namespace EDU_HUB_AI.View
                 ("입실 대기", ThemeColors.InfoText)
             );
             _kpiBar.SetValues(
-                total.ToString(),
-                assigned.ToString(),
-                empty.ToString(),
+                $"{total}개",
+                $"{assigned}개",
+                $"{empty}개",
                 $"{rate}%",
-                _waitingData.Count.ToString()
+                $"{_waitingData.Count}명"
             );
         }
 

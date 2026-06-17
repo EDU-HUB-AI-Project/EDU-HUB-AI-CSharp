@@ -283,10 +283,10 @@ namespace EDU_HUB_AI.View
         private void UpdateKpi()
         {
             _kpiBar.SetValues(
-                _all.Count.ToString(),
-                _allDetail.Count(m => m.mealType == "BREAKFAST").ToString(),  
-                _allDetail.Count(m => m.mealType == "LUNCH").ToString(),      
-                _allDetail.Count(m => m.mealType == "DINNER").ToString()      
+                $"{_all.Count}일",
+                $"{_allDetail.Count(m => m.mealType == "BREAKFAST")}건",
+                $"{_allDetail.Count(m => m.mealType == "LUNCH")}건",
+                $"{_allDetail.Count(m => m.mealType == "DINNER")}건"
             );
         }
 
