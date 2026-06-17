@@ -485,7 +485,7 @@ namespace EDU_HUB_AI.View
                             string message = row["message"]?.ToString();
                             if(string.IsNullOrEmpty(studentId))
                             {
-                                throw new Exception($"{dt.Rows.IndexOf(row) + 1}행 : 이름이 비어있습니다.");
+                                throw new Exception($"{dt.Rows.IndexOf(row) + 1}행 : 교육생ID가 비어있습니다.");
                             }
                             var attendDate = string.IsNullOrWhiteSpace(rawDate) ? null : DateHelper.NormalizeBirthDate(rawDate);
                             if (string.IsNullOrEmpty(attendDate))
